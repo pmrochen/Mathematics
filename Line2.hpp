@@ -20,6 +20,9 @@
 namespace core::mathematics {
 namespace templates {
 
+template<typename T, typename U>
+concept Intersection2Type = (std::same_as<T, U> || std::same_as<T, Vector2<U>>); // #TODO Move to Concepts.hpp
+
 template<typename T>
 	requires std::floating_point<T>
 struct Ray2;
@@ -72,23 +75,23 @@ struct Line2
 
 	// Closest points
 	Vector2<T> getClosestPoint(const Vector2<T>& point) const noexcept;											// normalized line
-	template<typename U> Vector2<T> getClosestPoint(const Vector2<T>& point) const noexcept;
+	template<NormalizationType U> Vector2<T> getClosestPoint(const Vector2<T>& point) const noexcept;
 	T getDistance(const Vector2<T>& point) const noexcept { return distance(getClosestPoint(point), point); }	// normalized line
-	template<typename U> T getDistance(const Vector2<T>& point) const noexcept { return distance(getClosestPoint<U>(point), point); }
+	template<NormalizationType U> T getDistance(const Vector2<T>& point) const noexcept { return distance(getClosestPoint<U>(point), point); }
 	T getSignedDistance(const Vector2<T>& point) const noexcept;												// normalized line
-	//template<typename U> T getSignedDistance(const Vector2<T>& point) const noexcept; // #TODO
+	//template<NormalizationType U> T getSignedDistance(const Vector2<T>& point) const noexcept; // #TODO
 	T getDistance(const Line2& line) const noexcept { return std::fabs(getSignedDistance(line)); }				// normalized line
-	//template<typename U> T getDistance(const Line2& line) const noexcept; // #TODO
+	//template<NormalizationType U> T getDistance(const Line2& line) const noexcept; // #TODO
 	T getSignedDistance(const Line2& line) const noexcept;														// normalized line
-	//template<typename U> T getSignedDistance(const Line2& line) const noexcept; // #TODO
+	//template<NormalizationType U> T getSignedDistance(const Line2& line) const noexcept; // #TODO
 
 	// Intersection
 	bool testIntersection(const Line2& line) const noexcept;
 	bool testIntersection(const Segment2<T>& segment) const noexcept { return findIntersection(segment).has_value(); }
 	std::optional<T> findIntersection(const Line2& line) const noexcept;
 	std::optional<T> findIntersection(const Segment2<T>& segment) const noexcept;
-	template<typename U> std::optional<U> findIntersection(const Line2& line) const noexcept;
-	template<typename U> std::optional<U> findIntersection(const Segment2<T>& segment) const noexcept;
+	template<Intersection2Type<T> U> std::optional<U> findIntersection(const Line2& line) const noexcept;
+	template<Intersection2Type<T> U> std::optional<U> findIntersection(const Segment2<T>& segment) const noexcept;
 
 	Vector2<T> origin;
 	Vector2<T> direction;
@@ -148,10 +151,9 @@ inline Vector2<T> Line2<T>::getClosestPoint(const Vector2<T>& point) const
 }
 
 template<typename T>
-template<typename U>
+template<NormalizationType U>
 inline Vector2<T> Line2<T>::getClosestPoint(const Vector2<T>& point) const
 {
-	static_assert(std::is_same_v<U, Normalized> || std::is_same_v<U, Unnormalized>);
 	if costexpr(std::is_same_v<U, Normalized>)
 		return dot(point - origin, direction)*direction + origin;
 	else
@@ -207,10 +209,9 @@ inline std::optional<T> Line2<T>::findIntersection(const Segment2<T>& segment) c
 }
 
 template<typename T>
-template<typename U> 
+template<Intersection2Type<T> U>
 inline std::optional<U> Line2<T>::findIntersection(const Line2& line) const
 {
-	static_assert(std::is_same_v<U, T> || std::is_same_v<U, Vector3<T>>);
 	std::optional<T> result = findIntersection(line);
 	if constexpr (std::is_same_v<U, T>)
 		return result;
@@ -219,10 +220,9 @@ inline std::optional<U> Line2<T>::findIntersection(const Line2& line) const
 }
 
 template<typename T>
-template<typename U> 
+template<Intersection2Type<T> U>
 inline std::optional<U> Line2<T>::findIntersection(const Segment2<T>& segment) const
 {
-	static_assert(std::is_same_v<U, T> || std::is_same_v<U, Vector3<T>>);
 	std::optional<T> result = findIntersection(segment);
 	if constexpr (std::is_same_v<U, T>)
 		return result;

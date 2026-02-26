@@ -91,9 +91,9 @@ struct Plane
 
 	// Distances
 	T getDistance(const Vector3<T>& point) const noexcept { return std::fabs(dot(getNormal(), point) + d); }	// normalized plane
-	template<typename U> T getDistance(const Vector3<T>& point) const noexcept;
+	template<NormalizationType U> T getDistance(const Vector3<T>& point) const noexcept;
 	T getSignedDistance(const Vector3<T>& point) const noexcept { return (dot(getNormal(), point) + d); }		// normalized plane
-	template<typename U> T getSignedDistance(const Vector3<T>& point) const noexcept;
+	template<NormalizationType U> T getSignedDistance(const Vector3<T>& point) const noexcept;
 
 	// Intersection
 	bool contains(const Vector3<T>& point) const noexcept;
@@ -104,9 +104,9 @@ struct Plane
 	std::optional<T> findIntersection(const Line3<T>& line) const noexcept;
 	std::optional<T> findIntersection(const Ray3<T>& ray) const noexcept;
 	std::optional<T> findIntersection(const Segment3<T>& segment) const noexcept;
-	template<typename U> std::optional<U> findIntersection(const Line3<T>& line) const noexcept;
-	template<typename U> std::optional<U> findIntersection(const Ray3<T>& ray) const noexcept;
-	template<typename U> std::optional<U> findIntersection(const Segment3<T>& segment) const noexcept;
+	template<Intersection3Type<T> U> std::optional<U> findIntersection(const Line3<T>& line) const noexcept;
+	template<Intersection3Type<T> U> std::optional<U> findIntersection(const Ray3<T>& ray) const noexcept;
+	template<Intersection3Type<T> U> std::optional<U> findIntersection(const Segment3<T>& segment) const noexcept;
 
 	//static const Plane& getEmpty() noexcept { return EMPTY; }
 
@@ -196,9 +196,9 @@ struct Plane<float>
 
 	// Distances
 	float getDistance(const Vector3<float>& point) const noexcept { return std::fabs(dot(getNormal(), point) + d); }	// normalized plane
-	template<typename U> float getDistance(const Vector3<float>& point) const noexcept;
+	template<NormalizationType U> float getDistance(const Vector3<float>& point) const noexcept;
 	float getSignedDistance(const Vector3<float>& point) const noexcept { return (dot(getNormal(), point) + d); }		// normalized plane
-	template<typename U> float getSignedDistance(const Vector3<float>& point) const noexcept;
+	template<NormalizationType U> float getSignedDistance(const Vector3<float>& point) const noexcept;
 
 	// Intersection
 	bool contains(const Vector3<float>& point) const noexcept;
@@ -209,9 +209,9 @@ struct Plane<float>
 	std::optional<float> findIntersection(const Line3<float>& line) const noexcept;
 	std::optional<float> findIntersection(const Ray3<float>& ray) const noexcept;
 	std::optional<float> findIntersection(const Segment3<float>& segment) const noexcept;
-	template<typename U> std::optional<U> findIntersection(const Line3<float>& line) const noexcept;
-	template<typename U> std::optional<U> findIntersection(const Ray3<float>& ray) const noexcept;
-	template<typename U> std::optional<U> findIntersection(const Segment3<float>& segment) const noexcept;
+	template<Intersection3Type<T> U> std::optional<U> findIntersection(const Line3<float>& line) const noexcept;
+	template<Intersection3Type<T> U> std::optional<U> findIntersection(const Ray3<float>& ray) const noexcept;
+	template<Intersection3Type<T> U> std::optional<U> findIntersection(const Segment3<float>& segment) const noexcept;
 
 	//static const Plane& getEmpty() noexcept { return EMPTY; }
 
@@ -376,10 +376,9 @@ inline Plane<T>& Plane<T>::normalize()
 //}
 
 template<typename T>
-template<typename U>
+template<NormalizationType U>
 inline T Plane<T>::getDistance(const Vector3<T>& point) const
 {
-	static_assert(std::is_same_v<U, Normalized> || std::is_same_v<U, Unnormalized>);
 	if costexpr(std::is_same_v<U, Normalized>)
 		return std::fabs(dot(getNormal(), point) + d);
 	else
@@ -387,10 +386,9 @@ inline T Plane<T>::getDistance(const Vector3<T>& point) const
 }
 
 template<typename T>
-template<typename U>
+template<NormalizationType U>
 inline T Plane<T>::getSignedDistance(const Vector3<T>& point) const
 {
-	static_assert(std::is_same_v<U, Normalized> || std::is_same_v<U, Unnormalized>);
 	if costexpr(std::is_same_v<U, Normalized>)
 		return dot(getNormal(), point) + d;
 	else
@@ -433,10 +431,9 @@ inline std::optional<T> Plane<T>::findIntersection(const Segment3<T>& segment) c
 }
 
 template<typename T>
-template<typename U> 
+template<Intersection3Type<T> U>
 inline std::optional<U> Plane<T>::findIntersection(const Line3<T>& line) const
 {
-	static_assert(std::is_same_v<U, T> || std::is_same_v<U, Vector3<T>>);
 	std::optional<T> result = findIntersection(line);
 	if constexpr (std::is_same_v<U, T>)
 		return result;
@@ -445,10 +442,9 @@ inline std::optional<U> Plane<T>::findIntersection(const Line3<T>& line) const
 }
 
 template<typename T>
-template<typename U> 
+template<Intersection3Type<T> U>
 inline std::optional<U> Plane<T>::findIntersection(const Ray3<T>& ray) const
 {
-	static_assert(std::is_same_v<U, T> || std::is_same_v<U, Vector3<T>>);
 	std::optional<T> result = findIntersection(ray);
 	if constexpr (std::is_same_v<U, T>)
 		return result;
@@ -457,10 +453,9 @@ inline std::optional<U> Plane<T>::findIntersection(const Ray3<T>& ray) const
 }
 
 template<typename T>
-template<typename U> 
+template<Intersection3Type<T> U>
 inline std::optional<U> Plane<T>::findIntersection(const Segment3<T>& segment) const
 {
-	static_assert(std::is_same_v<U, T> || std::is_same_v<U, Vector3<T>>);
 	std::optional<T> result = findIntersection(segment);
 	if constexpr (std::is_same_v<U, T>)
 		return result;
@@ -582,20 +577,18 @@ inline Plane<float>& Plane<float>::normalize()
 //	return (getNormal()*(-2.f*(dot(getNormal(), point) + d)) + point); 
 //}
 
-template<typename U>
+template<NormalizationType U>
 inline float Plane<float>::getDistance(const Vector3<float>& point) const
 {
-	static_assert(std::is_same_v<U, Normalized> || std::is_same_v<U, Unnormalized>);
 	if costexpr(std::is_same_v<U, Normalized>)
 		return std::fabs(dot(getNormal(), point) + d);
 	else
 		return std::fabs((dot(getNormal(), point) + d)/getNormal().getMagnitude());
 }
 
-template<typename U>
+template<NormalizationType U>
 inline float Plane<float>::getSignedDistance(const Vector3<float>& point) const
 {
-	static_assert(std::is_same_v<U, Normalized> || std::is_same_v<U, Unnormalized>);
 	if costexpr(std::is_same_v<U, Normalized>)
 		return dot(getNormal(), point) + d;
 	else
@@ -633,10 +626,9 @@ inline std::optional<float> Plane<float>::findIntersection(const Segment3<float>
 	return (result.has_value() && (result.value() >= 0.f) && (result.value() <= 1.f)) ? result : std::optional<float>();
 }
 
-template<typename U>
+template<Intersection3Type<T> U>
 inline std::optional<U> Plane<float>::findIntersection(const Line3<float>& line) const
 {
-	static_assert(std::is_same_v<U, float> || std::is_same_v<U, Vector3<float>>);
 	std::optional<float> result = findIntersection(line);
 	if constexpr (std::is_same_v<U, float>)
 		return result;
@@ -644,10 +636,9 @@ inline std::optional<U> Plane<float>::findIntersection(const Line3<float>& line)
 		return result.has_value() ? std::optional<U>(line.evaluate(result.value())) : std::optional<U>();
 }
 
-template<typename U>
+template<Intersection3Type<T> U>
 inline std::optional<U> Plane<float>::findIntersection(const Ray3<float>& ray) const
 {
-	static_assert(std::is_same_v<U, float> || std::is_same_v<U, Vector3<float>>);
 	std::optional<float> result = findIntersection(ray);
 	if constexpr (std::is_same_v<U, float>)
 		return result;
@@ -655,10 +646,9 @@ inline std::optional<U> Plane<float>::findIntersection(const Ray3<float>& ray) c
 		return result.has_value() ? std::optional<U>(ray.evaluate(result.value())) : std::optional<U>();
 }
 
-template<typename U>
+template<Intersection3Type<T> U>
 inline std::optional<U> Plane<float>::findIntersection(const Segment3<float>& segment) const
 {
-	static_assert(std::is_same_v<U, float> || std::is_same_v<U, Vector3<float>>);
 	std::optional<float> result = findIntersection(segment);
 	if constexpr (std::is_same_v<U, float>)
 		return result;

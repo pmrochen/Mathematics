@@ -73,9 +73,9 @@ struct Segment2
 	std::optional<T> findIntersection(const Line2<T>& line) const noexcept;
 	//std::optional<T> findIntersection(const Ray2<T>& ray) const noexcept;
 	std::optional<T> findIntersection(const Segment2& segment) const;
-	template<typename U> std::optional<U> findIntersection(const Line2<T>& line) const noexcept;
-	//template<typename U> std::optional<U> findIntersection(const Ray2<T>& ray) const noexcept;
-	template<typename U> std::optional<U> findIntersection(const Segment2& segment) const;
+	template<Intersection2Type<T> U> std::optional<U> findIntersection(const Line2<T>& line) const noexcept;
+	//template<Intersection2Type<T> U> std::optional<U> findIntersection(const Ray2<T>& ray) const noexcept;
+	template<Intersection2Type<T> U> std::optional<U> findIntersection(const Segment2& segment) const;
 
 	Vector2<T> start;
 	Vector2<T> end;
@@ -163,10 +163,9 @@ inline std::optional<T> Segment2<T>::findIntersection(const Segment2& segment) c
 }
 
 template<typename T>
-template<typename U> 
+template<Intersection2Type<T> U>
 inline std::optional<U> Segment2<T>::findIntersection(const Line2<T>& line) const
 {
-	static_assert(std::is_same_v<U, T> || std::is_same_v<U, Vector3<T>>);
 	std::optional<T> result = findIntersection(line);
 	if constexpr (std::is_same_v<U, T>)
 		return result;
@@ -175,10 +174,9 @@ inline std::optional<U> Segment2<T>::findIntersection(const Line2<T>& line) cons
 }
 
 template<typename T>
-template<typename U> 
+template<Intersection2Type<T> U> 
 inline std::optional<U> Segment2<T>::findIntersection(const Segment2& segment) const
 {
-	static_assert(std::is_same_v<U, T> || std::is_same_v<U, Vector3<T>>);
 	std::optional<T> result = findIntersection(segment);
 	if constexpr (std::is_same_v<U, T>)
 		return result;

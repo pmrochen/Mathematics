@@ -28,6 +28,17 @@ struct Uninitialized
 
 constexpr Uninitialized UNINITIALIZED{};
 
+struct Normalized
+{
+};
+
+struct Unnormalized
+{
+};
+
+template<typename T>
+concept NormalizationType = (std::same_as<T, Normalized> || std::same_as<T, Unnormalized>); // #TODO Move to Concepts.hpp
+
 namespace templates {
 
 template<typename T>

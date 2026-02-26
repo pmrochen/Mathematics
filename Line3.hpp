@@ -20,6 +20,9 @@
 namespace core::mathematics {
 namespace templates {
 
+template<typename T, typename U>
+concept Intersection3Type = (std::same_as<T, U> || std::same_as<T, Vector3<U>>); // #TODO Move to Concepts.hpp
+
 template<typename T>
 	requires std::floating_point<T>
 struct Ray;
@@ -70,9 +73,9 @@ struct Line3
 
 	// Closest points
 	Vector3<T> getClosestPoint(const Vector3<T>& point) const noexcept;											// normalized line
-	template<typename U> Vector3<T> getClosestPoint(const Vector3<T>& point) const noexcept;
+	template<NormalizationType U> Vector3<T> getClosestPoint(const Vector3<T>& point) const noexcept;
 	T getDistance(const Vector3<T>& point) const noexcept { return distance(getClosestPoint(point), point); }	// normalized line
-	template<typename U> T getDistance(const Vector3<T>& point) const noexcept { return distance(getClosestPoint<U>(point), point); }
+	template<NormalizationType U> T getDistance(const Vector3<T>& point) const noexcept { return distance(getClosestPoint<U>(point), point); }
 	//T getDistance(const Line3& line) const noexcept;
 
 	Vector3<T> origin;
@@ -127,10 +130,9 @@ inline Vector3<T> Line3<T>::getClosestPoint(const Vector3<T>& point) const
 }
 
 template<typename T>
-template<typename U>
+template<NormalizationType U>
 inline Vector3<T> Line3<T>::getClosestPoint(const Vector3<T>& point) const
 {
-	static_assert(std::is_same_v<U, Normalized> || std::is_same_v<U, Unnormalized>);
 	if costexpr(std::is_same_v<U, Normalized>)
 		return dot(point - origin, direction)*direction + origin;
 	else

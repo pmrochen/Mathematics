@@ -62,17 +62,17 @@ struct Ray2
 
 	// Closest points
 	Vector2<T> getClosestPoint(const Vector2<T>& point) const;											// normalized ray
-	template<typename U> Vector2<T> getClosestPoint(const Vector2<T>& point) const;
+	template<NormalizationType U> Vector2<T> getClosestPoint(const Vector2<T>& point) const;
 	T getDistance(const Vector2<T>& point) const { return distance(getClosestPoint(point), point); }	// normalized ray
-	template<typename U> T getDistance(const Vector2<T>& point) const { return distance(getClosestPoint<U>(point), point); }
+	template<NormalizationType U> T getDistance(const Vector2<T>& point) const { return distance(getClosestPoint<U>(point), point); }
 
 	// Intersection
 	bool testIntersection(const Line2<T>& line) const noexcept { return findIntersection(line).has_value(); }
 	//bool testIntersection(const Ray2& ray) const noexcept { return findIntersection(ray).has_value(); }
 	std::optional<T> findIntersection(const Line2<T>& line) const noexcept;
 	//std::optional<T> findIntersection(const Ray2& ray) const noexcept;
-	template<typename U> std::optional<U> findIntersection(const Line2<T>& line) const noexcept;
-	//template<typename U> std::optional<U> findIntersection(const Ray2& ray) const noexcept;
+	template<Intersection2Type<T> U> std::optional<U> findIntersection(const Line2<T>& line) const noexcept;
+	//template<Intersection2Type<T> U> std::optional<U> findIntersection(const Ray2& ray) const noexcept;
 
 	Vector2<T> origin;
 	Vector2<T> direction;
@@ -112,10 +112,9 @@ inline Vector2<T> Ray2<T>::getClosestPoint(const Vector2<T>& point) const
 }
 
 template<typename T>
-template<typename U>
+template<NormalizationType U>
 inline Vector2<T> Ray2<T>::getClosestPoint(const Vector2<T>& point) const
 {
-	static_assert(std::is_same_v<U, Normalized> || std::is_same_v<U, Unnormalized>);
 	if costexpr(std::is_same_v<U, Normalized>)
 		return std::max(dot(point - origin, direction), T(0))*direction + origin;
 	else
@@ -141,10 +140,9 @@ inline std::optional<T> Ray2<T>::findIntersection(const Line2<T>& line) const
 }
 
 template<typename T>
-template<typename U> 
+template<Intersection2Type<T> U>
 inline std::optional<U> Ray2<T>::findIntersection(const Line2<T>& line) const
 {
-	static_assert(std::is_same_v<U, T> || std::is_same_v<U, Vector3<T>>);
 	std::optional<T> result = findIntersection(line);
 	if constexpr (std::is_same_v<U, T>)
 		return result;

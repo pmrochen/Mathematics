@@ -63,9 +63,9 @@ struct Ray3
 
 	// Closest points
 	Vector3<T> getClosestPoint(const Vector3<T>& point) const;											// normalized ray
-	template<typename U> Vector3<T> getClosestPoint(const Vector3<T>& point) const;
+	template<NormalizationType U> Vector3<T> getClosestPoint(const Vector3<T>& point) const;
 	T getDistance(const Vector3<T>& point) const { return distance(getClosestPoint(point), point); }	// normalized ray
-	template<typename U> T getDistance(const Vector3<T>& point) const { return distance(getClosestPoint<U>(point), point); }
+	template<NormalizationType U> T getDistance(const Vector3<T>& point) const { return distance(getClosestPoint<U>(point), point); }
 
 	Vector3<T> origin;
 	Vector3<T> direction;
@@ -119,10 +119,9 @@ inline Vector3<T> Ray3<T>::getClosestPoint(const Vector3<T>& point) const
 }
 
 template<typename T>
-template<typename U>
+template<NormalizationType U>
 inline Vector3<T> Ray3<T>::getClosestPoint(const Vector3<T>& point) const
 {
-	static_assert(std::is_same_v<U, Normalized> || std::is_same_v<U, Unnormalized>);
 	if costexpr(std::is_same_v<U, Normalized>)
 		return std::max(dot(point - origin, direction), T(0))*direction + origin;
 	else
