@@ -205,6 +205,11 @@
     <ClInclude Include="Scalar.hpp" />
     <ClInclude Include="Segment2.hpp" />
     <ClInclude Include="Segment3.hpp" />
+    <ClInclude Include="Simd\AvxIntrinsics.hpp" />
+    <ClInclude Include="Simd\Float4.hpp" />
+    <ClInclude Include="Simd\Intrinsics.hpp" />
+    <ClInclude Include="Simd\Simd.hpp" />
+    <ClInclude Include="Simd\SseIntrinsics.hpp" />
     <ClInclude Include="Vector2.hpp" />
     <ClInclude Include="Vector3.hpp" />
     <ClInclude Include="Vector4.hpp" />

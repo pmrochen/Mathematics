@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="AffineTransform.hpp" />
+    <ClInclude Include="Axis.hpp" />
+    <ClInclude Include="Constants.hpp" />
+    <ClInclude Include="Euler.hpp" />
+    <ClInclude Include="EulerOrder.hpp" />
+    <ClInclude Include="HalfSpace.hpp" />
+    <ClInclude Include="Line2.hpp" />
+    <ClInclude Include="Line3.hpp" />
+    <ClInclude Include="Mathematics.hpp" />
+    <ClInclude Include="Matrix2.hpp" />
+    <ClInclude Include="Matrix3.hpp" />
+    <ClInclude Include="Matrix4.hpp" />
+    <ClInclude Include="Plane.hpp" />
+    <ClInclude Include="Quaternion.hpp" />
+    <ClInclude Include="Ray2.hpp" />
+    <ClInclude Include="Ray3.hpp" />
+    <ClInclude Include="Scalar.hpp" />
+    <ClInclude Include="Segment2.hpp" />
+    <ClInclude Include="Segment3.hpp" />
+    <ClInclude Include="Vector2.hpp" />
+    <ClInclude Include="Vector3.hpp" />
+    <ClInclude Include="Vector4.hpp" />
+    <ClInclude Include="YawPitchRoll.hpp" />
+    <ClInclude Include="Simd\AvxIntrinsics.hpp">
+      <Filter>Simd</Filter>
+    </ClInclude>
+    <ClInclude Include="Simd\Float4.hpp">
+      <Filter>Simd</Filter>
+    </ClInclude>
+    <ClInclude Include="Simd\Intrinsics.hpp">
+      <Filter>Simd</Filter>
+    </ClInclude>
+    <ClInclude Include="Simd\Simd.hpp">
+      <Filter>Simd</Filter>
+    </ClInclude>
+    <ClInclude Include="Simd\SseIntrinsics.hpp">
+      <Filter>Simd</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Simd">
+      <UniqueIdentifier>{5e89e8a5-ab03-4f55-af97-cdce31e28fd4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
