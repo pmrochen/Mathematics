@@ -54,15 +54,15 @@ struct Quaternion
 	explicit Quaternion(const YawPitchRoll<T>& r) noexcept;
 	explicit Quaternion(const Euler<T>& e) noexcept;
 	//explicit Quaternion(const tuples::templates::Tuple4<T>& t) noexcept : x(t.x), y(t.y), z(t.z), w(t.w) {}
-	//template<typename U> explicit Quaternion(const tuples::templates::Tuple4<U>& t) noexcept : x(T(t.x)), y(T(t.y)), z(T(t.z)), w(T(t.w)) {}
+	//template<ArithmeticType U> explicit Quaternion(const tuples::templates::Tuple4<U>& t) noexcept : x(T(t.x)), y(T(t.y)), z(T(t.z)), w(T(t.w)) {}
 	explicit Quaternion(const std::tuple<T, T, T, T>& t) noexcept : x(std::get<0>(t)), y(std::get<1>(t)), z(std::get<2>(t)), w(std::get<3>(t)) {}
-	template<typename U> explicit Quaternion(const std::tuple<U, U, U, U>& t) noexcept : x(T(std::get<0>(t))), y(T(std::get<1>(t))), z(T(std::get<2>(t))), w(T(std::get<3>(t))) {}
+	template<ArithmeticType U> explicit Quaternion(const std::tuple<U, U, U, U>& t) noexcept : x(T(std::get<0>(t))), y(T(std::get<1>(t))), z(T(std::get<2>(t))), w(T(std::get<3>(t))) {}
 	explicit Quaternion(const T* q) noexcept : x(q[0]), y(q[1]), z(q[2]), w(q[3]) {}
 
 	//explicit operator tuples::templates::Tuple4<T>() noexcept { return tuples::templates::Tuple4<T>(x, y, z, w); }
-	//template<typename U> explicit operator tuples::templates::Tuple4<U>() noexcept { return tuples::templates::Tuple4<U>(U(x), U(y), U(z), U(w)); }
+	//template<ArithmeticType U> explicit operator tuples::templates::Tuple4<U>() noexcept { return tuples::templates::Tuple4<U>(U(x), U(y), U(z), U(w)); }
 	//explicit operator std::tuple<T, T, T, T>() { return std::tuple<T, T, T, T>(x, y, z, w); }
-	//template<typename U> explicit operator std::tuple<U, U, U, U>() { return std::tuple<U, U, U, U>(U(x), U(y), U(z), U(w)); }
+	//template<ArithmeticType U> explicit operator std::tuple<U, U, U, U>() { return std::tuple<U, U, U, U>(U(x), U(y), U(z), U(w)); }
 	explicit operator T*() noexcept { return &x; }
 	explicit operator const T*() const noexcept { return &x; }
 	T& operator[](int i) noexcept { return (&x)[i]; }
@@ -162,9 +162,9 @@ struct Quaternion<float>
 	explicit Quaternion(const YawPitchRoll<float>& r) noexcept;
 	explicit Quaternion(const Euler<float>& e) noexcept;
 	//explicit Quaternion(const tuples::templates::Tuple4<float>& t) noexcept : xyzw(simd::set4(t.x, t.y, t.z, t.w)) {}
-	//template<typename U> explicit Quaternion(const tuples::templates::Tuple4<U>& t) noexcept : xyzw(simd::set4((float)t.x, (float)t.y, (float)t.z, (float)t.w)) {}
+	//template<ArithmeticType U> explicit Quaternion(const tuples::templates::Tuple4<U>& t) noexcept : xyzw(simd::set4((float)t.x, (float)t.y, (float)t.z, (float)t.w)) {}
 	explicit Quaternion(const std::tuple<float, float, float, float>& t) noexcept : xyzw(simd::set4(std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t))) {}
-	template<typename U> explicit Quaternion(const std::tuple<U, U, U, U>& t) noexcept : xyzw(simd::set4((float)std::get<0>(t), (float)std::get<1>(t), (float)std::get<2>(t), (float)std::get<3>(t))) {}
+	template<ArithmeticType U> explicit Quaternion(const std::tuple<U, U, U, U>& t) noexcept : xyzw(simd::set4((float)std::get<0>(t), (float)std::get<1>(t), (float)std::get<2>(t), (float)std::get<3>(t))) {}
 	explicit Quaternion(const float* q) noexcept : xyzw(simd::load4(q)) {}
 	explicit Quaternion(simd::float4 q) noexcept : xyzw(q) {}
 	Quaternion(const Quaternion& q) noexcept : xyzw(q.xyzw) {}
@@ -172,9 +172,9 @@ struct Quaternion<float>
 
 	operator simd::float4() const noexcept { return xyzw; }
 	//explicit operator tuples::templates::Tuple4<float>() noexcept { return tuples::templates::Tuple4<float>(x, y, z, w); }
-	//template<typename U> explicit operator tuples::templates::Tuple4<U>() noexcept { return tuples::templates::Tuple4<U>(U(x), U(y), U(z), U(w)); }
+	//template<ArithmeticType U> explicit operator tuples::templates::Tuple4<U>() noexcept { return tuples::templates::Tuple4<U>(U(x), U(y), U(z), U(w)); }
 	//explicit operator std::tuple<float, float, float, float>() { return std::tuple<float, float, float, float>(x, y, z, w); }
-	//template<typename U> explicit operator std::tuple<U, U, U, U>() { return std::tuple<U, U, U, U>(U(x), U(y), U(z), U(w)); }
+	//template<ArithmeticType U> explicit operator std::tuple<U, U, U, U>() { return std::tuple<U, U, U, U>(U(x), U(y), U(z), U(w)); }
 	explicit operator float* () noexcept { return &x; }
 	explicit operator const float* () const noexcept { return &x; }
 	float& operator[](int i) noexcept { return (&x)[i]; }

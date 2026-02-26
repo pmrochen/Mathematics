@@ -82,11 +82,11 @@ struct Euler
 	Euler(const Quaternion<T>& q, EulerOrder order) noexcept;
 	Euler(const Matrix3<T>& m, EulerOrder order) noexcept;
 	explicit Euler(const std::tuple<T, T, T, EulerOrder>& t) noexcept : x(std::get<0>(t)), y(std::get<1>(t)), z(std::get<2>(t)), order(std::get<3>(t)) {}
-	template<typename U> explicit Euler(const std::tuple<U, U, U, EulerOrder>& t) noexcept : x(T(std::get<0>(t))), y(T(std::get<1>(t))), z(T(std::get<2>(t))), order(std::get<3>(t)) {}
+	template<ArithmeticType U> explicit Euler(const std::tuple<U, U, U, EulerOrder>& t) noexcept : x(T(std::get<0>(t))), y(T(std::get<1>(t))), z(T(std::get<2>(t))), order(std::get<3>(t)) {}
 	Euler(const T* e, EulerOrder order) noexcept : x(e[0]), y(e[1]), z(e[2]), order(order) {}
 
 	//explicit operator std::tuple<T, T, T, EulerOrder>() { return std::tuple<T, T, T, EulerOrder>(x, y, z, order); }
-	//template<typename U> explicit operator std::tuple<U, U, U, EulerOrder>() { return std::tuple<U, U, U, EulerOrder>(U(x), U(y), U(z), order); }
+	//template<ArithmeticType U> explicit operator std::tuple<U, U, U, EulerOrder>() { return std::tuple<U, U, U, EulerOrder>(U(x), U(y), U(z), order); }
 	explicit operator T*() noexcept { return &x; }
 	explicit operator const T*() const noexcept { return &x; }
 	T& operator[](int i) noexcept { return (&x)[i]; }

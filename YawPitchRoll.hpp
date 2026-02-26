@@ -43,11 +43,11 @@ struct YawPitchRoll
 	//explicit YawPitchRoll(const Vector3<T>& direction) noexcept; // -> fromForward
 	//YawPitchRoll(const Vector3<T>& direction, T roll) noexcept;
 	explicit YawPitchRoll(const std::tuple<T, T, T>& t) noexcept : yaw(std::get<0>(t)), pitch(std::get<1>(t)), roll(std::get<2>(t)) {}
-	template<typename U> explicit YawPitchRoll(const std::tuple<U, U, U>& t) noexcept : yaw(T(std::get<0>(t))), pitch(T(std::get<1>(t))), roll(T(std::get<2>(t))) {}
+	template<ArithmeticType U> explicit YawPitchRoll(const std::tuple<U, U, U>& t) noexcept : yaw(T(std::get<0>(t))), pitch(T(std::get<1>(t))), roll(T(std::get<2>(t))) {}
 	//YawPitchRoll(const T* r) noexcept : yaw(r[0]), pitch(r[1]), roll(r[2]) {}
 
 	//explicit operator std::tuple<T, T, T>() { return std::tuple<T, T, T>(yaw, pitch, roll); }
-	//template<typename U> explicit operator std::tuple<U, U, U>() { return std::tuple<U, U, U>(U(yaw), U(pitch), U(roll)); }
+	//template<ArithmeticType U> explicit operator std::tuple<U, U, U>() { return std::tuple<U, U, U>(U(yaw), U(pitch), U(roll)); }
 	//explicit operator T*() noexcept { return &yaw; }
 	//explicit operator const T*() const noexcept { return &yaw; }
 
