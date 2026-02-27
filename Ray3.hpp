@@ -30,6 +30,7 @@ struct Ray3
 	using ConstResult = const Ray3&;
 
 	Ray3() = default;
+	explicit Ray3(Uninitialized) noexcept : origin(Uninitialized()), direction(Uninitialized()) {}
 	Ray3(const Vector3<T>& origin, const Vector3<T>& direction) noexcept : origin(origin), direction(direction) {}
 	explicit Ray3(const Line3<T>& line) noexcept : origin(line.origin), direction(line.direction) {}
 	//explicit Ray3(const Segment3<T>& segment) noexcept;
@@ -43,10 +44,10 @@ struct Ray3
 	const Line3<T>& asLine() const noexcept { return reinterpret_cast<const Line3<T>&>(*this); }
 
 	// Properties
-	bool isApproxEqual(const Ray3& ray) const noexcept;
-	bool isApproxEqual(const Ray3& ray, T tolerance) const noexcept;
+	bool approxEquals(const Ray3& ray) const noexcept;
+	bool approxEquals(const Ray3& ray, T tolerance) const noexcept;
 	//bool isFinite() const noexcept { return origin.isFinite() && direction.isFinite(); }
-	void set(const Vector3<T>& origin, const Vector3<T>& direction) noexcept { this->origin = origin; this->direction = direction; }
+	Ray3& set(const Vector3<T>& origin, const Vector3<T>& direction) noexcept { this->origin = origin; this->direction = direction; return *this; }
 	const Vector3<T>& getOrigin() const noexcept { return origin; }
 	void setOrigin(const Vector3<T>& origin) noexcept { this->origin = origin; }
 	const Vector3<T>& getDirection() const noexcept { return direction; }
@@ -63,9 +64,9 @@ struct Ray3
 
 	// Closest points
 	Vector3<T> getClosestPoint(const Vector3<T>& point) const;											// normalized ray
-	template<NormalizationType U> Vector3<T> getClosestPoint(const Vector3<T>& point) const;
-	T getDistance(const Vector3<T>& point) const { return distance(getClosestPoint(point), point); }	// normalized ray
-	template<NormalizationType U> T getDistance(const Vector3<T>& point) const { return distance(getClosestPoint<U>(point), point); }
+	template<Normalization U> Vector3<T> getClosestPoint(const Vector3<T>& point) const;
+	T getDistanceTo(const Vector3<T>& point) const { return distance(getClosestPoint(point), point); }	// normalized ray
+	template<Normalization U> T getDistanceTo(const Vector3<T>& point) const { return distance(getClosestPoint<U>(point), point); }
 
 	Vector3<T> origin;
 	Vector3<T> direction;
@@ -87,15 +88,15 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const R
 }
 
 template<typename T>
-inline bool Ray3<T>::isApproxEqual(const Ray3<T>& ray) const
+inline bool Ray3<T>::approxEquals(const Ray3<T>& ray) const
 {
-	return origin.isApproxEqual(ray.origin) && direction.isApproxEqual(ray.direction);
+	return origin.approxEquals(ray.origin) && direction.approxEquals(ray.direction);
 }
 
 template<typename T>
-inline bool Ray3<T>::isApproxEqual(const Ray3<T>& ray, T tolerance) const
+inline bool Ray3<T>::approxEquals(const Ray3<T>& ray, T tolerance) const
 {
-	return origin.isApproxEqual(ray.origin, tolerance) && direction.isApproxEqual(ray.direction, tolerance);
+	return origin.approxEquals(ray.origin, tolerance) && direction.approxEquals(ray.direction, tolerance);
 }
 
 template<typename T>
@@ -119,7 +120,7 @@ inline Vector3<T> Ray3<T>::getClosestPoint(const Vector3<T>& point) const
 }
 
 template<typename T>
-template<NormalizationType U>
+template<Normalization U>
 inline Vector3<T> Ray3<T>::getClosestPoint(const Vector3<T>& point) const
 {
 	if costexpr(std::is_same_v<U, Normalized>)

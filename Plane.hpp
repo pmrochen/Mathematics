@@ -16,7 +16,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
-#include <Simd/Intrinsics.hpp>
+#include "Simd/Intrinsics.hpp"
 #include "Constants.hpp"
 #include "Vector3.hpp"
 #include "Matrix3.hpp"
@@ -45,11 +45,11 @@ struct Plane
 	Plane(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2) noexcept;
 	explicit Plane(const HalfSpace<T>& h) noexcept : a(h.a), b(h.b), c(h.c), d(h.d) {}
 	explicit Plane(const std::tuple<T, T, T, T>& t) noexcept : a(std::get<0>(t)), b(std::get<1>(t)), c(std::get<2>(t)), d(std::get<3>(t)) {}
-	template<ArithmeticType U> explicit Plane(const std::tuple<U, U, U, U>& t) noexcept : a(T(std::get<0>(t))), b(T(std::get<1>(t))), c(T(std::get<2>(t))), d(T(std::get<3>(t))) {}
+	template<Arithmetic U> explicit Plane(const std::tuple<U, U, U, U>& t) noexcept : a(T(std::get<0>(t))), b(T(std::get<1>(t))), c(T(std::get<2>(t))), d(T(std::get<3>(t))) {}
 	//explicit Plane(const T* p) noexcept : a(p[0]), b(p[1]), c(p[2]), d(p[3]) {}
 
 	//explicit operator std::tuple<T, T, T, T>() noexcept { return std::tuple<T, T, T, T>(a, b, c, d); }
-	//template<ArithmeticType U> explicit operator std::tuple<U, U, U, U>() noexcept { return std::tuple<U, U, U, U>(U(a), U(b), U(c), U(d)); }
+	//template<Arithmetic U> explicit operator std::tuple<U, U, U, U>() noexcept { return std::tuple<U, U, U, U>(U(a), U(b), U(c), U(d)); }
 	//explicit operator T*() noexcept { return &a; }
 	//explicit operator const T*() const noexcept { return &a; }
 	//T& operator[](int i) noexcept { return (&a)[i]; }
@@ -66,10 +66,13 @@ struct Plane
 
 	const HalfSpace<T>& asHalfSpace() const noexcept { return reinterpret_cast<const HalfSpace<T>&>(*this); }
 
+	// Least-squares fit of a plane
+	//template<std::input_iterator I, std::sentinel_for<I> S> static Plane computeBestFit(I first, S last); // #TODO
+
 	// Properties
 	bool isEmpty() const noexcept { return (a == T()) && (b == T()) && (c == T()) && (d == T()); }
-	bool isApproxEqual(const Plane& p) const noexcept;
-	bool isApproxEqual(const Plane& p, T tolerance) const noexcept;
+	bool approxEquals(const Plane& p) const noexcept;
+	bool approxEquals(const Plane& p, T tolerance) const noexcept;
 	bool isFinite() const noexcept { return std::isfinite(a) && std::isfinite(b) && std::isfinite(c) && std::isfinite(d); }
 	const Vector3<T>& getNormal() const noexcept { return reinterpret_cast<const Vector3&>(*this); }
 	void setNormal(const Vector3<T>& normal) noexcept { a = normal.x; b = normal.y; c = normal.z; }
@@ -90,29 +93,23 @@ struct Plane
 	//Vector3<T> reflect(const Vector3<T>& point) const noexcept; // #TODO -> Vector3
 
 	// Distances
-	T getDistance(const Vector3<T>& point) const noexcept { return std::fabs(dot(getNormal(), point) + d); }	// normalized plane
-	template<NormalizationType U> T getDistance(const Vector3<T>& point) const noexcept;
-	T getSignedDistance(const Vector3<T>& point) const noexcept { return (dot(getNormal(), point) + d); }		// normalized plane
-	template<NormalizationType U> T getSignedDistance(const Vector3<T>& point) const noexcept;
+	T getDistanceTo(const Vector3<T>& point) const noexcept { return std::fabs(dot(getNormal(), point) + d); }	// normalized plane
+	template<Normalization U> T getDistanceTo(const Vector3<T>& point) const noexcept;
+	T getSignedDistanceTo(const Vector3<T>& point) const noexcept { return (dot(getNormal(), point) + d); }		// normalized plane
+	template<Normalization U> T getSignedDistanceTo(const Vector3<T>& point) const noexcept;
 
-	// Intersection
+	// Containment and intersection
 	bool contains(const Vector3<T>& point) const noexcept;
-	bool testIntersection(const Line3<T>& line) const noexcept;
-	bool testIntersection(const Ray3<T>& ray) const noexcept { return findIntersection(ray).has_value(); }
-	bool testIntersection(const Segment3<T>& segment) const noexcept { return findIntersection(segment).has_value(); }
-	//bool testIntersection(const Triangle<T>& triangle) const noexcept; // #TODO Check if all vertices are on the same side
+	bool intersects(const Line3<T>& line) const noexcept;
+	bool intersects(const Ray3<T>& ray) const noexcept { return findIntersection(ray).has_value(); }
+	bool intersects(const Segment3<T>& segment) const noexcept { return findIntersection(segment).has_value(); }
+	//bool intersects(const Triangle<T>& triangle) const noexcept; // #TODO Check if all vertices are on the same side
 	std::optional<T> findIntersection(const Line3<T>& line) const noexcept;
 	std::optional<T> findIntersection(const Ray3<T>& ray) const noexcept;
 	std::optional<T> findIntersection(const Segment3<T>& segment) const noexcept;
-	template<Intersection3Type<T> U> std::optional<U> findIntersection(const Line3<T>& line) const noexcept;
-	template<Intersection3Type<T> U> std::optional<U> findIntersection(const Ray3<T>& ray) const noexcept;
-	template<Intersection3Type<T> U> std::optional<U> findIntersection(const Segment3<T>& segment) const noexcept;
-
-	//static const Plane& getEmpty() noexcept { return EMPTY; }
-
-	// Least-squares fit of a plane
-	//static Plane computeBestFit(const Vector3<T>* points, size_t nPoints); // #TODO
-	//static Plane computeBestFit(const std::vector<Vector3<T>>& points);
+	template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Line3<T>& line) const noexcept;
+	template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Ray3<T>& ray) const noexcept;
+	template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Segment3<T>& segment) const noexcept;
 
 	static const Plane EMPTY;
 
@@ -138,7 +135,7 @@ struct Plane<float>
 	Plane(const Vector3<float>& p0, const Vector3<float>& p1, const Vector3<float>& p2) noexcept;
 	explicit Plane(const HalfSpace<float>& h) noexcept : abcd(h.abcd) {}
 	explicit Plane(const std::tuple<float, float, float, float>& t) noexcept : abcd(simd::set4(std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t))) {}
-	template<ArithmeticType U> explicit Plane(const std::tuple<U, U, U, U>& t) noexcept : abcd(simd::set4((float)std::get<0>(t), (float)std::get<1>(t), (float)std::get<2>(t), (float)std::get<3>(t))) {}
+	template<Arithmetic U> explicit Plane(const std::tuple<U, U, U, U>& t) noexcept : abcd(simd::set4((float)std::get<0>(t), (float)std::get<1>(t), (float)std::get<2>(t), (float)std::get<3>(t))) {}
 	//explicit Plane(const float* p) noexcept : abcd(simd::load4(p)) {}
 	explicit Plane(simd::float4 p) noexcept : abcd(p) {}
 	Plane(const Plane& p) noexcept : abcd(p.abcd) {}
@@ -146,7 +143,7 @@ struct Plane<float>
 
 	operator simd::float4() const noexcept { return abcd; }
 	//explicit operator std::tuple<float, float, float, float>() noexcept { return std::tuple<float, float, float, float>(a, b, c, d); }
-	//template<ArithmeticType U> explicit operator std::tuple<U, U, U, U>() noexcept { return std::tuple<U, U, U, U>(U(a), U(b), U(c), U(d)); }
+	//template<Arithmetic U> explicit operator std::tuple<U, U, U, U>() noexcept { return std::tuple<U, U, U, U>(U(a), U(b), U(c), U(d)); }
 	//explicit operator float* () noexcept { return &a; }
 	//explicit operator const float* () const noexcept { return &a; }
 	//float& operator[](int i) noexcept { return (&a)[i]; }
@@ -167,10 +164,13 @@ struct Plane<float>
 
 	const HalfSpace<float> asHalfSpace() const noexcept { return HalfSpace<float>(abcd); }
 
+	// Least-squares fit of a plane
+	//template<std::input_iterator I, std::sentinel_for<I> S> static Plane computeBestFit(I first, S last); // #TODO
+
 	// Properties
 	bool isEmpty() const noexcept { return simd::all4(simd::equal(abcd, simd::zero<simd::float4>())); }
-	bool isApproxEqual(const Plane& p) const noexcept { simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, p)), simd::set4(Constants<float>::TOLERANCE))); }
-	bool isApproxEqual(const Plane& p, float tolerance) const noexcept { simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, p)), simd::set4(tolerance))); }
+	bool approxEquals(const Plane& p) const noexcept { simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, p)), simd::set4(Constants<float>::TOLERANCE))); }
+	bool approxEquals(const Plane& p, float tolerance) const noexcept { simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, p)), simd::set4(tolerance))); }
 	bool isFinite() const noexcept { return simd::all4(simd::isFinite(abcd)); }
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	const Vector3<float> getNormal() const noexcept { return Vector3<float>(simd::xyzz(abcd)); }
@@ -195,29 +195,23 @@ struct Plane<float>
 	//Vector3<float> reflect(const Vector3<float>& point) const noexcept; // #TODO -> Vector3
 
 	// Distances
-	float getDistance(const Vector3<float>& point) const noexcept { return std::fabs(dot(getNormal(), point) + d); }	// normalized plane
-	template<NormalizationType U> float getDistance(const Vector3<float>& point) const noexcept;
-	float getSignedDistance(const Vector3<float>& point) const noexcept { return (dot(getNormal(), point) + d); }		// normalized plane
-	template<NormalizationType U> float getSignedDistance(const Vector3<float>& point) const noexcept;
+	float getDistanceTo(const Vector3<float>& point) const noexcept { return std::fabs(dot(getNormal(), point) + d); }	// normalized plane
+	template<Normalization U> float getDistanceTo(const Vector3<float>& point) const noexcept;
+	float getSignedDistanceTo(const Vector3<float>& point) const noexcept { return (dot(getNormal(), point) + d); }		// normalized plane
+	template<Normalization U> float getSignedDistanceTo(const Vector3<float>& point) const noexcept;
 
-	// Intersection
+	// Containment and intersection
 	bool contains(const Vector3<float>& point) const noexcept;
-	bool testIntersection(const Line3<float>& line) const noexcept;
-	bool testIntersection(const Ray3<float>& ray) const noexcept { return findIntersection(ray).has_value(); }
-	bool testIntersection(const Segment3<float>& segment) const noexcept { return findIntersection(segment).has_value(); }
-	//bool testIntersection(const Triangle<float>& triangle) const noexcept; // #TODO Check if all vertices are on the same side
+	bool intersects(const Line3<float>& line) const noexcept;
+	bool intersects(const Ray3<float>& ray) const noexcept { return findIntersection(ray).has_value(); }
+	bool intersects(const Segment3<float>& segment) const noexcept { return findIntersection(segment).has_value(); }
+	//bool intersects(const Triangle<float>& triangle) const noexcept; // #TODO Check if all vertices are on the same side
 	std::optional<float> findIntersection(const Line3<float>& line) const noexcept;
 	std::optional<float> findIntersection(const Ray3<float>& ray) const noexcept;
 	std::optional<float> findIntersection(const Segment3<float>& segment) const noexcept;
-	template<Intersection3Type<T> U> std::optional<U> findIntersection(const Line3<float>& line) const noexcept;
-	template<Intersection3Type<T> U> std::optional<U> findIntersection(const Ray3<float>& ray) const noexcept;
-	template<Intersection3Type<T> U> std::optional<U> findIntersection(const Segment3<float>& segment) const noexcept;
-
-	//static const Plane& getEmpty() noexcept { return EMPTY; }
-
-	// Least-squares fit of a plane
-	//static Plane computeBestFit(const Vector3<float>* points, size_t nPoints); // #TODO
-	//static Plane computeBestFit(const std::vector<Vector3<float>>& points);
+	template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Line3<float>& line) const noexcept;
+	template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Ray3<float>& ray) const noexcept;
+	template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Segment3<float>& segment) const noexcept;
 
 	static const Plane EMPTY;
 
@@ -286,14 +280,14 @@ inline const T& Plane<T>::get() const
 }
 
 template<typename T>
-inline bool Plane<T>::isApproxEqual(const Plane<T>& p) const
+inline bool Plane<T>::approxEquals(const Plane<T>& p) const
 { 
 	return (std::fabs(p.a - a) < Constants<T>::TOLERANCE) && (std::fabs(p.b - b) < Constants<T>::TOLERANCE) && 
 		(std::fabs(p.c - c) < Constants<T>::TOLERANCE) && (std::fabs(p.d - d) < Constants<T>::TOLERANCE); 
 }
 
 template<typename T>
-inline bool Plane<T>::isApproxEqual(const Plane<T>& p, T tolerance) const
+inline bool Plane<T>::approxEquals(const Plane<T>& p, T tolerance) const
 {
 	return (std::fabs(p.a - a) < tolerance) && (std::fabs(p.b - b) < tolerance) && 
 		(std::fabs(p.c - c) < tolerance) && (std::fabs(p.d - d) < tolerance); 
@@ -376,8 +370,8 @@ inline Plane<T>& Plane<T>::normalize()
 //}
 
 template<typename T>
-template<NormalizationType U>
-inline T Plane<T>::getDistance(const Vector3<T>& point) const
+template<Normalization U>
+inline T Plane<T>::getDistanceTo(const Vector3<T>& point) const
 {
 	if costexpr(std::is_same_v<U, Normalized>)
 		return std::fabs(dot(getNormal(), point) + d);
@@ -386,8 +380,8 @@ inline T Plane<T>::getDistance(const Vector3<T>& point) const
 }
 
 template<typename T>
-template<NormalizationType U>
-inline T Plane<T>::getSignedDistance(const Vector3<T>& point) const
+template<Normalization U>
+inline T Plane<T>::getSignedDistanceTo(const Vector3<T>& point) const
 {
 	if costexpr(std::is_same_v<U, Normalized>)
 		return dot(getNormal(), point) + d;
@@ -402,7 +396,7 @@ inline bool Plane<T>::contains(const Vector3<T>& point) const
 }
 
 template<typename T>
-inline bool Plane<T>::testIntersection(const Line3<T>& line) const
+inline bool Plane<T>::intersects(const Line3<T>& line) const
 {
 	return (std::fabs(dot(getNormal(), line.direction)) >= Constants<T>::TOLERANCE);
 }
@@ -431,7 +425,7 @@ inline std::optional<T> Plane<T>::findIntersection(const Segment3<T>& segment) c
 }
 
 template<typename T>
-template<Intersection3Type<T> U>
+template<ScalarOrVector3<T> U>
 inline std::optional<U> Plane<T>::findIntersection(const Line3<T>& line) const
 {
 	std::optional<T> result = findIntersection(line);
@@ -442,7 +436,7 @@ inline std::optional<U> Plane<T>::findIntersection(const Line3<T>& line) const
 }
 
 template<typename T>
-template<Intersection3Type<T> U>
+template<ScalarOrVector3<T> U>
 inline std::optional<U> Plane<T>::findIntersection(const Ray3<T>& ray) const
 {
 	std::optional<T> result = findIntersection(ray);
@@ -453,7 +447,7 @@ inline std::optional<U> Plane<T>::findIntersection(const Ray3<T>& ray) const
 }
 
 template<typename T>
-template<Intersection3Type<T> U>
+template<ScalarOrVector3<T> U>
 inline std::optional<U> Plane<T>::findIntersection(const Segment3<T>& segment) const
 {
 	std::optional<T> result = findIntersection(segment);
@@ -577,8 +571,8 @@ inline Plane<float>& Plane<float>::normalize()
 //	return (getNormal()*(-2.f*(dot(getNormal(), point) + d)) + point); 
 //}
 
-template<NormalizationType U>
-inline float Plane<float>::getDistance(const Vector3<float>& point) const
+template<Normalization U>
+inline float Plane<float>::getDistanceTo(const Vector3<float>& point) const
 {
 	if costexpr(std::is_same_v<U, Normalized>)
 		return std::fabs(dot(getNormal(), point) + d);
@@ -586,8 +580,8 @@ inline float Plane<float>::getDistance(const Vector3<float>& point) const
 		return std::fabs((dot(getNormal(), point) + d)/getNormal().getMagnitude());
 }
 
-template<NormalizationType U>
-inline float Plane<float>::getSignedDistance(const Vector3<float>& point) const
+template<Normalization U>
+inline float Plane<float>::getSignedDistanceTo(const Vector3<float>& point) const
 {
 	if costexpr(std::is_same_v<U, Normalized>)
 		return dot(getNormal(), point) + d;
@@ -600,7 +594,7 @@ inline bool Plane<float>::contains(const Vector3<float>& point) const
 	return (std::fabs(dot(getNormal(), point) + d) < Constants<float>::TOLERANCE);
 }
 
-inline bool Plane<float>::testIntersection(const Line3<float>& line) const
+inline bool Plane<float>::intersects(const Line3<float>& line) const
 {
 	return (std::fabs(dot(getNormal(), line.direction)) >= Constants<float>::TOLERANCE);
 }
@@ -626,7 +620,7 @@ inline std::optional<float> Plane<float>::findIntersection(const Segment3<float>
 	return (result.has_value() && (result.value() >= 0.f) && (result.value() <= 1.f)) ? result : std::optional<float>();
 }
 
-template<Intersection3Type<T> U>
+template<ScalarOrVector3<T> U>
 inline std::optional<U> Plane<float>::findIntersection(const Line3<float>& line) const
 {
 	std::optional<float> result = findIntersection(line);
@@ -636,7 +630,7 @@ inline std::optional<U> Plane<float>::findIntersection(const Line3<float>& line)
 		return result.has_value() ? std::optional<U>(line.evaluate(result.value())) : std::optional<U>();
 }
 
-template<Intersection3Type<T> U>
+template<ScalarOrVector3<T> U>
 inline std::optional<U> Plane<float>::findIntersection(const Ray3<float>& ray) const
 {
 	std::optional<float> result = findIntersection(ray);
@@ -646,7 +640,7 @@ inline std::optional<U> Plane<float>::findIntersection(const Ray3<float>& ray) c
 		return result.has_value() ? std::optional<U>(ray.evaluate(result.value())) : std::optional<U>();
 }
 
-template<Intersection3Type<T> U>
+template<ScalarOrVector3<T> U>
 inline std::optional<U> Plane<float>::findIntersection(const Segment3<float>& segment) const
 {
 	std::optional<float> result = findIntersection(segment);

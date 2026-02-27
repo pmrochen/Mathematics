@@ -14,7 +14,7 @@
 #include <tuple>
 #include <cstddef>
 #include <cmath>
-#include <Simd/Intrinsics.hpp>
+#include "Simd/Intrinsics.hpp"
 #include "Constants.hpp"
 #include "Axis.hpp"
 #include "Vector3.hpp"
@@ -51,8 +51,6 @@ struct Matrix4
 	using ConstArg = const Matrix4&;
 	using ConstResult = const Matrix4&;
 
-	//static constexpr int NUM_COMPONENTS = 16;
-
 	constexpr Matrix4() noexcept : m00(), m01(), m02(), m03(), m10(), m11(), m12(), m13(), m20(), m21(), m22(), m23(), m30(), m31(), m32(), m33() {}
 	explicit Matrix4(Uninitialized) noexcept {}
 	explicit Matrix4(Identity) noexcept : m00(1), m01(), m02(), m03(), m10(), m11(1), m12(), m13(), m20(), m21(), m22(1), m23(), m30(), m31(), m32(), m33(1) {}
@@ -82,51 +80,50 @@ struct Matrix4
 	template<typename A> void load(A& ar) { ar(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33); }
 	template<typename A> void save(A& ar) const { ar(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33); }
 
-	// #TODO rename get...() to make...()
-	static Matrix4 getTranslation(const Vector3<T>& v) noexcept { return Matrix4(Uninitialized()).setTranslation(v); }
-	static Matrix4 getScaling(const Vector3<T>& v) noexcept { return Matrix4(Uninitialized()).setScaling(v); }
-	static Matrix4 getRotation(Axis axis, T angle) noexcept { return Matrix4(Uninitialized()).setRotation(axis, angle); }
-	static Matrix4 getRotation(const Vector3<T>& axis, T angle) noexcept { return Matrix4(Uninitialized()).setRotation(axis, angle); }
-	static Matrix4 getRotation(const YawPitchRoll<T>& r) noexcept { return Matrix4(Uninitialized()).setRotation(r); }
-	static Matrix4 getRotation(const Euler<T>& e) noexcept { return Matrix4(Uninitialized()).setRotation(e); }
-	static Matrix4 getRotation(const Quaternion<T>& q) noexcept { return Matrix4(Uninitialized()).setRotation(q); }
-	static Matrix4 getRotationTranslation(Axis axis, T angle, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(axis, angle, t); }
-	static Matrix4 getRotationTranslation(const Vector3<T>& axis, T angle, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(axis, angle, t); }
-	static Matrix4 getRotationTranslation(const YawPitchRoll<T>& r, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(r, t); }
-	static Matrix4 getRotationTranslation(const Euler<T>& e, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(e, t); }
-	static Matrix4 getRotationTranslation(const Quaternion<T>& q, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(q, t); }
-	static Matrix4 getScalingRotation(const Vector3<T>& s, Axis axis, T angle) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, axis, angle); }
-	static Matrix4 getScalingRotation(const Vector3<T>& s, const Vector3<T>& axis, T angle) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, axis, angle); }
-	static Matrix4 getScalingRotation(const Vector3<T>& s, const YawPitchRoll<T>& r) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, r); }
-	static Matrix4 getScalingRotation(const Vector3<T>& s, const Euler<T>& e) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, e); }
-	static Matrix4 getScalingRotation(const Vector3<T>& s, const Quaternion<T>& q) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, q); }
-	static Matrix4 getScalingTranslation(const Vector3<T>& s, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setScalingTranslation(s, t); }
-	static Matrix4 getScalingRotationTranslation(const Vector3<T>& s, Axis axis, T angle, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, axis, angle, t); }
-	static Matrix4 getScalingRotationTranslation(const Vector3<T>& s, const Vector3<T>& axis, T angle, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, axis, angle, t); }
-	static Matrix4 getScalingRotationTranslation(const Vector3<T>& s, const YawPitchRoll<T>& r, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, r, t); }
-	static Matrix4 getScalingRotationTranslation(const Vector3<T>& s, const Euler<T>& e, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, e, t); }
-	static Matrix4 getScalingRotationTranslation(const Vector3<T>& s, const Quaternion<T>& q, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, q, t); }
-	static Matrix4 getShearing(T xy, T xz, T yx, T yz, T zx, T zy) noexcept { return Matrix4(Uninitialized()).setShearing(xy, xz, yx, yz, zx, zy); }
-	static Matrix4 getReflection(const Plane<T>& plane) noexcept { return Matrix4(Uninitialized()).setReflection(plane); }
+	static Matrix4 makeTranslation(const Vector3<T>& v) noexcept { return Matrix4(Uninitialized()).setTranslation(v); }
+	static Matrix4 makeScaling(const Vector3<T>& v) noexcept { return Matrix4(Uninitialized()).setScaling(v); }
+	static Matrix4 makeRotation(Axis axis, T angle) noexcept { return Matrix4(Uninitialized()).setRotation(axis, angle); }
+	static Matrix4 makeRotation(const Vector3<T>& axis, T angle) noexcept { return Matrix4(Uninitialized()).setRotation(axis, angle); }
+	static Matrix4 makeRotation(const YawPitchRoll<T>& r) noexcept { return Matrix4(Uninitialized()).setRotation(r); }
+	static Matrix4 makeRotation(const Euler<T>& e) noexcept { return Matrix4(Uninitialized()).setRotation(e); }
+	static Matrix4 makeRotation(const Quaternion<T>& q) noexcept { return Matrix4(Uninitialized()).setRotation(q); }
+	static Matrix4 makeRotationTranslation(Axis axis, T angle, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(axis, angle, t); }
+	static Matrix4 makeRotationTranslation(const Vector3<T>& axis, T angle, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(axis, angle, t); }
+	static Matrix4 makeRotationTranslation(const YawPitchRoll<T>& r, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(r, t); }
+	static Matrix4 makeRotationTranslation(const Euler<T>& e, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(e, t); }
+	static Matrix4 makeRotationTranslation(const Quaternion<T>& q, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(q, t); }
+	static Matrix4 makeScalingRotation(const Vector3<T>& s, Axis axis, T angle) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, axis, angle); }
+	static Matrix4 makeScalingRotation(const Vector3<T>& s, const Vector3<T>& axis, T angle) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, axis, angle); }
+	static Matrix4 makeScalingRotation(const Vector3<T>& s, const YawPitchRoll<T>& r) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, r); }
+	static Matrix4 makeScalingRotation(const Vector3<T>& s, const Euler<T>& e) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, e); }
+	static Matrix4 makeScalingRotation(const Vector3<T>& s, const Quaternion<T>& q) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, q); }
+	static Matrix4 makeScalingTranslation(const Vector3<T>& s, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setScalingTranslation(s, t); }
+	static Matrix4 makeScalingRotationTranslation(const Vector3<T>& s, Axis axis, T angle, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, axis, angle, t); }
+	static Matrix4 makeScalingRotationTranslation(const Vector3<T>& s, const Vector3<T>& axis, T angle, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, axis, angle, t); }
+	static Matrix4 makeScalingRotationTranslation(const Vector3<T>& s, const YawPitchRoll<T>& r, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, r, t); }
+	static Matrix4 makeScalingRotationTranslation(const Vector3<T>& s, const Euler<T>& e, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, e, t); }
+	static Matrix4 makeScalingRotationTranslation(const Vector3<T>& s, const Quaternion<T>& q, const Vector3<T>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, q, t); }
+	static Matrix4 makeShearing(T xy, T xz, T yx, T yz, T zx, T zy) noexcept { return Matrix4(Uninitialized()).setShearing(xy, xz, yx, yz, zx, zy); }
+	static Matrix4 makeReflection(const Plane<T>& plane) noexcept { return Matrix4(Uninitialized()).setReflection(plane); }
 
 	bool isZero() const noexcept;
 	bool isApproxZero() const noexcept;
 	bool isIdentity() const noexcept;
 	bool isApproxIdentity() const noexcept;
-	bool isApproxEqual(const Matrix4& m) const noexcept;
-	bool isApproxEqual(const Matrix4& m, T tolerance) const noexcept;
+	bool approxEquals(const Matrix4& m) const noexcept;
+	bool approxEquals(const Matrix4& m, T tolerance) const noexcept;
 	bool isFinite() const noexcept;
 	const Vector4<T>& getRow(int i) const noexcept { return reinterpret_cast<const Vector4<T>*>(&m00)[i]; }
 	Vector4<T> getColumn(int i) const noexcept { return Vector4<T>((&m00)[i], (&m10)[i], (&m20)[i], (&m30)[i]); }
 	T getTrace() const noexcept { return (m00 + m11 + m22 + m33); }
 	T getDeterminant() const noexcept;
 	bool isSingular() const noexcept { return (getDeterminant() == T(0)); }
-	Matrix4& setZero/*zero*/() noexcept;
-	Matrix4& setIdentity/*makeIdentity*/() noexcept;
+	Matrix4& setZero() noexcept;
+	Matrix4& setIdentity() noexcept;
 	Matrix4& set(const Vector4<T>& row0, const Vector4<T>& row1, const Vector4<T>& row2, const Vector4<T>& row3) noexcept;
 	Matrix4& set(T m00, T m01, T m02, T m03, T m10, T m11, T m12, T m13, T m20, T m21, T m22, T m23, T m30, T m31, T m32, T m33) noexcept;
-	Matrix4& setTranslation/*makeTranslation*/(const Vector3<T>& v) noexcept;
-	Matrix4& setScaling/*makeScaling*/(const Vector3<T>& v) noexcept;
+	Matrix4& setTranslation(const Vector3<T>& v) noexcept;
+	Matrix4& setScaling(const Vector3<T>& v) noexcept;
 	Matrix4& setRotation(Axis axis, T angle) noexcept;
 	Matrix4& setRotation(const Vector3<T>& axis, T angle) noexcept;
 	Matrix4& setRotation(const YawPitchRoll<T>& r) noexcept;
@@ -150,26 +147,17 @@ struct Matrix4
 	Matrix4& setScalingRotationTranslation(const Vector3<T>& s, const Quaternion<T>& q, const Vector3<T>& t) noexcept;
 	Matrix4& setShearing(T xy, T xz, T yx, T yz, T zx, T zy) noexcept;
 	Matrix4& setReflection(const Plane<T>& plane) noexcept;
-	Matrix4& setTranspose/*transposeOf*/(const Matrix4& m) noexcept;
-	Matrix4& setInverse/*inverseOf*/(const Matrix4& m) noexcept;
-	Matrix4& setInverseTranspose/*inverseTransposeOf*/(const Matrix4& m) noexcept { return setInverse(m).transpose(); }
+	Matrix4& setTranspose(const Matrix4& m) noexcept;
+	Matrix4& setInverse(const Matrix4& m) noexcept;
+	Matrix4& setInverseTranspose(const Matrix4& m) noexcept { return setInverse(m).transpose(); }
 	Matrix4& preConcatenate(const Matrix4& m) noexcept;
 	Matrix4& concatenate(const Matrix4& m) noexcept { return operator*=(m); }
 	Matrix4& translate(const Vector3<T>& v) noexcept;
 	Matrix4& preScale(const Vector3<T>& v) noexcept;
 	Matrix4& scale(const Vector3<T>& v) noexcept;
-	//Matrix4& rotate(Axis axis, T angle) noexcept { concatenate(Matrix4(Uninitialized()).setRotation(axis, angle)); return *this; }
-	//Matrix4& rotate(const Vector3<T>& axis, float angle) noexcept { concatenate(Matrix4(Uninitialized()).setRotation(axis, angle)); return *this; }
-	//Matrix4& rotate(const YawPitchRoll<T>& r) noexcept { concatenate(Matrix4(Uninitialized()).setRotation(r)); return *this; }
-	//Matrix4& rotate(const Euler<T>& e) noexcept { concatenate(Matrix4(Uninitialized()).setRotation(e)); return *this; }
-	//Matrix4& rotate(const Quaternion<T>& q) noexcept { concatenate(Matrix4(Uninitialized()).setRotation(q)); return *this; }
-	//Matrix4& shear(T xy, T xz, T yx, T yz, T zx, T zy) noexcept { concatenate(Matrix4(Uninitialized()).setShearing(xy, xz, yx, yz, zx, zy)); return *this; }
 	Matrix4& negate() noexcept;
 	Matrix4& transpose() noexcept;
 	Matrix4& invert() noexcept { setInverse(*this); }
-
-	//static const Matrix4& getZero() noexcept { return ZERO; }
-	//static const Matrix4& getIdentity() noexcept { return IDENTITY; }
 
 	static const Matrix4 ZERO;
 	static const Matrix4 IDENTITY;
@@ -204,8 +192,6 @@ struct Matrix4<float>
 	using ComponentType = float;
 	using ConstArg = const Matrix4;
 	using ConstResult = const Matrix4;
-
-	//static constexpr int NUM_COMPONENTS = 16;
 
 	/*constexpr*/ Matrix4() noexcept;
 	explicit Matrix4(Uninitialized) noexcept {}
@@ -243,52 +229,51 @@ struct Matrix4<float>
 	template<typename A> void load(A& ar);
 	template<typename A> void save(A& ar) const { ar(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33); }
 
-	// #TODO rename get...() to make...()
-	static Matrix4 getTranslation(const Vector3<float>& v) noexcept { return Matrix4(Uninitialized()).setTranslation(v); }
-	static Matrix4 getScaling(const Vector3<float>& v) noexcept { return Matrix4(Uninitialized()).setScaling(v); }
-	static Matrix4 getRotation(Axis axis, float angle) noexcept { return Matrix4(Uninitialized()).setRotation(axis, angle); }
-	static Matrix4 getRotation(const Vector3<float>& axis, float angle) noexcept { return Matrix4(Uninitialized()).setRotation(axis, angle); }
-	static Matrix4 getRotation(const YawPitchRoll<float>& r) noexcept { return Matrix4(Uninitialized()).setRotation(r); }
-	static Matrix4 getRotation(const Euler<float>& e) noexcept { return Matrix4(Uninitialized()).setRotation(e); }
-	static Matrix4 getRotation(const Quaternion<float>& q) noexcept { return Matrix4(Uninitialized()).setRotation(q); }
-	static Matrix4 getRotationTranslation(Axis axis, float angle, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(axis, angle, t); }
-	static Matrix4 getRotationTranslation(const Vector3<float>& axis, float angle, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(axis, angle, t); }
-	static Matrix4 getRotationTranslation(const YawPitchRoll<float>& r, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(r, t); }
-	static Matrix4 getRotationTranslation(const Euler<float>& e, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(e, t); }
-	static Matrix4 getRotationTranslation(const Quaternion<float>& q, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(q, t); }
-	static Matrix4 getScalingRotation(const Vector3<float>& s, Axis axis, float angle) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, axis, angle); }
-	static Matrix4 getScalingRotation(const Vector3<float>& s, const Vector3<float>& axis, float angle) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, axis, angle); }
-	static Matrix4 getScalingRotation(const Vector3<float>& s, const YawPitchRoll<float>& r) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, r); }
-	static Matrix4 getScalingRotation(const Vector3<float>& s, const Euler<float>& e) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, e); }
-	static Matrix4 getScalingRotation(const Vector3<float>& s, const Quaternion<float>& q) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, q); }
-	static Matrix4 getScalingTranslation(const Vector3<float>& s, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setScalingTranslation(s, t); }
-	static Matrix4 getScalingRotationTranslation(const Vector3<float>& s, Axis axis, float angle, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, axis, angle, t); }
-	static Matrix4 getScalingRotationTranslation(const Vector3<float>& s, const Vector3<float>& axis, float angle, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, axis, angle, t); }
-	static Matrix4 getScalingRotationTranslation(const Vector3<float>& s, const YawPitchRoll<float>& r, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, r, t); }
-	static Matrix4 getScalingRotationTranslation(const Vector3<float>& s, const Euler<float>& e, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, e, t); }
-	static Matrix4 getScalingRotationTranslation(const Vector3<float>& s, const Quaternion<float>& q, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, q, t); }
-	static Matrix4 getShearing(float xy, float xz, float yx, float yz, float zx, float zy) noexcept { return Matrix4(Uninitialized()).setShearing(xy, xz, yx, yz, zx, zy); }
-	static Matrix4 getReflection(const Plane<float>& plane) noexcept { return Matrix4(Uninitialized()).setReflection(plane); }
+	static Matrix4 makeTranslation(const Vector3<float>& v) noexcept { return Matrix4(Uninitialized()).setTranslation(v); }
+	static Matrix4 makeScaling(const Vector3<float>& v) noexcept { return Matrix4(Uninitialized()).setScaling(v); }
+	static Matrix4 makeRotation(Axis axis, float angle) noexcept { return Matrix4(Uninitialized()).setRotation(axis, angle); }
+	static Matrix4 makeRotation(const Vector3<float>& axis, float angle) noexcept { return Matrix4(Uninitialized()).setRotation(axis, angle); }
+	static Matrix4 makeRotation(const YawPitchRoll<float>& r) noexcept { return Matrix4(Uninitialized()).setRotation(r); }
+	static Matrix4 makeRotation(const Euler<float>& e) noexcept { return Matrix4(Uninitialized()).setRotation(e); }
+	static Matrix4 makeRotation(const Quaternion<float>& q) noexcept { return Matrix4(Uninitialized()).setRotation(q); }
+	static Matrix4 makeRotationTranslation(Axis axis, float angle, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(axis, angle, t); }
+	static Matrix4 makeRotationTranslation(const Vector3<float>& axis, float angle, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(axis, angle, t); }
+	static Matrix4 makeRotationTranslation(const YawPitchRoll<float>& r, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(r, t); }
+	static Matrix4 makeRotationTranslation(const Euler<float>& e, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(e, t); }
+	static Matrix4 makeRotationTranslation(const Quaternion<float>& q, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setRotationTranslation(q, t); }
+	static Matrix4 makeScalingRotation(const Vector3<float>& s, Axis axis, float angle) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, axis, angle); }
+	static Matrix4 makeScalingRotation(const Vector3<float>& s, const Vector3<float>& axis, float angle) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, axis, angle); }
+	static Matrix4 makeScalingRotation(const Vector3<float>& s, const YawPitchRoll<float>& r) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, r); }
+	static Matrix4 makeScalingRotation(const Vector3<float>& s, const Euler<float>& e) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, e); }
+	static Matrix4 makeScalingRotation(const Vector3<float>& s, const Quaternion<float>& q) noexcept { return Matrix4(Uninitialized()).setScalingRotation(s, q); }
+	static Matrix4 makeScalingTranslation(const Vector3<float>& s, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setScalingTranslation(s, t); }
+	static Matrix4 makeScalingRotationTranslation(const Vector3<float>& s, Axis axis, float angle, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, axis, angle, t); }
+	static Matrix4 makeScalingRotationTranslation(const Vector3<float>& s, const Vector3<float>& axis, float angle, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, axis, angle, t); }
+	static Matrix4 makeScalingRotationTranslation(const Vector3<float>& s, const YawPitchRoll<float>& r, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, r, t); }
+	static Matrix4 makeScalingRotationTranslation(const Vector3<float>& s, const Euler<float>& e, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, e, t); }
+	static Matrix4 makeScalingRotationTranslation(const Vector3<float>& s, const Quaternion<float>& q, const Vector3<float>& t) noexcept { return Matrix4(Uninitialized()).setScalingRotationTranslation(s, q, t); }
+	static Matrix4 makeShearing(float xy, float xz, float yx, float yz, float zx, float zy) noexcept { return Matrix4(Uninitialized()).setShearing(xy, xz, yx, yz, zx, zy); }
+	static Matrix4 makeReflection(const Plane<float>& plane) noexcept { return Matrix4(Uninitialized()).setReflection(plane); }
 
 	bool isZero() const noexcept;
 	bool isApproxZero() const noexcept;
 	bool isIdentity() const noexcept;
 	bool isApproxIdentity() const noexcept;
-	bool isApproxEqual(const Matrix4& m) const noexcept;
-	bool isApproxEqual(const Matrix4& m, float tolerance) const noexcept;
+	bool approxEquals(const Matrix4& m) const noexcept;
+	bool approxEquals(const Matrix4& m, float tolerance) const noexcept;
 	bool isFinite() const noexcept;
 	const Vector4<float>& getRow(int i) const noexcept { return reinterpret_cast<const Vector4<float>&>((&row0)[i]); }
 	Vector4<float> getColumn(int i) const noexcept; // #TODO
 	float getTrace() const noexcept { return (m00 + m11 + m22 + m33); }
 	float getDeterminant() const noexcept;
 	bool isSingular() const noexcept { return (getDeterminant() == 0.f); }
-	Matrix4& setZero/*zero*/() noexcept;
-	Matrix4& setIdentity/*makeIdentity*/() noexcept;
+	Matrix4& setZero() noexcept;
+	Matrix4& setIdentity() noexcept;
 	Matrix4& set(const Vector4<float>& row0, const Vector4<float>& row1, const Vector4<float>& row2, const Vector4<float>& row3) noexcept;
 	Matrix4& set(simd::float4 row0, simd::float4 row1, simd::float4 row2, simd::float4 row3) noexcept;
 	Matrix4& set(float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13, float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33) noexcept;
-	Matrix4& setTranslation/*makeTranslation*/(const Vector3<float>& v) noexcept;
-	Matrix4& setScaling/*makeScaling*/(const Vector3<float>& v) noexcept;
+	Matrix4& setTranslation(const Vector3<float>& v) noexcept;
+	Matrix4& setScaling(const Vector3<float>& v) noexcept;
 	Matrix4& setRotation(Axis axis, float angle) noexcept;
 	Matrix4& setRotation(const Vector3<float>& axis, float angle) noexcept;
 	Matrix4& setRotation(const YawPitchRoll<float>& r) noexcept;
@@ -312,26 +297,17 @@ struct Matrix4<float>
 	Matrix4& setScalingRotationTranslation(const Vector3<float>& s, const Quaternion<float>& q, const Vector3<float>& t) noexcept;
 	Matrix4& setShearing(float xy, float xz, float yx, float yz, float zx, float zy) noexcept;
 	Matrix4& setReflection(const Plane<float>& plane) noexcept;
-	Matrix4& setTranspose/*transposeOf*/(const Matrix4& m) noexcept;
-	Matrix4& setInverse/*inverseOf*/(const Matrix4& m) noexcept;
-	Matrix4& setInverseTranspose/*inverseTransposeOf*/(const Matrix4& m) noexcept { return setInverse(m).transpose(); }
+	Matrix4& setTranspose(const Matrix4& m) noexcept;
+	Matrix4& setInverse(const Matrix4& m) noexcept;
+	Matrix4& setInverseTranspose(const Matrix4& m) noexcept { return setInverse(m).transpose(); }
 	Matrix4& preConcatenate(const Matrix4& m) noexcept;
 	Matrix4& concatenate(const Matrix4& m) noexcept { return operator*=(m); }
 	Matrix4& translate(const Vector3<float>& v) noexcept;
 	Matrix4& preScale(const Vector3<float>& v) noexcept;
 	Matrix4& scale(const Vector3<float>& v) noexcept;
-	//Matrix4& rotate(Axis axis, float angle) noexcept { concatenate(Matrix4(Uninitialized()).setRotation(axis, angle)); return *this; }
-	//Matrix4& rotate(const Vector3<float>& axis, float angle) noexcept { concatenate(Matrix4(Uninitialized()).setRotation(axis, angle)); return *this; }
-	//Matrix4& rotate(const YawPitchRoll<float>& r) noexcept { concatenate(Matrix4(Uninitialized()).setRotation(r)); return *this; }
-	//Matrix4& rotate(const Euler<float>& e) noexcept { concatenate(Matrix4(Uninitialized()).setRotation(e)); return *this; }
-	//Matrix4& rotate(const Quaternion<float>& q) noexcept { concatenate(Matrix4(Uninitialized()).setRotation(q)); return *this; }
-	//Matrix4& shear(float xy, float xz, float yx, float yz, float zx, float zy) noexcept { concatenate(Matrix4(Uninitialized()).setShearing(xy, xz, yx, yz, zx, zy)); return *this; }
 	Matrix4& negate() noexcept;
 	Matrix4& transpose() noexcept;
 	Matrix4& invert() noexcept { setInverse(*this); }
-
-	//static const Matrix4& getZero() noexcept { return ZERO; }
-	//static const Matrix4& getIdentity() noexcept { return IDENTITY; }
 
 	static const Matrix4 ZERO;
 	static const Matrix4 IDENTITY;
@@ -635,7 +611,7 @@ inline bool Matrix4<T>::isApproxIdentity() const
 }
 
 template<typename T>
-inline bool Matrix4<T>::isApproxEqual(const Matrix4<T>& m) const
+inline bool Matrix4<T>::approxEquals(const Matrix4<T>& m) const
 {
 	return (std::fabs(m.m00 - m00) < Constants<T>::TOLERANCE) &&
 		(std::fabs(m.m01 - m01) < Constants<T>::TOLERANCE) &&
@@ -656,7 +632,7 @@ inline bool Matrix4<T>::isApproxEqual(const Matrix4<T>& m) const
 }
 
 template<typename T>
-inline bool Matrix4<T>::isApproxEqual(const Matrix4<T>& m, T tolerance) const
+inline bool Matrix4<T>::approxEquals(const Matrix4<T>& m, T tolerance) const
 {
 	return (std::fabs(m.m00 - m00) < tolerance) &&
 		(std::fabs(m.m01 - m01) < tolerance) &&
@@ -1324,7 +1300,7 @@ inline bool Matrix4<float>::isApproxIdentity() const
 		simd::all4(simd::lessThan(simd::abs4(simd::sub4(row3, Vector4<float>::UNIT_W)), Vector4<float>::TOLERANCE));
 }
 
-inline bool Matrix4<float>::isApproxEqual(const Matrix4& m) const
+inline bool Matrix4<float>::approxEquals(const Matrix4& m) const
 {
 	return simd::all4(simd::lessThan(simd::abs4(simd::sub4(row0, m.row0)), Vector4<float>::TOLERANCE)) &&
 		simd::all4(simd::lessThan(simd::abs4(simd::sub4(row1, m.row1)), Vector4<float>::TOLERANCE)) &&
@@ -1332,7 +1308,7 @@ inline bool Matrix4<float>::isApproxEqual(const Matrix4& m) const
 		simd::all4(simd::lessThan(simd::abs4(simd::sub4(row3, m.row3)), Vector4<float>::TOLERANCE));
 }
 
-inline bool Matrix4<float>::isApproxEqual(const Matrix4& m, float tolerance) const
+inline bool Matrix4<float>::approxEquals(const Matrix4& m, float tolerance) const
 {
 	auto t = simd::set4(tolerance);
 	return simd::all4(simd::lessThan(simd::abs4(simd::sub4(row0, m.row0)), t)) &&

@@ -30,6 +30,7 @@ struct Ray2
 	using ConstResult = const Ray2&;
 
 	Ray2() = default;
+	explicit Ray2(Uninitialized) noexcept : origin(Uninitialized()), direction(Uninitialized()) {}
 	Ray2(const Vector2<T>& origin, const Vector2<T>& direction) noexcept : origin(origin), direction(direction) {}
 	explicit Ray2(const Line2<T>& line) noexcept : origin(line.origin), direction(line.direction) {}
 	//explicit Ray2(const Segment2<T>& segment) noexcept;
@@ -43,10 +44,10 @@ struct Ray2
 	const Line2<T>& asLine() const noexcept { return reinterpret_cast<const Line2<T>&>(*this); }
 
 	// Properties
-	bool isApproxEqual(const Ray2& ray) const noexcept;
-	bool isApproxEqual(const Ray2& ray, T tolerance) const noexcept;
+	bool approxEquals(const Ray2& ray) const noexcept;
+	bool approxEquals(const Ray2& ray, T tolerance) const noexcept;
 	//bool isFinite() const noexcept { return origin.isFinite() && direction.isFinite(); }
-	void set(const Vector2<T>& origin, const Vector2<T>& direction) noexcept { this->origin = origin; this->direction = direction; }
+	Ray2& set(const Vector2<T>& origin, const Vector2<T>& direction) noexcept { this->origin = origin; this->direction = direction; return *this; }
 	const Vector2<T>& getOrigin() const noexcept { return origin; }
 	void setOrigin(const Vector2<T>& origin) noexcept { this->origin = origin; }
 	const Vector2<T>& getDirection() const noexcept { return direction; }
@@ -62,17 +63,17 @@ struct Ray2
 
 	// Closest points
 	Vector2<T> getClosestPoint(const Vector2<T>& point) const;											// normalized ray
-	template<NormalizationType U> Vector2<T> getClosestPoint(const Vector2<T>& point) const;
-	T getDistance(const Vector2<T>& point) const { return distance(getClosestPoint(point), point); }	// normalized ray
-	template<NormalizationType U> T getDistance(const Vector2<T>& point) const { return distance(getClosestPoint<U>(point), point); }
+	template<Normalization U> Vector2<T> getClosestPoint(const Vector2<T>& point) const;
+	T getDistanceTo(const Vector2<T>& point) const { return distance(getClosestPoint(point), point); }	// normalized ray
+	template<Normalization U> T getDistanceTo(const Vector2<T>& point) const { return distance(getClosestPoint<U>(point), point); }
 
 	// Intersection
-	bool testIntersection(const Line2<T>& line) const noexcept { return findIntersection(line).has_value(); }
-	//bool testIntersection(const Ray2& ray) const noexcept { return findIntersection(ray).has_value(); }
+	bool intersects(const Line2<T>& line) const noexcept { return findIntersection(line).has_value(); }
+	//bool intersects(const Ray2& ray) const noexcept { return findIntersection(ray).has_value(); }
 	std::optional<T> findIntersection(const Line2<T>& line) const noexcept;
 	//std::optional<T> findIntersection(const Ray2& ray) const noexcept;
-	template<Intersection2Type<T> U> std::optional<U> findIntersection(const Line2<T>& line) const noexcept;
-	//template<Intersection2Type<T> U> std::optional<U> findIntersection(const Ray2& ray) const noexcept;
+	template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Line2<T>& line) const noexcept;
+	//template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Ray2& ray) const noexcept;
 
 	Vector2<T> origin;
 	Vector2<T> direction;
@@ -94,15 +95,15 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const R
 }
 
 template<typename T>
-inline bool Ray2<T>::isApproxEqual(const Ray2<T>& ray) const
+inline bool Ray2<T>::approxEquals(const Ray2<T>& ray) const
 {
-	return origin.isApproxEqual(ray.origin) && direction.isApproxEqual(ray.direction);
+	return origin.approxEquals(ray.origin) && direction.approxEquals(ray.direction);
 }
 
 template<typename T>
-inline bool Ray2<T>::isApproxEqual(const Ray2<T>& ray, T tolerance) const
+inline bool Ray2<T>::approxEquals(const Ray2<T>& ray, T tolerance) const
 {
-	return origin.isApproxEqual(ray.origin, tolerance) && direction.isApproxEqual(ray.direction, tolerance);
+	return origin.approxEquals(ray.origin, tolerance) && direction.approxEquals(ray.direction, tolerance);
 }
 
 template<typename T>
@@ -112,7 +113,7 @@ inline Vector2<T> Ray2<T>::getClosestPoint(const Vector2<T>& point) const
 }
 
 template<typename T>
-template<NormalizationType U>
+template<Normalization U>
 inline Vector2<T> Ray2<T>::getClosestPoint(const Vector2<T>& point) const
 {
 	if costexpr(std::is_same_v<U, Normalized>)
@@ -140,7 +141,7 @@ inline std::optional<T> Ray2<T>::findIntersection(const Line2<T>& line) const
 }
 
 template<typename T>
-template<Intersection2Type<T> U>
+template<ScalarOrVector2<T> U>
 inline std::optional<U> Ray2<T>::findIntersection(const Line2<T>& line) const
 {
 	std::optional<T> result = findIntersection(line);

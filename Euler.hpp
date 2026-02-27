@@ -18,7 +18,7 @@
 #include <cstddef>
 #include <cctype>
 #include <cmath>
-#include <Simd/Intrinsics.hpp>
+#include "Simd/Intrinsics.hpp"
 #include "Constants.hpp"
 #include "Vector3.hpp"
 #include "Matrix3.hpp"
@@ -82,11 +82,11 @@ struct Euler
 	Euler(const Quaternion<T>& q, EulerOrder order) noexcept;
 	Euler(const Matrix3<T>& m, EulerOrder order) noexcept;
 	explicit Euler(const std::tuple<T, T, T, EulerOrder>& t) noexcept : x(std::get<0>(t)), y(std::get<1>(t)), z(std::get<2>(t)), order(std::get<3>(t)) {}
-	template<ArithmeticType U> explicit Euler(const std::tuple<U, U, U, EulerOrder>& t) noexcept : x(T(std::get<0>(t))), y(T(std::get<1>(t))), z(T(std::get<2>(t))), order(std::get<3>(t)) {}
+	template<Arithmetic U> explicit Euler(const std::tuple<U, U, U, EulerOrder>& t) noexcept : x(T(std::get<0>(t))), y(T(std::get<1>(t))), z(T(std::get<2>(t))), order(std::get<3>(t)) {}
 	Euler(const T* e, EulerOrder order) noexcept : x(e[0]), y(e[1]), z(e[2]), order(order) {}
 
 	//explicit operator std::tuple<T, T, T, EulerOrder>() { return std::tuple<T, T, T, EulerOrder>(x, y, z, order); }
-	//template<ArithmeticType U> explicit operator std::tuple<U, U, U, EulerOrder>() { return std::tuple<U, U, U, EulerOrder>(U(x), U(y), U(z), order); }
+	//template<Arithmetic U> explicit operator std::tuple<U, U, U, EulerOrder>() { return std::tuple<U, U, U, EulerOrder>(U(x), U(y), U(z), order); }
 	explicit operator T*() noexcept { return &x; }
 	explicit operator const T*() const noexcept { return &x; }
 	T& operator[](int i) noexcept { return (&x)[i]; }
@@ -108,24 +108,15 @@ struct Euler
 
 	bool isZero() const noexcept { return (x == T()) && (y == T()) && (z == T()); }
 	bool isApproxZero() const noexcept;
-	bool isApproxEqual(const Euler& e) const noexcept;
-	bool isApproxEqual(const Euler& e, T tolerance) const noexcept;
+	bool approxEquals(const Euler& e) const noexcept;
+	bool approxEquals(const Euler& e, T tolerance) const noexcept;
 	bool isFinite() const noexcept { return std::isfinite(x) && std::isfinite(y) && std::isfinite(z); }
-	Euler& setZero/*zero*/() noexcept { x = T(); y = T(); z = T(); return *this; }
-	Euler& setZero/*zero*/(EulerOrder order) noexcept { x = T(); y = T(); z = T(); this->order = order; return *this; }
+	Euler& setZero() noexcept { x = T(); y = T(); z = T(); return *this; }
+	Euler& setZero(EulerOrder order) noexcept { x = T(); y = T(); z = T(); this->order = order; return *this; }
 	Euler& set(T x, T y, T z) noexcept { this->x = x; this->y = y; this->z = z; return *this; }
 	Euler& set(T x, T y, T z, EulerOrder order) noexcept { this->x = x; this->y = y; this->z = z; this->order = order; return *this; }
 	Euler& negate() noexcept { x = -x; y = -y; z = -z; return *this; }
 	//Euler& clamp(T low, T high);
-
-	//static const Euler& getZero() noexcept { return ZERO; }
-	////static const Euler& getZero(EulerOrder order) noexcept;
-	//static const Euler& getZeroXYZ() noexcept { return ZERO_XYZ; }
-	//static const Euler& getZeroXZY() noexcept { return ZERO_XZY; }
-	//static const Euler& getZeroYZX() noexcept { return ZERO_YZX; }
-	//static const Euler& getZeroYXZ() noexcept { return ZERO_YXZ; }
-	//static const Euler& getZeroZXY() noexcept { return ZERO_ZXY; }
-	//static const Euler& getZeroZYX() noexcept { return ZERO_ZYX; }
 
 	static const Euler ZERO;
 	static const Euler ZERO_XYZ;
@@ -391,14 +382,14 @@ inline bool Euler<T>::isApproxZero() const
 }
 
 template<typename T>
-inline bool Euler<T>::isApproxEqual(const Euler<T>& e) const
+inline bool Euler<T>::approxEquals(const Euler<T>& e) const
 { 
 	return (order == e.order) && (std::fabs(e.x - x) < Constants<T>::TOLERANCE) && 
         (std::fabs(e.y - y) < Constants<T>::TOLERANCE) && (std::fabs(e.z - z) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
-inline bool Euler<T>::isApproxEqual(const Euler<T>& e, T tolerance) const
+inline bool Euler<T>::approxEquals(const Euler<T>& e, T tolerance) const
 { 
 	return (order == e.order) && (std::fabs(e.x - x) < tolerance) && 
         (std::fabs(e.y - y) < tolerance) && (std::fabs(e.z - z) < tolerance);

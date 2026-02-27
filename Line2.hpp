@@ -21,7 +21,7 @@ namespace core::mathematics {
 namespace templates {
 
 template<typename T, typename U>
-concept Intersection2Type = (std::same_as<T, U> || std::same_as<T, Vector2<U>>); // #TODO Move to Concepts.hpp
+concept ScalarOrVector2 = (std::same_as<T, U> || std::same_as<T, Vector2<U>>); // #TODO Move to Concepts.hpp
 
 template<typename T>
 	requires std::floating_point<T>
@@ -36,6 +36,7 @@ struct Line2
 	using ConstResult = const Line2&;
 
 	Line2() = default;
+	explicit Line2(Uninitialized) noexcept : origin(Uninitialized()), direction(Uninitialized()) {}
 	Line2(const Vector2<T>& origin, const Vector2<T>& direction) noexcept : origin(origin), direction(direction) {}
 	Line2(const Vector2<T>& origin, T inclinationAngle) noexcept;
 	Line2(const Ray2<T>& ray) noexcept;
@@ -47,17 +48,16 @@ struct Line2
 
 	template<typename A> void serialize(A& ar) { ar(origin, direction); }
 
-	const Ray3<T>& asRay() const noexcept;
+	const Ray2<T>& asRay() const noexcept;
 
 	// Least-squares fit of a line
-	//static Line2 computeBestFitOf(const Vector2<T>* points, std::size_t nPoints) noexcept; // #TODO
-	//static Line2 computeBestFitOf(const std::vector<Vector2<T>>& points) noexcept;
+	//template<std::input_iterator I, std::sentinel_for<I> S> static Line2 computeBestFit(I first, S last); // #TODO
 
 	// Properties
-	bool isApproxEqual(const Line2& line) const noexcept;
-	bool isApproxEqual(const Line2& line, T tolerance) const noexcept;
+	bool approxEquals(const Line2& line) const noexcept;
+	bool approxEquals(const Line2& line, T tolerance) const noexcept;
 	//bool isFinite() const noexcept { return origin.isFinite() && direction.isFinite(); }
-	void set(const Vector2<T>& origin, const Vector2<T>& direction) noexcept { this->origin = origin; this->direction = direction; }
+	Line2& set(const Vector2<T>& origin, const Vector2<T>& direction) noexcept { this->origin = origin; this->direction = direction; return *this; }
 	const Vector2<T>& getOrigin() const noexcept { return origin; }
 	void setOrigin(const Vector2<T>& origin) noexcept { this->origin = origin; }
 	const Vector2<T>& getDirection() const noexcept { return direction; }
@@ -75,23 +75,23 @@ struct Line2
 
 	// Closest points
 	Vector2<T> getClosestPoint(const Vector2<T>& point) const noexcept;											// normalized line
-	template<NormalizationType U> Vector2<T> getClosestPoint(const Vector2<T>& point) const noexcept;
-	T getDistance(const Vector2<T>& point) const noexcept { return distance(getClosestPoint(point), point); }	// normalized line
-	template<NormalizationType U> T getDistance(const Vector2<T>& point) const noexcept { return distance(getClosestPoint<U>(point), point); }
-	T getSignedDistance(const Vector2<T>& point) const noexcept;												// normalized line
-	//template<NormalizationType U> T getSignedDistance(const Vector2<T>& point) const noexcept; // #TODO
-	T getDistance(const Line2& line) const noexcept { return std::fabs(getSignedDistance(line)); }				// normalized line
-	//template<NormalizationType U> T getDistance(const Line2& line) const noexcept; // #TODO
-	T getSignedDistance(const Line2& line) const noexcept;														// normalized line
-	//template<NormalizationType U> T getSignedDistance(const Line2& line) const noexcept; // #TODO
+	template<Normalization U> Vector2<T> getClosestPoint(const Vector2<T>& point) const noexcept;
+	T getDistanceTo(const Vector2<T>& point) const noexcept { return distance(getClosestPoint(point), point); }	// normalized line
+	template<Normalization U> T getDistanceTo(const Vector2<T>& point) const noexcept { return distance(getClosestPoint<U>(point), point); }
+	T getSignedDistanceTo(const Vector2<T>& point) const noexcept;												// normalized line
+	//template<Normalization U> T getSignedDistanceTo(const Vector2<T>& point) const noexcept; // #TODO
+	T getDistanceTo(const Line2& line) const noexcept { return std::fabs(getSignedDistance(line)); }			// normalized line
+	//template<Normalization U> T getDistanceTo(const Line2& line) const noexcept; // #TODO
+	T getSignedDistanceTo(const Line2& line) const noexcept;													// normalized line
+	//template<Normalization U> T getSignedDistanceTo(const Line2& line) const noexcept; // #TODO
 
 	// Intersection
-	bool testIntersection(const Line2& line) const noexcept;
-	bool testIntersection(const Segment2<T>& segment) const noexcept { return findIntersection(segment).has_value(); }
+	bool intersects(const Line2& line) const noexcept;
+	bool intersects(const Segment2<T>& segment) const noexcept { return findIntersection(segment).has_value(); }
 	std::optional<T> findIntersection(const Line2& line) const noexcept;
 	std::optional<T> findIntersection(const Segment2<T>& segment) const noexcept;
-	template<Intersection2Type<T> U> std::optional<U> findIntersection(const Line2& line) const noexcept;
-	template<Intersection2Type<T> U> std::optional<U> findIntersection(const Segment2<T>& segment) const noexcept;
+	template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Line2& line) const noexcept;
+	template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Segment2<T>& segment) const noexcept;
 
 	Vector2<T> origin;
 	Vector2<T> direction;
@@ -120,15 +120,15 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const L
 }
 
 template<typename T>
-inline bool Line2<T>::isApproxEqual(const Line2<T>& line) const
+inline bool Line2<T>::approxEquals(const Line2<T>& line) const
 { 
-	return origin.isApproxEqual(line.origin) && direction.isApproxEqual(line.direction); 
+	return origin.approxEquals(line.origin) && direction.approxEquals(line.direction); 
 }
 
 template<typename T>
-inline bool Line2<T>::isApproxEqual(const Line2<T>& line, T tolerance) const
+inline bool Line2<T>::approxEquals(const Line2<T>& line, T tolerance) const
 { 
-	return origin.isApproxEqual(line.origin, tolerance) && direction.isApproxEqual(line.direction, tolerance); 
+	return origin.approxEquals(line.origin, tolerance) && direction.approxEquals(line.direction, tolerance); 
 }
 
 template<typename T>
@@ -151,7 +151,7 @@ inline Vector2<T> Line2<T>::getClosestPoint(const Vector2<T>& point) const
 }
 
 template<typename T>
-template<NormalizationType U>
+template<Normalization U>
 inline Vector2<T> Line2<T>::getClosestPoint(const Vector2<T>& point) const
 {
 	if costexpr(std::is_same_v<U, Normalized>)
@@ -161,13 +161,13 @@ inline Vector2<T> Line2<T>::getClosestPoint(const Vector2<T>& point) const
 }
 
 template<typename T>
-inline T Line2<T>::getSignedDistance(const Vector2<T>& point) const
+inline T Line2<T>::getSignedDistanceTo(const Vector2<T>& point) const
 {
 	return cross(origin - point, direction);
 }
 
 template<typename T>
-inline T Line2<T>::getSignedDistance(const Line2& line) const
+inline T Line2<T>::getSignedDistanceTo(const Line2& line) const
 {
 	return (std::fabs(cross(direction, line.direction)) < Constants<T>::TOLERANCE) ?
 		cross((origin + dot(line.origin - origin, direction)*direction) - line.origin, direction) :
@@ -209,7 +209,7 @@ inline std::optional<T> Line2<T>::findIntersection(const Segment2<T>& segment) c
 }
 
 template<typename T>
-template<Intersection2Type<T> U>
+template<ScalarOrVector2<T> U>
 inline std::optional<U> Line2<T>::findIntersection(const Line2& line) const
 {
 	std::optional<T> result = findIntersection(line);
@@ -220,7 +220,7 @@ inline std::optional<U> Line2<T>::findIntersection(const Line2& line) const
 }
 
 template<typename T>
-template<Intersection2Type<T> U>
+template<ScalarOrVector2<T> U>
 inline std::optional<U> Line2<T>::findIntersection(const Segment2<T>& segment) const
 {
 	std::optional<T> result = findIntersection(segment);

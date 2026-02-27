@@ -15,7 +15,7 @@
 #include <tuple>
 #include <cstddef>
 #include <cmath>
-#include <Simd/Intrinsics.hpp>
+#include "Simd/Intrinsics.hpp"
 #include "Constants.hpp"
 #include "Vector3.hpp"
 #include "Matrix3.hpp"
@@ -43,11 +43,11 @@ struct YawPitchRoll
 	//explicit YawPitchRoll(const Vector3<T>& direction) noexcept; // -> fromForward
 	//YawPitchRoll(const Vector3<T>& direction, T roll) noexcept;
 	explicit YawPitchRoll(const std::tuple<T, T, T>& t) noexcept : yaw(std::get<0>(t)), pitch(std::get<1>(t)), roll(std::get<2>(t)) {}
-	template<ArithmeticType U> explicit YawPitchRoll(const std::tuple<U, U, U>& t) noexcept : yaw(T(std::get<0>(t))), pitch(T(std::get<1>(t))), roll(T(std::get<2>(t))) {}
+	template<Arithmetic U> explicit YawPitchRoll(const std::tuple<U, U, U>& t) noexcept : yaw(T(std::get<0>(t))), pitch(T(std::get<1>(t))), roll(T(std::get<2>(t))) {}
 	//YawPitchRoll(const T* r) noexcept : yaw(r[0]), pitch(r[1]), roll(r[2]) {}
 
 	//explicit operator std::tuple<T, T, T>() { return std::tuple<T, T, T>(yaw, pitch, roll); }
-	//template<ArithmeticType U> explicit operator std::tuple<U, U, U>() { return std::tuple<U, U, U>(U(yaw), U(pitch), U(roll)); }
+	//template<Arithmetic U> explicit operator std::tuple<U, U, U>() { return std::tuple<U, U, U>(U(yaw), U(pitch), U(roll)); }
 	//explicit operator T*() noexcept { return &yaw; }
 	//explicit operator const T*() const noexcept { return &yaw; }
 
@@ -70,15 +70,13 @@ struct YawPitchRoll
 
     bool isZero() const noexcept { return (yaw == T()) && (pitch == T()) && (roll == T()); }
 	bool isApproxZero() const noexcept;
-	bool isApproxEqual(const YawPitchRoll& r) const noexcept;
-	bool isApproxEqual(const YawPitchRoll& r, T tolerance) const noexcept;
+	bool approxEquals(const YawPitchRoll& r) const noexcept;
+	bool approxEquals(const YawPitchRoll& r, T tolerance) const noexcept;
 	bool isFinite() const noexcept { return std::isfinite(yaw) && std::isfinite(pitch) && std::isfinite(roll); }
-	YawPitchRoll& setZero/*zero*/() noexcept { yaw = T(); pitch = T(); roll = T(); return *this; }
+	YawPitchRoll& setZero() noexcept { yaw = T(); pitch = T(); roll = T(); return *this; }
 	YawPitchRoll& set(T yaw, T pitch, T roll) noexcept { this->yaw = yaw; this->pitch = pitch; this->roll = roll; return *this; }
 	YawPitchRoll& negate() noexcept { yaw = -yaw; pitch = -pitch; roll = -roll; return *this; }
 	//YawPitchRoll& clamp(T low, T high);
-
-	//static const YawPitchRoll& getZero() noexcept { return ZERO; }
 
 	static const YawPitchRoll ZERO;
 
@@ -218,14 +216,14 @@ inline bool YawPitchRoll<T>::isApproxZero() const
 }
 
 template<typename T>
-inline bool YawPitchRoll<T>::isApproxEqual(const YawPitchRoll<T>& r) const
+inline bool YawPitchRoll<T>::approxEquals(const YawPitchRoll<T>& r) const
 { 
 	return (std::fabs(r.yaw - yaw) < Constants<T>::TOLERANCE) && (std::fabs(r.pitch - pitch) < Constants<T>::TOLERANCE) &&
 		(std::fabs(r.roll - roll) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
-inline bool YawPitchRoll<T>::isApproxEqual(const YawPitchRoll<T>& r, T tolerance) const
+inline bool YawPitchRoll<T>::approxEquals(const YawPitchRoll<T>& r, T tolerance) const
 { 
 	return (std::fabs(r.yaw - yaw) < tolerance) && (std::fabs(r.pitch - pitch) < tolerance) &&
 		(std::fabs(r.roll - roll) < tolerance);

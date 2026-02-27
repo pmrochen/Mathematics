@@ -21,7 +21,7 @@ namespace core::mathematics {
 namespace templates {
 
 template<typename T, typename U>
-concept Intersection3Type = (std::same_as<T, U> || std::same_as<T, Vector3<U>>); // #TODO Move to Concepts.hpp
+concept ScalarOrVector3 = (std::same_as<T, U> || std::same_as<T, Vector3<U>>); // #TODO Move to Concepts.hpp
 
 template<typename T>
 	requires std::floating_point<T>
@@ -36,6 +36,7 @@ struct Line3
 	using ConstResult = const Line3&;
 
 	Line3() = default;
+	explicit Line3(Uninitialized) noexcept : origin(Uninitialized()), direction(Uninitialized()) {}
 	Line3(const Vector3<T>& origin, const Vector3<T>& direction) noexcept : origin(origin), direction(direction) {}
 	Line3(const Ray3<T>& ray) noexcept;
 	//explicit Line3(const Segment3<T>& segment) noexcept;
@@ -49,14 +50,13 @@ struct Line3
 	const Ray3<T>& asRay() const noexcept;
 
 	// Least-squares fit of a line
-	//static Line3 computeBestFitOf(const Vector3<T>* points, std::size_t nPoints) noexcept; // #TODO
-	//static Line3 computeBestFitOf(const std::vector<Vector3<T>>& points) noexcept;
+	//template<std::input_iterator I, std::sentinel_for<I> S> static Line3 computeBestFit(I first, S last); // #TODO
 
 	// Properties
-	bool isApproxEqual(const Line3& line) const noexcept;
-	bool isApproxEqual(const Line3& line, T tolerance) const noexcept;
+	bool approxEquals(const Line3& line) const noexcept;
+	bool approxEquals(const Line3& line, T tolerance) const noexcept;
 	//bool isFinite() const noexcept { return origin.isFinite() && direction.isFinite(); }
-	void set(const Vector3<T>& origin, const Vector3<T>& direction) noexcept { this->origin = origin; this->direction = direction; }
+	Line3& set(const Vector3<T>& origin, const Vector3<T>& direction) noexcept { this->origin = origin; this->direction = direction; return *this; }
 	const Vector3<T>& getOrigin() const noexcept { return origin; }
 	void setOrigin(const Vector3<T>& origin) noexcept { this->origin = origin; }
 	const Vector3<T>& getDirection() const noexcept { return direction; }
@@ -73,10 +73,10 @@ struct Line3
 
 	// Closest points
 	Vector3<T> getClosestPoint(const Vector3<T>& point) const noexcept;											// normalized line
-	template<NormalizationType U> Vector3<T> getClosestPoint(const Vector3<T>& point) const noexcept;
-	T getDistance(const Vector3<T>& point) const noexcept { return distance(getClosestPoint(point), point); }	// normalized line
-	template<NormalizationType U> T getDistance(const Vector3<T>& point) const noexcept { return distance(getClosestPoint<U>(point), point); }
-	//T getDistance(const Line3& line) const noexcept;
+	template<Normalization U> Vector3<T> getClosestPoint(const Vector3<T>& point) const noexcept;
+	T getDistanceTo(const Vector3<T>& point) const noexcept { return distance(getClosestPoint(point), point); }	// normalized line
+	template<Normalization U> T getDistanceTo(const Vector3<T>& point) const noexcept { return distance(getClosestPoint<U>(point), point); }
+	//T getDistanceTo(const Line3& line) const noexcept;
 
 	Vector3<T> origin;
 	Vector3<T> direction;
@@ -98,15 +98,15 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const L
 }
 
 template<typename T>
-inline bool Line3<T>::isApproxEqual(const Line3<T>& line) const
+inline bool Line3<T>::approxEquals(const Line3<T>& line) const
 {
-	return origin.isApproxEqual(line.origin) && direction.isApproxEqual(line.direction);
+	return origin.approxEquals(line.origin) && direction.approxEquals(line.direction);
 }
 
 template<typename T>
-inline bool Line3<T>::isApproxEqual(const Line3<T>& line, T tolerance) const
+inline bool Line3<T>::approxEquals(const Line3<T>& line, T tolerance) const
 {
-	return origin.isApproxEqual(line.origin, tolerance) && direction.isApproxEqual(line.direction, tolerance);
+	return origin.approxEquals(line.origin, tolerance) && direction.approxEquals(line.direction, tolerance);
 }
 
 template<typename T>
@@ -130,7 +130,7 @@ inline Vector3<T> Line3<T>::getClosestPoint(const Vector3<T>& point) const
 }
 
 template<typename T>
-template<NormalizationType U>
+template<Normalization U>
 inline Vector3<T> Line3<T>::getClosestPoint(const Vector3<T>& point) const
 {
 	if costexpr(std::is_same_v<U, Normalized>)

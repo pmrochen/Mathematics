@@ -15,7 +15,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
-#include <Simd/Intrinsics.hpp>
+#include "Simd/Intrinsics.hpp"
 #include "Constants.hpp"
 #include "Vector3.hpp"
 #include "Matrix3.hpp"
@@ -46,11 +46,11 @@ struct HalfSpace
 	HalfSpace(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2) noexcept;
 	HalfSpace(const Plane<T>& p) noexcept;
 	explicit HalfSpace(const std::tuple<T, T, T, T>& t) noexcept : a(std::get<0>(t)), b(std::get<1>(t)), c(std::get<2>(t)), d(std::get<3>(t)) {}
-	template<ArithmeticType U> explicit HalfSpace(const std::tuple<U, U, U, U>& t) noexcept : a(T(std::get<0>(t))), b(T(std::get<1>(t))), c(T(std::get<2>(t))), d(T(std::get<3>(t))) {}
+	template<Arithmetic U> explicit HalfSpace(const std::tuple<U, U, U, U>& t) noexcept : a(T(std::get<0>(t))), b(T(std::get<1>(t))), c(T(std::get<2>(t))), d(T(std::get<3>(t))) {}
 	//explicit HalfSpace(const T* h) noexcept : a(h[0]), b(h[1]), c(h[2]), d(h[3]) {}
 
 	//explicit operator std::tuple<T, T, T, T>() noexcept { return std::tuple<T, T, T, T>(a, b, c, d); }
-	//template<ArithmeticType U> explicit operator std::tuple<U, U, U, U>() noexcept { return std::tuple<U, U, U, U>(U(a), U(b), U(c), U(d)); }
+	//template<Arithmetic U> explicit operator std::tuple<U, U, U, U>() noexcept { return std::tuple<U, U, U, U>(U(a), U(b), U(c), U(d)); }
 	//explicit operator T*() noexcept { return &a; }
 	//explicit operator const T*() const noexcept { return &a; }
 	//T& operator[](int i) noexcept { return (&a)[i]; }
@@ -69,8 +69,8 @@ struct HalfSpace
 
 	// Properties
 	bool isEmpty() const noexcept { return (a == T()) && (b == T()) && (c == T()) && (d == T()); }
-	bool isApproxEqual(const HalfSpace& h) const noexcept;
-	bool isApproxEqual(const HalfSpace& h, T tolerance) const noexcept;
+	bool approxEquals(const HalfSpace& h) const noexcept;
+	bool approxEquals(const HalfSpace& h, T tolerance) const noexcept;
 	bool isFinite() const noexcept { return std::isfinite(a) && std::isfinite(b) && std::isfinite(c) && std::isfinite(d); }
 	const Vector3<T>& getNormal() const noexcept { return reinterpret_cast<const Vector3<T>&>(*this); }
 	void setNormal(const Vector3<T>& normal) noexcept { a = normal.x; b = normal.y; c = normal.z; }
@@ -88,17 +88,15 @@ struct HalfSpace
 	HalfSpace& normalize() noexcept;
 
 	// Distances
-	T getDistance(const Vector3<T>& point) const { return std::max(dot(getNormal(), point) + d, 0.f); }		// normalized half-space
-	template<NormalizationType U> T getDistance(const Vector3<T>& point) const;
-	T getSignedDistance(const Vector3<T>& point) const noexcept { return (dot(getNormal(), point) + d); }	// normalized half-space
-	template<NormalizationType U> T getSignedDistance(const Vector3<T>& point) const noexcept;
+	T getDistanceTo(const Vector3<T>& point) const { return std::max(dot(getNormal(), point) + d, 0.f); }	// normalized half-space
+	template<Normalization U> T getDistanceTo(const Vector3<T>& point) const;
+	T getSignedDistanceTo(const Vector3<T>& point) const noexcept { return (dot(getNormal(), point) + d); }	// normalized half-space
+	template<Normalization U> T getSignedDistanceTo(const Vector3<T>& point) const noexcept;
 
-	// Intersection
+	// Containment and intersection
 	bool contains(const Vector3<T>& point) const noexcept { return (dot(getNormal(), point) <= -d); }
-	bool testIntersection(const Segment3<T>& segment) const noexcept;
-	bool testIntersection(const Triangle3<T>& triangle) const noexcept;
-
-	//static const HalfSpace& getEmpty() noexcept { return EMPTY; }
+	bool intersects(const Segment3<T>& segment) const noexcept;
+	bool intersects(const Triangle3<T>& triangle) const noexcept;
 
 	static const HalfSpace EMPTY;
 
@@ -127,7 +125,7 @@ struct HalfSpace<float>
 	HalfSpace(const Vector3<float>& p0, const Vector3<float>& p1, const Vector3<float>& p2) noexcept;
 	HalfSpace(const Plane<float>& p) noexcept;
 	explicit HalfSpace(const std::tuple<float, float, float, float>& t) noexcept : abcd(simd::set4(std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t))) {}
-	template<ArithmeticType U> explicit HalfSpace(const std::tuple<U, U, U, U>& t) noexcept : abcd(simd::set4((float)std::get<0>(t), (float)std::get<1>(t), (float)std::get<2>(t), (float)std::get<3>(t))) {}
+	template<Arithmetic U> explicit HalfSpace(const std::tuple<U, U, U, U>& t) noexcept : abcd(simd::set4((float)std::get<0>(t), (float)std::get<1>(t), (float)std::get<2>(t), (float)std::get<3>(t))) {}
 	//explicit HalfSpace(const float* h) noexcept : abcd(simd::load4(h)) {}
 	explicit HalfSpace(simd::float4 h) noexcept : abcd(h) {}
 	HalfSpace(const HalfSpace& h) noexcept : abcd(h.abcd) {}
@@ -135,7 +133,7 @@ struct HalfSpace<float>
 
 	operator simd::float4() const noexcept { return abcd; }
 	//explicit operator std::tuple<float, float, float, float>() noexcept { return std::tuple<float, float, float, float>(a, b, c, d); }
-	//template<ArithmeticType U> explicit operator std::tuple<U, U, U, U>() noexcept { return std::tuple<U, U, U, U>(U(a), U(b), U(c), U(d)); }
+	//template<Arithmetic U> explicit operator std::tuple<U, U, U, U>() noexcept { return std::tuple<U, U, U, U>(U(a), U(b), U(c), U(d)); }
 	//explicit operator float* () noexcept { return &a; }
 	//explicit operator const float* () const noexcept { return &a; }
 	//float& operator[](int i) noexcept { return (&a)[i]; }
@@ -158,8 +156,8 @@ struct HalfSpace<float>
 
 	// Properties
 	bool isEmpty() const noexcept { return simd::all4(simd::equal(abcd, simd::zero<simd::float4>())); }
-	bool isApproxEqual(const HalfSpace& h) const noexcept { simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, h)), simd::set4(Constants<float>::TOLERANCE))); }
-	bool isApproxEqual(const HalfSpace& h, float tolerance) const noexcept { simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, h)), simd::set4(tolerance))); }
+	bool approxEquals(const HalfSpace& h) const noexcept { simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, h)), simd::set4(Constants<float>::TOLERANCE))); }
+	bool approxEquals(const HalfSpace& h, float tolerance) const noexcept { simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, h)), simd::set4(tolerance))); }
 	bool isFinite() const noexcept { return simd::all4(simd::isFinite(abcd)); }
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	const Vector3<float> getNormal() const noexcept { return Vector3<float>(simd::xyzz(abcd)); }
@@ -181,17 +179,15 @@ struct HalfSpace<float>
 	HalfSpace& normalize() noexcept;
 
 	// Distances
-	float getDistance(const Vector3<float>& point) const { return std::max(dot(getNormal(), point) + d, 0.f); }		// normalized half-space
-	template<NormalizationType U> float getDistance(const Vector3<float>& point) const;
-	float getSignedDistance(const Vector3<float>& point) const noexcept { return (dot(getNormal(), point) + d); }	// normalized half-space
-	template<NormalizationType U> float getSignedDistance(const Vector3<float>& point) const noexcept;
+	float getDistanceTo(const Vector3<float>& point) const { return std::max(dot(getNormal(), point) + d, 0.f); }	// normalized half-space
+	template<Normalization U> float getDistanceTo(const Vector3<float>& point) const;
+	float getSignedDistanceTo(const Vector3<float>& point) const noexcept { return (dot(getNormal(), point) + d); }	// normalized half-space
+	template<Normalization U> float getSignedDistanceTo(const Vector3<float>& point) const noexcept;
 
-	// Intersection
+	// Containment and intersection
 	bool contains(const Vector3<float>& point) const noexcept { return (dot(getNormal(), point) <= -d); }
-	bool testIntersection(const Segment3<float>& segment) const noexcept;
-	bool testIntersection(const Triangle3<float>& triangle) const noexcept;
-
-	//static const HalfSpace& getEmpty() noexcept { return EMPTY; }
+	bool intersects(const Segment3<float>& segment) const noexcept;
+	bool intersects(const Triangle3<float>& triangle) const noexcept;
 
 	static const HalfSpace EMPTY;
 
@@ -260,14 +256,14 @@ inline const T& HalfSpace<T>::get() const
 }
 
 template<typename T>
-inline bool HalfSpace<T>::isApproxEqual(const HalfSpace<T>& h) const
+inline bool HalfSpace<T>::approxEquals(const HalfSpace<T>& h) const
 { 
 	return (std::fabs(h.a - a) < Constants<T>::TOLERANCE) && (std::fabs(h.b - b) < Constants<T>::TOLERANCE) && 
 		(std::fabs(h.c - c) < Constants<T>::TOLERANCE) && (std::fabs(h.d - d) < Constants<T>::TOLERANCE); 
 }
 
 template<typename T>
-inline bool HalfSpace<T>::isApproxEqual(const HalfSpace<T>& h, T tolerance) const
+inline bool HalfSpace<T>::approxEquals(const HalfSpace<T>& h, T tolerance) const
 {
 	return (std::fabs(h.a - a) < tolerance) && (std::fabs(h.b - b) < tolerance) && 
 		(std::fabs(h.c - c) < tolerance) && (std::fabs(h.d - d) < tolerance); 
@@ -344,8 +340,8 @@ inline HalfSpace<T>& HalfSpace<T>::normalize()
 }
 
 template<typename T>
-template<NormalizationType U>
-inline T HalfSpace<T>::getDistance<(const Vector3<T>& point) const
+template<Normalization U>
+inline T HalfSpace<T>::getDistanceTo(const Vector3<T>& point) const
 {
 	if costexpr(std::is_same_v<U, Normalized>)
 		return std::max(dot(getNormal(), point) + d, T(0));
@@ -354,8 +350,8 @@ inline T HalfSpace<T>::getDistance<(const Vector3<T>& point) const
 }
 
 template<typename T>
-template<NormalizationType U> 
-inline T HalfSpace<T>::getSignedDistance(const Vector3<T>& point) const
+template<Normalization U> 
+inline T HalfSpace<T>::getSignedDistanceTo(const Vector3<T>& point) const
 {
 	if costexpr(std::is_same_v<U, Normalized>)
 		return dot(getNormal(), point) + d;
@@ -364,13 +360,13 @@ inline T HalfSpace<T>::getSignedDistance(const Vector3<T>& point) const
 }
 
 template<typename T>
-inline bool HalfSpace<T>::testIntersection(const Segment3<T>& segment) const
+inline bool HalfSpace<T>::intersects(const Segment3<T>& segment) const
 {
 	return contains(segment.start) || contains(segment.end);
 }
 
 template<typename T>
-inline bool HalfSpace<T>::testIntersection(const Triangle3<T>& triangle) const
+inline bool HalfSpace<T>::intersects(const Triangle3<T>& triangle) const
 {
 	return contains(triangle.vertices[0]) || contains(triangle.vertices[1]) || contains(triangle.vertices[2]);
 }
@@ -484,8 +480,8 @@ inline HalfSpace<float>& HalfSpace<float>::normalize()
 	return *this;
 }
 
-template<NormalizationType U>
-inline float HalfSpace<float>::getDistance<(const Vector3<float>& point) const
+template<Normalization U>
+inline float HalfSpace<float>::getDistanceTo(const Vector3<float>& point) const
 {
 	if costexpr(std::is_same_v<U, Normalized>)
 		return std::max(dot(getNormal(), point) + d, T(0));
@@ -493,8 +489,8 @@ inline float HalfSpace<float>::getDistance<(const Vector3<float>& point) const
 		return std::max((dot(getNormal(), point) + d)/getNormal().getMagnitude(), T(0));
 }
 
-template<NormalizationType U>
-inline float HalfSpace<float>::getSignedDistance(const Vector3<float>& point) const
+template<Normalization U>
+inline float HalfSpace<float>::getSignedDistanceTo(const Vector3<float>& point) const
 {
 	if costexpr(std::is_same_v<U, Normalized>)
 		return dot(getNormal(), point) + d;
@@ -502,12 +498,12 @@ inline float HalfSpace<float>::getSignedDistance(const Vector3<float>& point) co
 		return (dot(getNormal(), point) + d)/getNormal().getMagnitude(), T(0);
 }
 
-inline bool HalfSpace<float>::testIntersection(const Segment3<float>& segment) const
+inline bool HalfSpace<float>::intersects(const Segment3<float>& segment) const
 {
 	return contains(segment.start) || contains(segment.end);
 }
 
-inline bool HalfSpace<float>::testIntersection(const Triangle3<float>& triangle) const
+inline bool HalfSpace<float>::intersects(const Triangle3<float>& triangle) const
 {
 	return contains(triangle.vertices[0]) || contains(triangle.vertices[1]) || contains(triangle.vertices[2]);
 }

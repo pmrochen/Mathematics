@@ -32,6 +32,7 @@ struct Segment2
 	using ConstResult = const Segment2&;
 
 	Segment2() = default;
+	explicit Segment2(Uninitialized) noexcept : start(Uninitialized()), end(Uninitialized()) {}
 	Segment2(const Vector2<T>& start, const Vector2<T>& end) noexcept : start(start), end(end) {}
 	explicit Segment2(const std::pair<Vector3<T>, Vector3<T>>& t) noexcept : start(t.first), end(t.second) {}
 	explicit Segment2(const std::tuple<Vector3<T>, Vector3<T>>& t) noexcept : start(std::get<0>(t)), end(std::get<1>(t)) {}
@@ -45,10 +46,10 @@ struct Segment2
 	template<typename A> void serialize(A& ar) { ar(start, end); }
 
 	// Properties
-	bool isApproxEqual(const Segment2& segment) const noexcept;
-	bool isApproxEqual(const Segment2& segment, T tolerance) const noexcept;
+	bool approxEquals(const Segment2& segment) const noexcept;
+	bool approxEquals(const Segment2& segment, T tolerance) const noexcept;
 	bool isFinite() const noexcept { return start.isFinite() && end.isFinite(); }
-	void set(const Vector2<T>& start, const Vector2<T>& end) noexcept { this->start = start; this->end = end; }
+	Segment2& set(const Vector2<T>& start, const Vector2<T>& end) noexcept { this->start = start; this->end = end; return *this; }
 	const Vector2<T>& getStart() const noexcept { return start; }
 	void setStart(const Vector2<T>& start) noexcept { this->start = start; }
 	const Vector2<T>& getEnd() const noexcept { return end; }
@@ -64,18 +65,18 @@ struct Segment2
 
 	// Closest points
 	Vector2<T> getClosestPoint(const Vector2<T>& point) const;
-	T getDistance(const Vector2<T>& point) const { return distance(getClosestPoint(point), point); }
+	T getDistanceTo(const Vector2<T>& point) const { return distance(getClosestPoint(point), point); }
 
 	// Intersection
-	bool testIntersection(const Line2<T>& line) const noexcept { return findIntersection(line).has_value(); }
-	//bool testIntersection(const Ray2<T>& ray) const noexcept { return findIntersection(ray).has_value(); }
-	bool testIntersection(const Segment2& segment) const noexcept { return findIntersection(segment).has_value(); }
+	bool intersects(const Line2<T>& line) const noexcept { return findIntersection(line).has_value(); }
+	//bool intersects(const Ray2<T>& ray) const noexcept { return findIntersection(ray).has_value(); }
+	bool intersects(const Segment2& segment) const noexcept { return findIntersection(segment).has_value(); }
 	std::optional<T> findIntersection(const Line2<T>& line) const noexcept;
 	//std::optional<T> findIntersection(const Ray2<T>& ray) const noexcept;
 	std::optional<T> findIntersection(const Segment2& segment) const;
-	template<Intersection2Type<T> U> std::optional<U> findIntersection(const Line2<T>& line) const noexcept;
-	//template<Intersection2Type<T> U> std::optional<U> findIntersection(const Ray2<T>& ray) const noexcept;
-	template<Intersection2Type<T> U> std::optional<U> findIntersection(const Segment2& segment) const;
+	template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Line2<T>& line) const noexcept;
+	//template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Ray2<T>& ray) const noexcept;
+	template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Segment2& segment) const;
 
 	Vector2<T> start;
 	Vector2<T> end;
@@ -97,15 +98,15 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const S
 }
 
 template<typename T>
-inline bool Segment2<T>::isApproxEqual(const Segment2<T>& segment) const
+inline bool Segment2<T>::approxEquals(const Segment2<T>& segment) const
 {
-	return origin.isApproxEqual(segment.start) && direction.isApproxEqual(segment.end);
+	return start.approxEquals(segment.start) && end.approxEquals(segment.end);
 }
 
 template<typename T>
-inline bool Segment2<T>::isApproxEqual(const Segment2<T>& segment, T tolerance) const
+inline bool Segment2<T>::approxEquals(const Segment2<T>& segment, T tolerance) const
 {
-	return origin.isApproxEqual(segment.start, tolerance) && direction.isApproxEqual(segment.end, tolerance);
+	return start.approxEquals(segment.start, tolerance) && end.approxEquals(segment.end, tolerance);
 }
 
 template<typename T>
@@ -163,7 +164,7 @@ inline std::optional<T> Segment2<T>::findIntersection(const Segment2& segment) c
 }
 
 template<typename T>
-template<Intersection2Type<T> U>
+template<ScalarOrVector2<T> U>
 inline std::optional<U> Segment2<T>::findIntersection(const Line2<T>& line) const
 {
 	std::optional<T> result = findIntersection(line);
@@ -174,7 +175,7 @@ inline std::optional<U> Segment2<T>::findIntersection(const Line2<T>& line) cons
 }
 
 template<typename T>
-template<Intersection2Type<T> U> 
+template<ScalarOrVector2<T> U> 
 inline std::optional<U> Segment2<T>::findIntersection(const Segment2& segment) const
 {
 	std::optional<T> result = findIntersection(segment);

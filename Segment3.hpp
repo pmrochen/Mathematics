@@ -32,6 +32,7 @@ struct Segment3
 	using ConstResult = const Segment3&;
 
 	Segment3() = default;
+	explicit Segment3(Uninitialized) noexcept : start(Uninitialized()), end(Uninitialized()) {}
 	Segment3(const Vector3<T>& start, const Vector3<T>& end) noexcept : start(start), end(end) {}
 	explicit Segment3(const std::pair<Vector3<T>, Vector3<T>>& t) noexcept : start(t.first), end(t.second) {}
 	explicit Segment3(const std::tuple<Vector3<T>, Vector3<T>>& t) noexcept : start(std::get<0>(t)), end(std::get<1>(t)) {}
@@ -45,10 +46,10 @@ struct Segment3
 	template<typename A> void serialize(A& ar) { ar(start, end); }
 
 	// Properties
-	bool isApproxEqual(const Segment3& segment) const noexcept;
-	bool isApproxEqual(const Segment3& segment, T tolerance) const noexcept;
+	bool approxEquals(const Segment3& segment) const noexcept;
+	bool approxEquals(const Segment3& segment, T tolerance) const noexcept;
 	bool isFinite() const noexcept { return start.isFinite() && end.isFinite(); }
-	void set(const Vector3<T>& start, const Vector3<T>& end) noexcept { this->start = start; this->end = end; }
+	Segment3& set(const Vector3<T>& start, const Vector3<T>& end) noexcept { this->start = start; this->end = end; return *this; }
 	const Vector3<T>& getStart() const noexcept { return start; }
 	void setStart(const Vector3<T>& start) noexcept { this->start = start; }
 	const Vector3<T>& getEnd() const noexcept { return end; }
@@ -67,7 +68,7 @@ struct Segment3
 
 	// Closest points
 	Vector3<T> getClosestPoint(const Vector3<T>& point) const;
-	T getDistance(const Vector3<T>& point) const { return distance(getClosestPoint(point), point); }
+	T getDistanceTo(const Vector3<T>& point) const { return distance(getClosestPoint(point), point); }
 
 	Vector3<T> start;
 	Vector3<T> end;
@@ -89,15 +90,15 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const S
 }
 
 template<typename T>
-inline bool Segment3<T>::isApproxEqual(const Segment3<T>& segment) const
+inline bool Segment3<T>::approxEquals(const Segment3<T>& segment) const
 {
-	return origin.isApproxEqual(segment.start) && direction.isApproxEqual(segment.end);
+	return origin.approxEquals(segment.start) && direction.approxEquals(segment.end);
 }
 
 template<typename T>
-inline bool Segment3<T>::isApproxEqual(const Segment3<T>& segment, T tolerance) const
+inline bool Segment3<T>::approxEquals(const Segment3<T>& segment, T tolerance) const
 {
-	return origin.isApproxEqual(segment.start, tolerance) && direction.isApproxEqual(segment.end, tolerance);
+	return origin.approxEquals(segment.start, tolerance) && direction.approxEquals(segment.end, tolerance);
 }
 
 template<typename T>
