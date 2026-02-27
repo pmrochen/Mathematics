@@ -7,6 +7,10 @@
 
 #include <limits>
 
+#ifndef MATHEMATICS_FAST_NORMALIZE
+#define MATHEMATICS_FAST_NORMALIZE 1
+#endif
+
 namespace core::mathematics {
 
 //template<typename T> constexpr T /*ZERO_*/TOLERANCE = T();
