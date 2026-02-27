@@ -6,6 +6,7 @@
 #pragma once
 
 #include "Constants.hpp"
+#include "Scalar.hpp"
 #include "Axis.hpp"
 #include "EulerOrder.hpp"
 #include "Vector2.hpp"
@@ -18,9 +19,9 @@
 #include "Quaternion.hpp"
 #include "YawPitchRoll.hpp"
 #include "Euler.hpp"
-//#include "Interval.hpp"
-//#include "AxisAlignedRectangle.hpp"
-//#include "Circle2.hpp"
+#include "Interval.hpp"
+#include "AxisAlignedRectangle.hpp"
+#include "Circle2.hpp"
 #include "Line2.hpp"
 #include "Ray2.hpp"
 #include "Segment2.hpp"
@@ -42,7 +43,6 @@
 //#include "SymmetricFrustum.hpp"
 //#include "SkewedFrustum.hpp"
 //#include "Torus.hpp"
-//#include "ConvexDecompositionOptions.hpp"
 //#include "Polyhedron.hpp"
 //#include "ConvexPolyhedron.hpp"
 //#include "TetrahedralMesh.hpp"

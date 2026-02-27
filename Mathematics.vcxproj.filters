@@ -39,6 +39,9 @@
     <ClInclude Include="Simd\SseIntrinsics.hpp">
       <Filter>Simd</Filter>
     </ClInclude>
+    <ClInclude Include="AxisAlignedRectangle.hpp" />
+    <ClInclude Include="Circle2.hpp" />
+    <ClInclude Include="Interval.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Simd">
