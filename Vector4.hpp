@@ -823,14 +823,14 @@ inline T lengthSquared(const Vector4<T>& v) noexcept
 
 template<typename T>
 	requires (std::floating_point<T> || std::integral<T>)
-inline Vector4<T> minimum(const Vector4<T>& v1, const Vector4<T>& v2)
+inline Vector4<T> min(const Vector4<T>& v1, const Vector4<T>& v2)
 {
 	return Vector4<T>(std::min(v1.x, v2.x), std::min(v1.y, v2.y), std::min(v1.z, v2.z), std::min(v1.w, v2.w));
 }
 
 template<typename T>
 	requires (std::floating_point<T> || std::integral<T>)
-inline Vector4<T> maximum(const Vector4<T>& v1, const Vector4<T>& v2)
+inline Vector4<T> max(const Vector4<T>& v1, const Vector4<T>& v2)
 {
 	return Vector4<T>(std::max(v1.x, v2.x), std::max(v1.y, v2.y), std::max(v1.z, v2.z), std::max(v1.w, v2.w));
 }
@@ -924,13 +924,13 @@ inline float lengthSquared(const Vector4<float>& v) noexcept
 }
 
 template<>
-inline Vector4<float> minimum(const Vector4<float>& v1, const Vector4<float>& v2)
+inline Vector4<float> min(const Vector4<float>& v1, const Vector4<float>& v2)
 {
 	return Vector4<float>(simd::min4(v1, v2));
 }
 
 template<>
-inline Vector4<float> maximum(const Vector4<float>& v1, const Vector4<float>& v2)
+inline Vector4<float> max(const Vector4<float>& v1, const Vector4<float>& v2)
 {
 	return Vector4<float>(simd::max4(v1, v2));
 }
