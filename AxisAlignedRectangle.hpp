@@ -11,7 +11,6 @@
 #include <concepts>
 #include <utility>
 #include <tuple>
-#include <optional>
 #include <algorithm>
 #include <cstddef>
 #include <cmath>

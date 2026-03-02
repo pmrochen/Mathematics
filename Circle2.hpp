@@ -10,13 +10,11 @@
 #include <type_traits>
 #include <concepts>
 #include <utility>
-#include <optional>
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
 #include "Constants.hpp"
 #include "Vector2.hpp"
-#include "Interval.hpp"
 #include "AxisAlignedRectangle.hpp"
 
 namespace core::mathematics {
@@ -66,9 +64,6 @@ struct Circle2
 	bool contains(const Vector2<T>& point) const noexcept;
 	bool intersects(const AxisAlignedRectangle<T>& rectangle) const noexcept;
 	bool intersects(const Circle2<T>& circle) const noexcept;
-	std::optional<Interval<T>> findIntersection(const Line2<T>& line) const noexcept; // #TODO
-	std::optional<Interval<T>> findIntersection(const Ray2<T>& ray) const noexcept; // #TODO
-	std::optional<Interval<T>> findIntersection(const Segment2<T>& segment) const noexcept; // #TODO
 
 	Vector2<T> center;
 	T radius;
