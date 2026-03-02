@@ -46,6 +46,7 @@ struct Interval
 
 	// Properties
 	bool isEmpty() const noexcept { return (minimum > maximum); }
+	bool isPoint() const noexcept { return (minimum == maximum); }
 	bool isZero() const noexcept { return (minimum == T()) && (maximum == T()); }
 	bool isApproxZero() const noexcept;
 	bool approxEquals(const Interval& interval) const noexcept;
@@ -179,17 +180,17 @@ inline std::optional<Interval<T>> Interval<T>::findIntersection(const Interval& 
 	{
 		if (minimum < interval.maximum)
 		{
-			return { Interval<T>((minimum < interval.minimum) ? interval.minimum : minimum,
-				(maximum > interval.maximum) ? interval.maximum : maximum); };
+			return { std::in_place, (minimum < interval.minimum) ? interval.minimum : minimum,
+				(maximum > interval.maximum) ? interval.maximum : maximum; };
 		}
 		else
 		{
-			return { Interval<T>(minimum); }
+			return { std::in_place, minimum; }
 		}
 	}
 	else
 	{
-		return { Interval<T>(maximum); }
+		return { std::in_place, maximum; }
 	}
 }
 
