@@ -1090,9 +1090,13 @@ inline Vector4<T> operator*(const Vector4<T>& v, const Matrix4<T>& m) noexcept
 		v.x*m.m02 + v.y*m.m12 + v.z*m.m22 + v.w*m.m32, v.x*m.m03 + v.y*m.m13 + v.z*m.m23 + v.w*m.m33);
 }
 
-//template<typename T>
-//	requires std::floating_point<T>
-//inline Vector4<T> operator*(const Matrix4<T>& m, const Vector4<T>& v) noexcept; // valid for column vectors only
+template<typename T>
+	requires std::floating_point<T>
+inline Vector4<T> operator*(const Matrix4<T>& m, const Vector4<T>& v) noexcept
+{
+	return Vector4<T>(m.m00*v.x + m.m01*v.y + m.m02*v.z + m.m03*v.w, m.m10*v.x + m.m11*v.y + m.m12*v.z + m.m13*v.w,
+		m.m20*v.x + m.m21*v.y + m.m22*v.z + m.m23*v.w, m.m30*v.x + m.m31*v.y + m.m32*v.z + m.m33*v.w);
+}
 
 template<typename T>
 inline Vector4& Vector4<T>::transform(const Matrix4<T>& m)
@@ -1136,8 +1140,11 @@ inline Vector4<float> operator*(const Vector4<float>& v, const Matrix4<float>& m
 	return Vector4<float>(simd::add4(t, simd::mul4(simd::wwww(v), m.row3)));
 }
 
-//template<>
-//inline Vector4<float> operator*(const Matrix4<float>& m, const Vector4<float>& v) noexcept; // valid for column vectors only
+template<>
+inline Vector4<float> operator*(const Matrix4<float>& m, const Vector4<float>& v) noexcept
+{
+	return Vector4<float>(simd::set4(simd::dot4(m.row0, v), simd::dot4(m.row1, v), simd::dot4(m.row2, v), simd::dot4(m.row3, v)));
+}
 
 inline Vector4<float>& Vector4<float>::transform(const Matrix4<float>& m)
 {

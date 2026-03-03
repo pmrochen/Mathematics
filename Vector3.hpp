@@ -1215,9 +1215,12 @@ inline Vector3<T> operator*(const Vector3<T>& v, const Matrix3<T>& m) noexcept
 	return Vector3<T>(v.x*m.m00 + v.y*m.m10 + v.z*m.m20, v.x*m.m01 + v.y*m.m11 + v.z*m.m21, v.x*m.m02 + v.y*m.m12 + v.z*m.m22);
 }
 
-//template<typename T>
-//	requires std::floating_point<T>
-//inline Vector3<T> operator*(const Matrix3<T>& m, const Vector3<T>& v) noexcept; // valid for column vectors only
+template<typename T>
+	requires std::floating_point<T>
+inline Vector3<T> operator*(const Matrix3<T>& m, const Vector3<T>& v) noexcept
+{
+	return Vector3<T>(m.m00*v.x + m.m01*v.y + m.m02*v.z, m.m10*v.x + m.m11*v.y + m.m12*v.z, m.m20*v.x + m.m21*v.y + m.m22*v.z);
+}
 
 template<typename T>
 inline Vector3<T>& Vector3<T>::rotate(const Quaternion<T>& q)
@@ -1301,8 +1304,15 @@ inline Vector3<float> operator*(const Vector3<float>& v, const Matrix3<float>& m
 	return Vector3<float>(simd::add4(t, simd::mul4(simd::zzzz(v), m.row2)));
 }
 
-//template<>
-//inline Vector3<float> operator*(const Matrix3<float>& m, const Vector3<float>& v) noexcept; // valid for column vectors only
+template<>
+inline Vector3<float> operator*(const Matrix3<float>& m, const Vector3<float>& v) noexcept
+{
+#if MATHEMATICS_SIMD_EXPAND_LAST
+	return Vector3<float>(simd:xyzz(simd::set3(simd::dot3(m.row0, v), simd::dot3(m.row1, v), simd::dot3(m.row2, v))));
+#else
+	return Vector3<float>(simd::set3(simd::dot3(m.row0, v), simd::dot3(m.row1, v), simd::dot3(m.row2, v)));
+#endif
+}
 
 inline Vector3<float>& Vector3<float>::rotate(const Quaternion<float>& q)
 {

@@ -1090,9 +1090,12 @@ inline Vector2<T> operator*(const Vector2<T>& v, const Matrix2<T>& m) noexcept
 	return Vector2<T>(v.x*m.m00 + v.y*m.m10, v.x*m.m01 + v.y*m.m11);
 }
 
-//template<typename T>
-//	requires std::floating_point<T>
-//inline Vector2<T> operator*(const Matrix2<T>& m, const Vector2<T>& v) noexcept; // valid for column vectors only
+template<typename T>
+	requires std::floating_point<T>
+inline Vector2<T> operator*(const Matrix2<T>& m, const Vector2<T>& v) noexcept
+{
+	return Vector2<T>(m.m00*v.x + m.m01*v.y, m.m10*v.x + m.m11*v.y);
+}
 
 template<typename T>
 inline Vector2<T>& Vector2<T>::transform(const Matrix2<T>& m)
@@ -1113,7 +1116,7 @@ inline Vector2<T> transform(const Vector2<T>& v, const Matrix2<T>& m) noexcept
 inline Vector2<float>& Vector2<float>::operator*=(const Matrix2<float>& m)
 {
 	auto t = simd::mul4(simd::xxyy(xy), simd::pack2x2(m.row0, m.row1));
-	t = simd::add4(t, simd::zwzw(t));
+	t = simd::add4(t, simd::zwxy(t));
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	xy = simd::xyyy(t);
 #else
@@ -1126,7 +1129,7 @@ template<>
 inline Vector2<float> operator*(const Vector2<float>& v, const Matrix2<float>& m) noexcept
 {
 	auto t = simd::mul4(simd::xxyy(v), simd::pack2x2(m.row0, m.row1));
-	t = simd::add4(t, simd::zwzw(t));
+	t = simd::add4(t, simd::zwxy(t));
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	return Vector2<float>(simd::xyyy(t));
 #else
@@ -1134,8 +1137,17 @@ inline Vector2<float> operator*(const Vector2<float>& v, const Matrix2<float>& m
 #endif
 }
 
-//template<>
-//inline Vector2<float> operator*(const Matrix2<float>& m, const Vector2<float>& v) noexcept; // valid for column vectors only
+template<>
+inline Vector2<float> operator*(const Matrix2<float>& m, const Vector2<float>& v) noexcept
+{
+	auto t = simd::mul4(simd::xyxy(v), simd::pack2x2(m.row0, m.row1));
+	t = simd::add4(t, simd::yxwz(t));
+#if MATHEMATICS_SIMD_EXPAND_LAST
+	return Vector2<float>(simd::xzzz(t));
+#else
+	return Vector2<float>(simd::cutoff2(simd::xzzz(t)));
+#endif
+}
 
 inline Vector2<float>& Vector2<float>::transform(const Matrix2<float>& m)
 {
