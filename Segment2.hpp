@@ -17,11 +17,20 @@
 #include <cmath>
 #include "Constants.hpp"
 #include "Vector2.hpp"
+#include "Interval.hpp"
 #include "Line2.hpp"
 #include "Ray2.hpp"
 
 namespace core::mathematics {
 namespace templates {
+	
+template<typename T>
+	requires std::floating_point<T>
+struct AxisAlignedRectangle;
+
+template<typename T>
+	requires std::floating_point<T>
+struct Circle2;
 
 template<typename T>
 	requires std::floating_point<T>
@@ -36,6 +45,10 @@ struct Segment2
 	Segment2(const Vector2<T>& start, const Vector2<T>& end) noexcept : start(start), end(end) {}
 	explicit Segment2(const std::pair<Vector3<T>, Vector3<T>>& t) noexcept : start(t.first), end(t.second) {}
 	explicit Segment2(const std::tuple<Vector3<T>, Vector3<T>>& t) noexcept : start(std::get<0>(t)), end(std::get<1>(t)) {}
+	explicit Segment2(const Line2<T>& line) noexcept : start(line.origin), end(line.origin + line.direction) {}
+	Segment2(const Line2<T>& line, const Interval<T>& interval) noexcept : start(line.evaluate(interval.minimum)), end(line.evaluate(interval.maximum)) {}
+	explicit Segment2(const Ray2<T>& ray) noexcept : start(ray.origin), end(ray.origin + ray.direction) {}
+	Segment2(const Ray2<T>& ray, const Interval<T>& interval) noexcept : start(ray.evaluate(interval.minimum)), end(ray.evaluate(interval.maximum)) {}
 
 	//explicit operator std::pair<Vector3<T>, Vector3<T>>() { return { start, end }; }
 	//explicit operator std::tuple<Vector3<T>, Vector3<T>>() { return { start, end }; }
@@ -71,12 +84,18 @@ struct Segment2
 	bool intersects(const Line2<T>& line) const noexcept { return findIntersection(line).has_value(); }
 	//bool intersects(const Ray2<T>& ray) const noexcept { return findIntersection(ray).has_value(); }
 	bool intersects(const Segment2& segment) const noexcept { return findIntersection(segment).has_value(); }
+	bool intersects(const AxisAlignedRectangle& rectangle) const noexcept { return findIntersection(rectangle).has_value(); }
+	bool intersects(const Circle2<T>& circle) const noexcept { return findIntersection(circle).has_value(); }
 	std::optional<T> findIntersection(const Line2<T>& line) const noexcept;
 	//std::optional<T> findIntersection(const Ray2<T>& ray) const noexcept;
 	std::optional<T> findIntersection(const Segment2& segment) const;
-	template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Line2<T>& line) const noexcept;
+	std::optional<Interval<T>> findIntersection(const AxisAlignedRectangle& rectangle) const noexcept;
+	std::optional<Interval<T>> findIntersection(const Circle2<T>& circle) const noexcept;
+	//template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Line2<T>& line) const noexcept;
 	//template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Ray2<T>& ray) const noexcept;
-	template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Segment2& segment) const;
+	//template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Segment2& segment) const;
+	//template<IntervalOrSegment2<T> U> std::optional<U> findIntersection(const AxisAlignedRectangle& rectangle) const noexcept;
+	//template<IntervalOrSegment2<T> U> std::optional<U> findIntersection(const Circle2<T>& circle) const;
 
 	Vector2<T> start;
 	Vector2<T> end;
@@ -217,3 +236,46 @@ struct hash<::core::mathematics::templates::Segment2<T>>
 };
 
 } // namespace std
+
+#include "AxisAlignedRectangle.hpp"
+#include "Circle2.hpp"
+
+namespace core::mathematics::templates {
+
+template<typename T>
+inline std::optional<Interval<T>> Segment2<T>::findIntersection(const AxisAlignedRectangle<T>& rectangle) const
+{
+	std::optional<Interval<T>> result = Line2(segment.start, segment.end - segment.start).findIntersection(rectangle);
+	if (result.has_value() && (result.value().maximum >= T(0)) && (result.value().minimum <= T(1)))
+	{
+		const Interval<T>& interval = result.value();
+		if (interval.minimum != interval.maximum)
+			return { std::in_place, std::max(interval.minimum, T(0)), std::min(interval.maximum, T(1)) };
+		else
+			return result;
+	}
+	else
+	{
+		return {};
+	}
+}
+
+template<typename T>
+inline std::optional<Interval<T>> Segment2<T>::findIntersection(const Circle2<T>& circle) const
+{
+	std::optional<Interval<T>> result = Line2(segment.start, segment.end - segment.start).findIntersection(circle);
+	if (result.has_value() && (result.value().maximum >= T(0)) && (result.value().minimum <= T(1)))
+	{
+		const Interval<T>& interval = result.value();
+		if (interval.minimum != interval.maximum)
+			return { std::in_place, std::max(interval.minimum, T(0)), std::min(interval.maximum, T(1)) };
+		else
+			return result;
+	}
+	else
+	{
+		return {};
+	}
+}
+
+} // namespace core::mathematics::templates

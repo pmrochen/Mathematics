@@ -11,17 +11,57 @@
 #include <concepts>
 #include <utility>
 #include <tuple>
+#include <optional>
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
 #include "Vector3.hpp"
 #include "Matrix3.hpp"
 #include "AffineTransform.hpp"
+#include "Interval.hpp"
 #include "Line3.hpp"
 #include "Ray3.hpp"
 
 namespace core::mathematics {
 namespace templates {
+	
+template<typename T>
+	requires std::floating_point<T>
+struct HalfSpace;
+
+template<typename T>
+	requires std::floating_point<T>
+struct Plane;
+
+template<typename T>
+	requires std::floating_point<T>
+struct Triangle3;
+
+template<typename T>
+	requires std::floating_point<T>
+struct AxisAlignedBox;
+
+template<typename T>
+	requires std::floating_point<T>
+struct OrientedBox;
+
+template<typename T>
+	requires std::floating_point<T>
+struct Sphere;
+
+template<typename T>
+	requires std::floating_point<T>
+struct Ellipsoid;
+
+#if SIMD_HAS_FLOAT4
+
+template<>
+struct HalfSpace<float>;
+
+template<>
+struct Plane<float>;
+
+#endif /* SIMD_HAS_FLOAT4 */
 
 template<typename T>
 	requires std::floating_point<T>
@@ -36,6 +76,10 @@ struct Segment3
 	Segment3(const Vector3<T>& start, const Vector3<T>& end) noexcept : start(start), end(end) {}
 	explicit Segment3(const std::pair<Vector3<T>, Vector3<T>>& t) noexcept : start(t.first), end(t.second) {}
 	explicit Segment3(const std::tuple<Vector3<T>, Vector3<T>>& t) noexcept : start(std::get<0>(t)), end(std::get<1>(t)) {}
+	explicit Segment3(const Line3<T>& line) noexcept : start(line.origin), end(line.origin + line.direction) {}
+	Segment3(const Line3<T>& line, const Interval<T>& interval) noexcept : start(line.evaluate(interval.minimum)), end(line.evaluate(interval.maximum)) {}
+	explicit Segment3(const Ray3<T>& ray) noexcept : start(ray.origin), end(ray.origin + ray.direction) {}
+	Segment3(const Ray3<T>& ray, const Interval<T>& interval) noexcept : start(ray.evaluate(interval.minimum)), end(ray.evaluate(interval.maximum)) {}
 
 	//explicit operator std::pair<Vector3<T>, Vector3<T>>() { return { start, end }; }
 	//explicit operator std::tuple<Vector3<T>, Vector3<T>>() { return { start, end }; }
@@ -69,6 +113,22 @@ struct Segment3
 	// Closest points
 	Vector3<T> getClosestPoint(const Vector3<T>& point) const;
 	T getDistanceTo(const Vector3<T>& point) const { return distance(getClosestPoint(point), point); }
+
+	// Intersection
+	bool intersects(const HalfSpace<T>& halfSpace) const noexcept;
+	bool intersects(const Plane<T>& plane) const noexcept { return findIntersection(plane).has_value(); }
+	bool intersects(const Triangle3<T>& triangle) const noexcept { return findIntersection(triangle).has_value(); }
+	bool intersects(const AxisAlignedBox& box) const noexcept { return findIntersection(box).has_value(); }
+	bool intersects(const OrientedBox& box) const noexcept { return findIntersection(box).has_value(); }
+	bool intersects(const Sphere<T>& sphere) const noexcept { return findIntersection(sphere).has_value(); }
+	bool intersects(const Ellipsoid<T>& ellipsoid) const noexcept; // #TODO
+	std::optional<T> findIntersection(const Plane<T>& plane) const noexcept;
+	std::optional<T> findIntersection(const Triangle3<T>& triangle) const noexcept; // #TODO
+	//template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Plane<T>& plane) const noexcept;
+	std::optional<Interval<T>> findIntersection(const AxisAlignedBox& box) const noexcept;
+	std::optional<Interval<T>> findIntersection(const OrientedBox& box) const noexcept;
+	std::optional<Interval<T>> findIntersection(const Sphere<T>& sphere) const noexcept;
+	std::optional<Interval<T>> findIntersection(const Ellipsoid<T>& ellipsoid) const noexcept; // #TODO
 
 	Vector3<T> start;
 	Vector3<T> end;
@@ -154,3 +214,93 @@ struct hash<::core::mathematics::templates::Segment3<T>>
 };
 
 } // namespace std
+
+#include "HalfSpace.hpp"
+#include "Plane.hpp"
+#include "Triangle3.hpp"
+#include "AxisAlignedBox.hpp"
+#include "OrientedBox.hpp"
+#include "Sphere.hpp"
+#include "Ellipsoid.hpp"
+
+namespace core::mathematics::templates {
+
+template<typename T>
+inline bool Segment3<T>::intersects(const HalfSpace<T>& halfSpace) const
+{
+	return halfSpace.contains(start) || halfSpace.contains(end);
+}
+
+template<typename T>
+inline std::optional<T> Segment3<T>::findIntersection(const Plane<T>& plane) const
+{
+	std::optional<T> result = Line3<T>(start, end - start).findIntersection(plane);
+	return (result.has_value() && (result.value() >= T(0)) && (result.value() <= T(1))) ? result : {};
+}
+
+//template<typename T>
+//template<ScalarOrVector3<T> U>
+//inline std::optional<U> Segment3<T>::findIntersection(const Plane<T>& plane) const
+//{
+//	std::optional<T> result = findIntersection(plane);
+//	if constexpr (std::is_same_v<U, T>)
+//		return result;
+//	else //if constexpr (std::is_same_v<U, Vector3<T>>)
+//		return result.has_value() ? { evaluate(result.value()) } : {};
+//}
+
+template<typename T>
+inline std::optional<Interval<T>> Segment3<T>::findIntersection(const AxisAlignedBox<T>& box) const
+{
+	std::optional<Interval<T>> result = Line3(segment.start, segment.end - segment.start).findIntersection(box);
+	if (result.has_value() && (result.value().maximum >= T(0)) && (result.value().minimum <= T(1)))
+	{
+		const Interval<T>& interval = result.value();
+		if (interval.minimum != interval.maximum)
+			return { std::in_place, std::max(interval.minimum, T(0)), std::min(interval.maximum, T(1)) };
+		else
+			return result;
+	}
+	else
+	{
+		return {};
+	}
+}
+
+template<typename T>
+inline std::optional<Interval<T>> Segment3<T>::findIntersection(const OrientedBox<T>& box) const
+{
+	std::optional<Interval<T>> result = Line3(segment.start, segment.end - segment.start).findIntersection(box);
+	if (result.has_value() && (result.value().maximum >= T(0)) && (result.value().minimum <= T(1)))
+	{
+		const Interval<T>& interval = result.value();
+		if (interval.minimum != interval.maximum)
+			return { std::in_place, std::max(interval.minimum, T(0)), std::min(interval.maximum, T(1)) };
+		else
+			return result;
+	}
+	else
+	{
+		return {};
+	}
+}
+
+template<typename T>
+inline std::optional<Interval<T>> Segment3<T>::findIntersection(const Sphere<T>& sphere) const
+{
+	std::optional<Interval<T>> result = Line3(segment.start, segment.end - segment.start).findIntersection(sphere);
+	if (result.has_value() && (result.value().maximum >= T(0)) && (result.value().minimum <= T(1)))
+	{
+		const Interval<T>& interval = result.value();
+		if (interval.minimum != interval.maximum)
+			return { std::in_place, std::max(interval.minimum, T(0)), std::min(interval.maximum, T(1)) };
+		else
+			return result;
+	}
+	else
+	{
+		return {};
+	}
+}
+
+} // namespace core::mathematics::templates

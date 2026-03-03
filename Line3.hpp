@@ -10,22 +10,58 @@
 #include <type_traits>
 #include <concepts>
 #include <utility>
+#include <optional>
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
 #include "Vector3.hpp"
 #include "Matrix3.hpp"
 #include "AffineTransform.hpp"
+#include "Interval.hpp"
 
 namespace core::mathematics {
 namespace templates {
 
-template<typename T, typename U>
-concept ScalarOrVector3 = (std::same_as<T, U> || std::same_as<T, Vector3<U>>); // #TODO Move to Concepts.hpp
+//template<typename T, typename U>
+//concept ScalarOrVector3 = (std::same_as<T, U> || std::same_as<T, Vector3<U>>); // #TODO Move to Concepts.hpp
+
+//template<typename T, typename U>
+//concept IntervalOrSegment3 = (std::same_as<T, Interval<U>> || std::same_as<T, Segment3<U>>); // #TODO Move to Concepts.hpp
 
 template<typename T>
 	requires std::floating_point<T>
-struct Ray;
+struct Ray3;
+
+template<typename T>
+	requires std::floating_point<T>
+struct Plane;
+
+template<typename T>
+	requires std::floating_point<T>
+struct Triangle3;
+
+template<typename T>
+	requires std::floating_point<T>
+struct AxisAlignedBox;
+
+template<typename T>
+	requires std::floating_point<T>
+struct OrientedBox;
+
+template<typename T>
+	requires std::floating_point<T>
+struct Sphere;
+
+template<typename T>
+	requires std::floating_point<T>
+struct Ellipsoid;
+
+#if SIMD_HAS_FLOAT4
+
+template<>
+struct Plane<float>;
+
+#endif /* SIMD_HAS_FLOAT4 */
 
 template<typename T>
 	requires std::floating_point<T>
@@ -77,6 +113,23 @@ struct Line3
 	T getDistanceTo(const Vector3<T>& point) const noexcept { return distance(getClosestPoint(point), point); }	// normalized line
 	template<Normalization U> T getDistanceTo(const Vector3<T>& point) const noexcept { return distance(getClosestPoint<U>(point), point); }
 	//T getDistanceTo(const Line3& line) const noexcept;
+
+	// Intersection
+	bool intersects(const Plane<T>& plane) const noexcept;
+	bool intersects(const Triangle3<T>& triangle) const noexcept { return findIntersection(triangle).has_value(); }
+	bool intersects(const AxisAlignedBox& box) const noexcept { return findIntersection(box).has_value(); }
+	bool intersects(const OrientedBox& box) const noexcept { return findIntersection(box).has_value(); }
+	bool intersects(const Sphere<T>& sphere) const noexcept;
+	template<Normalization U> bool intersects(const Sphere<T>& sphere) const noexcept;
+	bool intersects(const Ellipsoid<T>& ellipsoid) const noexcept; // #TODO
+	std::optional<T> findIntersection(const Plane<T>& plane) const noexcept;
+	std::optional<T> findIntersection(const Triangle3<T>& triangle) const noexcept; // #TODO
+	//template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Plane<T>& plane) const noexcept;
+	std::optional<Interval<T>> findIntersection(const AxisAlignedBox& box) const noexcept; // #TODO
+	std::optional<Interval<T>> findIntersection(const OrientedBox& box) const noexcept; // #TODO
+	std::optional<Interval<T>> findIntersection(const Sphere<T>& sphere) const noexcept;
+	template<Normalization U> std::optional<Interval<T>> findIntersection(const Sphere<T>& sphere) const noexcept;
+	std::optional<Interval<T>> findIntersection(const Ellipsoid<T>& ellipsoid) const noexcept; // #TODO
 
 	Vector3<T> origin;
 	Vector3<T> direction;
@@ -190,6 +243,12 @@ struct hash<::core::mathematics::templates::Line3<T>>
 } // namespace std
 
 #include "Ray3.hpp"
+#include "Plane.hpp"
+#include "Triangle3.hpp"
+#include "AxisAlignedBox.hpp"
+#include "OrientedBox.hpp"
+#include "Sphere.hpp"
+#include "Ellipsoid.hpp"
 
 namespace core::mathematics::templates {
 
@@ -202,6 +261,134 @@ template<typename T>
 inline const Ray3<T>& Line3<T>::asRay() const
 { 
 	return reinterpret_cast<const Ray3<T>&>(*this);
+}
+
+template<typename T>
+inline bool Line3<T>::intersects(const Plane<T>& plane) const
+{
+	return (std::fabs(dot(plane.getNormal(), direction)) >= Constants<T>::TOLERANCE);
+}
+
+template<typename T>
+inline bool Line3<T>::intersects(const Sphere<T>& sphere) const
+{
+	Vector3<T> diff = line.origin - sphere.center;
+	T a = dot(line.direction, line.direction);
+	T b = T(2)*dot(line.direction, diff);
+	T c = dot(diff, diff) - sphere.radius*sphere.radius;
+	return !((b*b - T(4)*a*c) < T(0));
+}
+
+template<typename T>
+template<Normalization U>
+inline bool Line3<T>::intersects(const Sphere<T>& sphere) const
+{
+	Vector3<T> diff = origin - sphere.center;
+	T c = dot(diff, diff) - sphere.radius*sphere.radius;
+	if costexpr(std::is_same_v<U, Normalized>)
+	{
+		T halfB = dot(direction, diff);
+		return !((halfB*halfB - c) < T(0));
+	}
+	else
+	{
+		T a = dot(direction, direction);
+		T b = T(2)*dot(direction, diff);
+		return !((b*b - T(4)*a*c) < T(0));
+	}
+}
+
+template<typename T>
+inline std::optional<T> Line3<T>::findIntersection(const Plane<T>& plane) const
+{
+	T nd = dot(plane.getNormal(), direction);
+	if (std::fabs(nd) < Constants<T>::TOLERANCE)
+		return {};
+	return { (-plane.d - dot(plane.getNormal(), origin))/nd };
+}
+
+//template<typename T>
+//template<ScalarOrVector3<T> U>
+//inline std::optional<U> Line3<T>::findIntersection(const Plane<T>& plane) const
+//{
+//	std::optional<T> result = findIntersection(plane);
+//	if constexpr (std::is_same_v<U, T>)
+//		return result;
+//	else //if constexpr (std::is_same_v<U, Vector3<T>>)
+//		return result.has_value() ? { evaluate(result.value()) } : {};
+//}
+
+template<typename T>
+inline std::optional<Interval<T>> Line3<T>::findIntersection(const Sphere<T>& sphere) const
+{
+	Vector3<T> diff = origin - sphere.center;
+	T a = dot(direction, direction);
+	T b = T(2)*dot(direction, diff);
+	T c = dot(diff, diff) - sphere.radius*sphere.radius;
+	T delta = b*b - T(4)*a*c;
+
+	if (delta < T(0))
+	{
+		return {};
+	}
+	else if (delta > T(0))
+	{
+		delta = std::sqrt(delta);
+		a = T(0.5)/a;
+		return { std::in_place, (-b - delta)*a, (-b + delta)*a };
+	}
+	else // delta == 0
+	{
+		return { std::in_place, -b*T(0.5)/a };
+	}
+}
+
+template<typename T>
+template<Normalization U>
+inline std::optional<Interval<T>> Line3<T>::findIntersection(const Sphere<T>& sphere) const
+{
+	Vector3<T> diff = origin - sphere.center;
+	T c = dot(diff, diff) - sphere.radius*sphere.radius;
+	if costexpr(std::is_same_v<U, Normalized>)
+	{
+		T halfB = dot(direction, diff);
+		T delta = halfB*halfB - c;
+
+		if (delta < T(0))
+		{
+			return {};
+		}
+		else if (delta > T(0))
+		{
+			delta = std::sqrt(delta);
+			return { std::in_place, -halfB - delta, -halfB + delta };
+		}
+		else // delta == 0
+		{
+			return { std::in_place, -halfB };
+		}
+	}
+	else
+	{
+		T a = dot(direction, direction);
+		T b = T(2)*dot(direction, diff);
+		T delta = b*b - T(4)*a*c;
+
+		if (delta < T(0))
+		{
+			return {};
+		}
+		else if (delta > T(0))
+		{
+			delta = std::sqrt(delta);
+			a = T(0.5)/a;
+			return { std::in_place, (-b - delta)*a, (-b + delta)*a };
+		}
+		else // delta == 0
+		{
+			return { std::in_place, -b*T(0.5)/a };
+		}
+	}
 }
 
 } // namespace core::mathematics::templates

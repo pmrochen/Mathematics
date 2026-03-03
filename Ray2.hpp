@@ -16,10 +16,19 @@
 #include <cmath>
 #include "Constants.hpp"
 #include "Vector2.hpp"
+#include "Interval.hpp"
 #include "Line2.hpp"
 
 namespace core::mathematics {
 namespace templates {
+	
+template<typename T>
+	requires std::floating_point<T>
+struct AxisAlignedRectangle;
+
+template<typename T>
+	requires std::floating_point<T>
+struct Circle2;
 
 template<typename T>
 	requires std::floating_point<T>
@@ -70,10 +79,18 @@ struct Ray2
 	// Intersection
 	bool intersects(const Line2<T>& line) const noexcept { return findIntersection(line).has_value(); }
 	//bool intersects(const Ray2& ray) const noexcept { return findIntersection(ray).has_value(); }
+	bool intersects(const AxisAlignedRectangle& rectangle) const noexcept { return findIntersection(rectangle).has_value(); }
+	bool intersects(const Circle2<T>& circle) const noexcept { return findIntersection(circle).has_value(); }
+	template<Normalization U> bool intersects(const Circle2<T>& circle) const noexcept { return findIntersection<U>(circle).has_value(); }
 	std::optional<T> findIntersection(const Line2<T>& line) const noexcept;
 	//std::optional<T> findIntersection(const Ray2& ray) const noexcept;
-	template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Line2<T>& line) const noexcept;
+	std::optional<Interval<T>> findIntersection(const AxisAlignedRectangle& rectangle) const noexcept;
+	std::optional<Interval<T>> findIntersection(const Circle2<T>& circle) const noexcept;
+	template<Normalization U> std::optional<Interval<T>> findIntersection(const Circle2<T>& circle) const noexcept;
+	//template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Line2<T>& line) const noexcept;
 	//template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Ray2& ray) const noexcept;
+	//template<IntervalOrSegment2<T> U> std::optional<U> findIntersection(const AxisAlignedRectangle& rectangle) const noexcept;
+	//template<IntervalOrSegment2<T> U> std::optional<U> findIntersection(const Circle2<T>& circle) const noexcept;
 
 	Vector2<T> origin;
 	Vector2<T> direction;
@@ -200,3 +217,65 @@ struct hash<::core::mathematics::templates::Ray2<T>>
 };
 
 } // namespace std
+
+#include "AxisAlignedRectangle.hpp"
+#include "Circle2.hpp"
+
+namespace core::mathematics::templates {
+
+template<typename T>
+inline std::optional<Interval<T>> Ray2<T>::findIntersection(const AxisAlignedRectangle<T>& rectangle) const
+{
+	std::optional<Interval<T>> result = asLine().findIntersection(rectangle);
+	if (result.has_value() && (result.value().maximum >= T(0)))
+	{
+		const Interval<T>& interval = result.value();
+		if (interval.minimum != interval.maximum)
+			return { std::in_place, std::max(interval.minimum, T(0)), interval.maximum };
+		else
+			return result;
+	}
+	else
+	{
+		return {};
+	}
+}
+
+template<typename T>
+inline std::optional<Interval<T>> Ray2<T>::findIntersection(const Circle2<T>& circle) const
+{
+	std::optional<Interval<T>> result = asLine().findIntersection(circle);
+	if (result.has_value() && (result.value().maximum >= T(0)))
+	{
+		const Interval<T>& interval = result.value();
+		if (interval.minimum != interval.maximum)
+			return { std::in_place, std::max(interval.minimum, T(0)), interval.maximum };
+		else
+			return result;
+	}
+	else
+	{
+		return {};
+	}
+}
+
+template<typename T>
+template<Normalization U>
+inline std::optional<Interval<T>> Ray2<T>::findIntersection(const Circle2<T>& circle) const
+{
+	std::optional<Interval<T>> result = asLine().findIntersection<U>(circle);
+	if (result.has_value() && (result.value().maximum >= T(0)))
+	{
+		const Interval<T>& interval = result.value();
+		if (interval.minimum != interval.maximum)
+			return { std::in_place, std::max(interval.minimum, T(0)), interval.maximum };
+		else
+			return result;
+	}
+	else
+	{
+		return {};
+	}
+}
+
+} // namespace core::mathematics::templates

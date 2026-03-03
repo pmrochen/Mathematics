@@ -92,6 +92,7 @@ struct AxisAlignedRectangle
 	bool contains(const AxisAlignedRectangle& rectangle) const noexcept;
 	bool contains(const Circle2<T>& circle) const noexcept;
 	bool intersects(const AxisAlignedRectangle& rectangle) const noexcept;
+	bool intersects(const Circle2<T>& circle) const noexcept;
 
 	static const AxisAlignedRectangle EMPTY;
 
@@ -281,6 +282,12 @@ inline bool AxisAlignedRectangle<T>::contains(const Circle2<T>& circle) const
 {
 	return (minimum.x <= (circle.center.x - circle.radius)) && (maximum.x >= (circle.center.x + circle.radius)) && // #TODO SIMD
 		(minimum.y <= (circle.center.y - circle.radius)) && (maximum.y >= (circle.center.y + circle.radius));
+}
+
+template<typename T>
+inline bool AxisAlignedRectangle<T>::intersects(const Circle2<T>& circle) const
+{
+	return circle.intersects(*this);
 }
 
 } // namespace core::mathematics::templates

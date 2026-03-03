@@ -12,7 +12,6 @@
 #include <concepts>
 #include <utility>
 #include <tuple>
-#include <optional>
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -21,13 +20,30 @@
 #include "Vector3.hpp"
 #include "Matrix3.hpp"
 #include "AffineTransform.hpp"
-#include "Line3.hpp"
-#include "Ray3.hpp"
-#include "Segment3.hpp"
 #include "HalfSpace.hpp"
 
 namespace core::mathematics {
 namespace templates {
+
+template<typename T>
+	requires std::floating_point<T>
+struct Triangle3;
+
+template<typename T>
+	requires std::floating_point<T>
+struct AxisAlignedBox;
+
+template<typename T>
+	requires std::floating_point<T>
+struct OrientedBox;
+
+template<typename T>
+	requires std::floating_point<T>
+struct Sphere;
+
+template<typename T>
+	requires std::floating_point<T>
+struct Ellipsoid;
 
 template<typename T>
 	requires std::floating_point<T>
@@ -100,16 +116,11 @@ struct Plane
 
 	// Containment and intersection
 	bool contains(const Vector3<T>& point) const noexcept;
-	bool intersects(const Line3<T>& line) const noexcept;
-	bool intersects(const Ray3<T>& ray) const noexcept { return findIntersection(ray).has_value(); }
-	bool intersects(const Segment3<T>& segment) const noexcept { return findIntersection(segment).has_value(); }
-	//bool intersects(const Triangle<T>& triangle) const noexcept; // #TODO Check if all vertices are on the same side
-	std::optional<T> findIntersection(const Line3<T>& line) const noexcept;
-	std::optional<T> findIntersection(const Ray3<T>& ray) const noexcept;
-	std::optional<T> findIntersection(const Segment3<T>& segment) const noexcept;
-	template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Line3<T>& line) const noexcept;
-	template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Ray3<T>& ray) const noexcept;
-	template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Segment3<T>& segment) const noexcept;
+	bool intersects(const Triangle3<T>& triangle) const noexcept;
+	bool intersects(const AxisAlignedBox<T>& box) const noexcept;
+	bool intersects(const OrientedBox<T>& box) const noexcept;
+	bool intersects(const Sphere<T>& sphere) const noexcept;
+	bool intersects(const Ellipsoid<T>& ellipsoid) const noexcept;
 
 	static const Plane EMPTY;
 
@@ -202,16 +213,11 @@ struct Plane<float>
 
 	// Containment and intersection
 	bool contains(const Vector3<float>& point) const noexcept;
-	bool intersects(const Line3<float>& line) const noexcept;
-	bool intersects(const Ray3<float>& ray) const noexcept { return findIntersection(ray).has_value(); }
-	bool intersects(const Segment3<float>& segment) const noexcept { return findIntersection(segment).has_value(); }
-	//bool intersects(const Triangle<float>& triangle) const noexcept; // #TODO Check if all vertices are on the same side
-	std::optional<float> findIntersection(const Line3<float>& line) const noexcept;
-	std::optional<float> findIntersection(const Ray3<float>& ray) const noexcept;
-	std::optional<float> findIntersection(const Segment3<float>& segment) const noexcept;
-	template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Line3<float>& line) const noexcept;
-	template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Ray3<float>& ray) const noexcept;
-	template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Segment3<float>& segment) const noexcept;
+	bool intersects(const Triangle3<float>& triangle) const noexcept;
+	bool intersects(const AxisAlignedBox<float>& box) const noexcept;
+	bool intersects(const OrientedBox<float>& box) const noexcept;
+	bool intersects(const Sphere<float>& sphere) const noexcept;
+	bool intersects(const Ellipsoid<float>& ellipsoid) const noexcept;
 
 	static const Plane EMPTY;
 
@@ -395,68 +401,6 @@ inline bool Plane<T>::contains(const Vector3<T>& point) const
 	return (std::fabs(dot(getNormal(), point) + d) < Constants<T>::TOLERANCE); 
 }
 
-template<typename T>
-inline bool Plane<T>::intersects(const Line3<T>& line) const
-{
-	return (std::fabs(dot(getNormal(), line.direction)) >= Constants<T>::TOLERANCE);
-}
-
-template<typename T>
-inline std::optional<T> Plane<T>::findIntersection(const Line3<T>& line) const
-{
-	T nd = dot(getNormal(), line.direction);
-	if (std::fabs(nd) < Constants<T>::TOLERANCE)
-		return {};
-	return std::optional<T>((-d - dot(getNormal(), line.origin))/nd);
-}
-
-template<typename T>
-inline std::optional<T> Plane<T>::findIntersection(const Ray3<T>& ray) const
-{
-	std::optional<T> result = findIntersection(ray.asLine());
-	return (result.has_value() && (result.value() >= T(0))) ? result : std::optional<T>();
-}
-
-template<typename T>
-inline std::optional<T> Plane<T>::findIntersection(const Segment3<T>& segment) const
-{
-	std::optional<T> result = findIntersection(Line3(segment.start, segment.end - segment.start));
-	return (result.has_value() && (result.value() >= T(0)) && (result.value() <= T(1))) ? result : std::optional<T>();
-}
-
-template<typename T>
-template<ScalarOrVector3<T> U>
-inline std::optional<U> Plane<T>::findIntersection(const Line3<T>& line) const
-{
-	std::optional<T> result = findIntersection(line);
-	if constexpr (std::is_same_v<U, T>)
-		return result;
-	else //if constexpr (std::is_same_v<U, Vector3<T>>)
-		return result.has_value() ? std::optional<U>(line.evaluate(result.value())) : std::optional<U>();
-}
-
-template<typename T>
-template<ScalarOrVector3<T> U>
-inline std::optional<U> Plane<T>::findIntersection(const Ray3<T>& ray) const
-{
-	std::optional<T> result = findIntersection(ray);
-	if constexpr (std::is_same_v<U, T>)
-		return result;
-	else //if constexpr (std::is_same_v<U, Vector3<T>>)
-		return result.has_value() ? std::optional<U>(ray.evaluate(result.value())) : std::optional<U>();
-}
-
-template<typename T>
-template<ScalarOrVector3<T> U>
-inline std::optional<U> Plane<T>::findIntersection(const Segment3<T>& segment) const
-{
-	std::optional<T> result = findIntersection(segment);
-	if constexpr (std::is_same_v<U, T>)
-		return result;
-	else //if constexpr (std::is_same_v<U, Vector3<T>>)
-		return result.has_value() ? std::optional<U>(segment.evaluate(result.value())) : std::optional<U>();
-}
-
 #if SIMD_HAS_FLOAT4
 
 inline Plane<float>::Plane<float>(const Vector3<float>& p0, const Vector3<float>& p1, const Vector3<float>& p2)
@@ -594,62 +538,6 @@ inline bool Plane<float>::contains(const Vector3<float>& point) const
 	return (std::fabs(dot(getNormal(), point) + d) < Constants<float>::TOLERANCE);
 }
 
-inline bool Plane<float>::intersects(const Line3<float>& line) const
-{
-	return (std::fabs(dot(getNormal(), line.direction)) >= Constants<float>::TOLERANCE);
-}
-
-inline std::optional<float> Plane<float>::findIntersection(const Line3<float>& line) const
-{
-	Vector3<float> n = getNormal();
-	float nd = dot(n, line.direction);
-	if (std::fabs(nd) < Constants<float>::TOLERANCE)
-		return {};
-	return std::optional<float>((-d - dot(n, line.origin))/nd);
-}
-
-inline std::optional<float> Plane<float>::findIntersection(const Ray3<float>& ray) const
-{
-	std::optional<float> result = findIntersection(ray.asLine());
-	return (result.has_value() && (result.value() >= 0.f)) ? result : std::optional<float>();
-}
-
-inline std::optional<float> Plane<float>::findIntersection(const Segment3<float>& segment) const
-{
-	std::optional<float> result = findIntersection(Line3(segment.start, segment.end - segment.start));
-	return (result.has_value() && (result.value() >= 0.f) && (result.value() <= 1.f)) ? result : std::optional<float>();
-}
-
-template<ScalarOrVector3<T> U>
-inline std::optional<U> Plane<float>::findIntersection(const Line3<float>& line) const
-{
-	std::optional<float> result = findIntersection(line);
-	if constexpr (std::is_same_v<U, float>)
-		return result;
-	else //if constexpr (std::is_same_v<U, Vector3<float>>)
-		return result.has_value() ? std::optional<U>(line.evaluate(result.value())) : std::optional<U>();
-}
-
-template<ScalarOrVector3<T> U>
-inline std::optional<U> Plane<float>::findIntersection(const Ray3<float>& ray) const
-{
-	std::optional<float> result = findIntersection(ray);
-	if constexpr (std::is_same_v<U, float>)
-		return result;
-	else //if constexpr (std::is_same_v<U, Vector3<float>>)
-		return result.has_value() ? std::optional<U>(ray.evaluate(result.value())) : std::optional<U>();
-}
-
-template<ScalarOrVector3<T> U>
-inline std::optional<U> Plane<float>::findIntersection(const Segment3<float>& segment) const
-{
-	std::optional<float> result = findIntersection(segment);
-	if constexpr (std::is_same_v<U, float>)
-		return result;
-	else //if constexpr (std::is_same_v<U, Vector3<float>>)
-		return result.has_value() ? std::optional<U>(segment.evaluate(result.value())) : std::optional<U>();
-}
-
 #endif /* SIMD_HAS_FLOAT4 */
 
 template<std::size_t I, typename T>
@@ -784,3 +672,72 @@ struct hash<::core::mathematics::templates::Plane<T>>
 };
 
 } // namespace std
+
+#include "Triangle3.hpp"
+#include "AxisAlignedBox.hpp"
+#include "OrientedBox.hpp"
+#include "Sphere.hpp"
+#include "Ellipsoid.hpp"
+
+namespace core::mathematics::templates {
+
+template<typename T>
+inline bool Plane<T>::intersects(const Triangle3<T>& triangle) const
+{
+	return triangle.intersects(*this);
+}
+
+template<typename T>
+inline bool Plane<T>::intersects(const AxisAlignedBox<T>& box) const
+{
+	return box.intersects(*this);
+}
+
+template<typename T>
+inline bool Plane<T>::intersects(const OrientedBox<T>& box) const
+{
+	return box.intersects(*this);
+}
+
+template<typename T>
+inline bool Plane<T>::intersects(const Sphere<T>& sphere) const
+{
+	return sphere.intersects(*this);
+}
+
+template<typename T>
+inline bool Plane<T>::intersects(const Ellipsoid<T>& ellipsoid) const
+{
+	return ellipsoid.intersects(*this);
+}
+
+#if SIMD_HAS_FLOAT4
+
+inline bool Plane<float>::intersects(const Triangle3<float>& triangle) const
+{
+	return triangle.intersects(*this);
+}
+
+inline bool Plane<float>::intersects(const AxisAlignedBox<float>& box) const
+{
+	return box.intersects(*this);
+}
+
+inline bool Plane<float>::intersects(const OrientedBox<float>& box) const
+{
+	return box.intersects(*this);
+}
+
+inline bool Plane<float>::intersects(const Sphere<float>& sphere) const
+{
+	return sphere.intersects(*this);
+}
+
+inline bool Plane<float>::intersects(const Ellipsoid<float>& ellipsoid) const
+{
+	return ellipsoid.intersects(*this);
+}
+
+#endif /* SIMD_HAS_FLOAT4 */
+
+} // namespace core::mathematics::templates

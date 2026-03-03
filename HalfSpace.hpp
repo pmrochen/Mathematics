@@ -20,8 +20,6 @@
 #include "Vector3.hpp"
 #include "Matrix3.hpp"
 #include "AffineTransform.hpp"
-#include "Segment3.hpp"
-#include "Triangle3.hpp"
 
 namespace core::mathematics {
 namespace templates {
@@ -29,6 +27,22 @@ namespace templates {
 template<typename T>
 	requires std::floating_point<T>
 struct Plane;
+
+template<typename T>
+	requires std::floating_point<T>
+struct Triangle3;
+
+template<typename T>
+	requires std::floating_point<T>
+struct AxisAlignedBox;
+
+template<typename T>
+	requires std::floating_point<T>
+struct OrientedBox;
+
+template<typename T>
+	requires std::floating_point<T>
+struct Sphere;
 
 template<typename T>
 	requires std::floating_point<T>
@@ -95,8 +109,10 @@ struct HalfSpace
 
 	// Containment and intersection
 	bool contains(const Vector3<T>& point) const noexcept { return (dot(getNormal(), point) <= -d); }
-	bool intersects(const Segment3<T>& segment) const noexcept;
 	bool intersects(const Triangle3<T>& triangle) const noexcept;
+	bool intersects(const AxisAlignedBox<T>& box) const noexcept;
+	bool intersects(const OrientedBox<T>& box) const noexcept;
+	bool intersects(const Sphere<T>& sphere) const noexcept;
 
 	static const HalfSpace EMPTY;
 
@@ -186,8 +202,10 @@ struct HalfSpace<float>
 
 	// Containment and intersection
 	bool contains(const Vector3<float>& point) const noexcept { return (dot(getNormal(), point) <= -d); }
-	bool intersects(const Segment3<float>& segment) const noexcept;
 	bool intersects(const Triangle3<float>& triangle) const noexcept;
+	bool intersects(const AxisAlignedBox<float>& box) const noexcept;
+	bool intersects(const OrientedBox<float>& box) const noexcept;
+	bool intersects(const Sphere<float>& sphere) const noexcept;
 
 	static const HalfSpace EMPTY;
 
@@ -359,17 +377,11 @@ inline T HalfSpace<T>::getSignedDistanceTo(const Vector3<T>& point) const
 		return (dot(getNormal(), point) + d)/getNormal().getMagnitude(), T(0);
 }
 
-template<typename T>
-inline bool HalfSpace<T>::intersects(const Segment3<T>& segment) const
-{
-	return contains(segment.start) || contains(segment.end);
-}
-
-template<typename T>
-inline bool HalfSpace<T>::intersects(const Triangle3<T>& triangle) const
-{
-	return contains(triangle.vertices[0]) || contains(triangle.vertices[1]) || contains(triangle.vertices[2]);
-}
+//template<typename T>
+//inline bool HalfSpace<T>::intersects(const Triangle3<T>& triangle) const
+//{
+//	return contains(triangle.vertices[0]) || contains(triangle.vertices[1]) || contains(triangle.vertices[2]);
+//}
 
 #if SIMD_HAS_FLOAT4
 
@@ -498,15 +510,10 @@ inline float HalfSpace<float>::getSignedDistanceTo(const Vector3<float>& point) 
 		return (dot(getNormal(), point) + d)/getNormal().getMagnitude(), T(0);
 }
 
-inline bool HalfSpace<float>::intersects(const Segment3<float>& segment) const
-{
-	return contains(segment.start) || contains(segment.end);
-}
-
-inline bool HalfSpace<float>::intersects(const Triangle3<float>& triangle) const
-{
-	return contains(triangle.vertices[0]) || contains(triangle.vertices[1]) || contains(triangle.vertices[2]);
-}
+//inline bool HalfSpace<float>::intersects(const Triangle3<float>& triangle) const
+//{
+//	return contains(triangle.vertices[0]) || contains(triangle.vertices[1]) || contains(triangle.vertices[2]);
+//}
 
 #endif /* SIMD_HAS_FLOAT4 */
 
@@ -644,6 +651,10 @@ struct hash<::core::mathematics::templates::HalfSpace<T>>
 } // namespace std
 
 #include "Plane.hpp"
+#include "Triangle3.hpp"
+#include "AxisAlignedBox.hpp"
+#include "OrientedBox.hpp"
+#include "Sphere.hpp"
 
 namespace core::mathematics::templates {
 
@@ -658,6 +669,30 @@ inline const Plane<T>& HalfSpace<T>::asPlane() const
 	return reinterpret_cast<const Plane<T>&>(*this); 
 }
 
+template<typename T>
+inline bool HalfSpace<T>::intersects(const Triangle3<T>& triangle) const
+{
+	return triangle.intersects(*this);
+}
+
+template<typename T>
+inline bool HalfSpace<T>::intersects(const AxisAlignedBox<T>& box) const
+{
+	return box.intersects(*this);
+}
+
+template<typename T>
+inline bool HalfSpace<T>::intersects(const OrientedBox<T>& box) const
+{
+	return box.intersects(*this);
+}
+
+template<typename T>
+inline bool HalfSpace<T>::intersects(const Sphere<T>& sphere) const
+{
+	return sphere.intersects(*this);
+}
+
 #if SIMD_HAS_FLOAT4
 
 inline HalfSpace<float>::HalfSpace(const Plane<float>& p) : abcd(p.abcd)
@@ -667,6 +702,26 @@ inline HalfSpace<float>::HalfSpace(const Plane<float>& p) : abcd(p.abcd)
 inline const Plane<float> HalfSpace<float>::asPlane() const
 { 
 	return Plane<float>(abcd); 
+}
+
+inline bool HalfSpace<float>::intersects(const Triangle3<float>& triangle) const
+{
+	return triangle.intersects(*this);
+}
+
+inline bool HalfSpace<float>::intersects(const AxisAlignedBox<float>& box) const
+{
+	return box.intersects(*this);
+}
+
+inline bool HalfSpace<float>::intersects(const OrientedBox<float>& box) const
+{
+	return box.intersects(*this);
+}
+
+inline bool HalfSpace<float>::intersects(const Sphere<float>& sphere) const
+{
+	return sphere.intersects(*this);
 }
 
 #endif /* SIMD_HAS_FLOAT4 */

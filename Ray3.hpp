@@ -10,16 +10,49 @@
 #include <type_traits>
 #include <concepts>
 #include <utility>
+#include <optional>
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
 #include "Vector3.hpp"
 #include "Matrix3.hpp"
 #include "AffineTransform.hpp"
+#include "Interval.hpp"
 #include "Line3.hpp"
 
 namespace core::mathematics {
 namespace templates {
+
+template<typename T>
+	requires std::floating_point<T>
+struct Plane;
+
+template<typename T>
+	requires std::floating_point<T>
+struct Triangle3;
+
+template<typename T>
+	requires std::floating_point<T>
+struct AxisAlignedBox;
+
+template<typename T>
+	requires std::floating_point<T>
+struct OrientedBox;
+
+template<typename T>
+	requires std::floating_point<T>
+struct Sphere;
+
+template<typename T>
+	requires std::floating_point<T>
+struct Ellipsoid;
+
+#if SIMD_HAS_FLOAT4
+
+template<>
+struct Plane<float>;
+
+#endif /* SIMD_HAS_FLOAT4 */
 
 template<typename T>
 	requires std::floating_point<T>
@@ -67,6 +100,23 @@ struct Ray3
 	template<Normalization U> Vector3<T> getClosestPoint(const Vector3<T>& point) const;
 	T getDistanceTo(const Vector3<T>& point) const { return distance(getClosestPoint(point), point); }	// normalized ray
 	template<Normalization U> T getDistanceTo(const Vector3<T>& point) const { return distance(getClosestPoint<U>(point), point); }
+
+	// Intersection
+	bool intersects(const Plane<T>& plane) const noexcept { return findIntersection(plane).has_value(); }
+	bool intersects(const Triangle3<T>& triangle) const noexcept { return findIntersection(triangle).has_value(); }
+	bool intersects(const AxisAlignedBox& box) const noexcept { return findIntersection(box).has_value(); }
+	bool intersects(const OrientedBox& box) const noexcept { return findIntersection(box).has_value(); }
+	bool intersects(const Sphere<T>& sphere) const noexcept { return findIntersection(sphere).has_value(); }
+	template<Normalization U> bool intersects(const Sphere<T>& sphere) const noexcept { return findIntersection<U>(sphere).has_value(); }
+	bool intersects(const Ellipsoid<T>& ellipsoid) const noexcept; // #TODO
+	std::optional<T> findIntersection(const Plane<T>& plane) const noexcept;
+	std::optional<T> findIntersection(const Triangle3<T>& triangle) const noexcept; // #TODO
+	//template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Plane<T>& plane) const noexcept;
+	std::optional<Interval<T>> findIntersection(const AxisAlignedBox& box) const noexcept;
+	std::optional<Interval<T>> findIntersection(const OrientedBox& box) const noexcept;
+	std::optional<Interval<T>> findIntersection(const Sphere<T>& sphere) const noexcept;
+	template<Normalization U> std::optional<Interval<T>> findIntersection(const Sphere<T>& sphere) const noexcept;
+	std::optional<Interval<T>> findIntersection(const Ellipsoid<T>& ellipsoid) const noexcept; // #TODO
 
 	Vector3<T> origin;
 	Vector3<T> direction;
@@ -178,3 +228,105 @@ struct hash<::core::mathematics::templates::Ray3<T>>
 };
 
 } // namespace std
+
+#include "Plane.hpp"
+#include "Triangle3.hpp"
+#include "AxisAlignedBox.hpp"
+#include "OrientedBox.hpp"
+#include "Sphere.hpp"
+#include "Ellipsoid.hpp"
+
+namespace core::mathematics::templates {
+
+template<typename T>
+inline std::optional<T> Ray3<T>::findIntersection(const Plane<T>& plane) const
+{
+	std::optional<T> result = asLine().findIntersection(plane);
+	return (result.has_value() && (result.value() >= T(0))) ? result : {};
+}
+
+//template<typename T>
+//template<ScalarOrVector3<T> U>
+//inline std::optional<U> Ray3<T>::findIntersection(const Plane<T>& plane) const
+//{
+//	std::optional<T> result = findIntersection(plane);
+//	if constexpr (std::is_same_v<U, T>)
+//		return result;
+//	else //if constexpr (std::is_same_v<U, Vector3<T>>)
+//		return result.has_value() ? { evaluate(result.value()) } : {};
+//}
+
+template<typename T>
+inline std::optional<Interval<T>> Ray3<T>::findIntersection(const AxisAlignedBox<T>& box) const
+{
+	std::optional<Interval<T>> result = asLine().findIntersection(box);
+	if (result.has_value() && (result.value().maximum >= T(0)))
+	{
+		const Interval<T>& interval = result.value();
+		if (interval.minimum != interval.maximum)
+			return { std::in_place, std::max(interval.minimum, T(0)), interval.maximum };
+		else
+			return result;
+	}
+	else
+	{
+		return {};
+	}
+}
+
+template<typename T>
+inline std::optional<Interval<T>> Ray3<T>::findIntersection(const OrientedBox<T>& box) const
+{
+	std::optional<Interval<T>> result = asLine().findIntersection(box);
+	if (result.has_value() && (result.value().maximum >= T(0)))
+	{
+		const Interval<T>& interval = result.value();
+		if (interval.minimum != interval.maximum)
+			return { std::in_place, std::max(interval.minimum, T(0)), interval.maximum };
+		else
+			return result;
+	}
+	else
+	{
+		return {};
+	}
+}
+
+template<typename T>
+inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Sphere<T>& sphere) const
+{
+	std::optional<Interval<T>> result = asLine().findIntersection(sphere);
+	if (result.has_value() && (result.value().maximum >= T(0)))
+	{
+		const Interval<T>& interval = result.value();
+		if (interval.minimum != interval.maximum)
+			return { std::in_place, std::max(interval.minimum, T(0)), interval.maximum };
+		else
+			return result;
+	}
+	else
+	{
+		return {};
+	}
+}
+
+template<typename T>
+template<Normalization U>
+inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Sphere<T>& sphere) const
+{
+	std::optional<Interval<T>> result = asLine().findIntersection<U>(sphere);
+	if (result.has_value() && (result.value().maximum >= T(0)))
+	{
+		const Interval<T>& interval = result.value();
+		if (interval.minimum != interval.maximum)
+			return { std::in_place, std::max(interval.minimum, T(0)), interval.maximum };
+		else
+			return result;
+	}
+	else
+	{
+		return {};
+	}
+}
+
+} // namespace core::mathematics::templates
