@@ -42,6 +42,8 @@
     <ClInclude Include="AxisAlignedRectangle.hpp" />
     <ClInclude Include="Circle2.hpp" />
     <ClInclude Include="Interval.hpp" />
+    <ClInclude Include="AxisAlignedBox.hpp" />
+    <ClInclude Include="Sphere.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Simd">
