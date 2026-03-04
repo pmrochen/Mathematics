@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <cmath>
 #include "Constants.hpp"
+#include "Scalar.hpp"
 #include "Vector2.hpp"
 #include "AxisAlignedRectangle.hpp"
 
@@ -55,15 +56,18 @@ struct Circle2
 	// Circumscribed rectangle
 	AxisAlignedRectangle<T> getCircumscribedRectangle() const noexcept;
 
+	// Transformation
+	Circle2& translate(const Vector2<T>& offset) { center += offset; return *this; }
+
 	// Closest point
 	//Vector2<T> getClosestPoint(const Vector2<T>& point) const noexcept; // #TODO
 	T getDistanceTo(const Vector2<T>& point) const { return std::max(distance(point, center) - radius, T(0)); }
 	T getSignedDistanceTo(const Vector2<T>& point) const noexcept { return distance(point, center) - radius; }
 
 	// Containment and intersection
-	bool contains(const Vector2<T>& point) const noexcept;
+	bool contains(const Vector2<T>& point) const noexcept { return (distanceSquared(point, center) <= radius*radius); }
 	bool intersects(const AxisAlignedRectangle<T>& rectangle) const noexcept;
-	bool intersects(const Circle2<T>& circle) const noexcept;
+	bool intersects(const Circle2& circle) const noexcept;
 
 	Vector2<T> center;
 	T radius;
@@ -101,43 +105,22 @@ inline bool Circle2<T>::approxEquals(const Circle2<T>& circle, T tolerance) cons
 template<typename T>
 inline AxisAlignedRectangle<T> Circle2<T>::getCircumscribedRectangle() const
 {
-	Vector2<T> h(radius, radius);
-	return AxisAlignedRectangle<T>(center - h, center + h);
-}
-
-template<typename T>
-inline bool Circle2<T>::contains(const Vector2<T>& point) const
-{
-	return (distanceSquared(point, center) <= radius*radius);
+	Vector2<T> halfDims(radius);
+	return AxisAlignedRectangle<T>(center - halfDims, center + halfDims);
 }
 
 template<typename T>
 inline bool Circle2<T>::intersects(const AxisAlignedRectangle<T>& rectangle) const
 {
 	T d = T(0);
-	
 	if (center.x < rectangle.minimum.x)
-	{
-		T s = center.x - rectangle.minimum.x;
-		d += s*s;
-	}
+		d += sqr(center.x - rectangle.minimum.x);
 	else if (center.x > rectangle.maximum.x)
-	{
-		T s = center.x - rectangle.maximum.x;
-		d += s*s;
-	}
-
+		d += sqr(center.x - rectangle.maximum.x);
 	if (center.y < rectangle.minimum.y)
-	{
-		T s = center.y - rectangle.minimum.y;
-		d += s*s;
-	}
+		d += sqr(center.y - rectangle.minimum.y);
 	else if (center.y > rectangle.maximum.y)
-	{
-		T s = center.y - rectangle.maximum.y;
-		d += s*s;
-	}
-
+		d += sqr(center.y - rectangle.maximum.y);
 	return (d <= radius*radius);
 }
 
