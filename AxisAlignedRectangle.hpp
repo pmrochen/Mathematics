@@ -36,11 +36,11 @@ struct AxisAlignedRectangle
 	explicit AxisAlignedRectangle(Uninitialized) noexcept : minimum(Uninitialized()), maximum(Uninitialized()) {}
 	AxisAlignedRectangle(const Vector2<T>& minimum, const Vector2<T>& maximum) noexcept : minimum(minimum), maximum(maximum) {}
 	explicit AxisAlignedRectangle(const Vector2<T>& dimensions) noexcept : minimum(T(-0.5)*dimensions), maximum(T(0.5)*dimensions) {}
-	explicit AxisAlignedRectangle(const std::pair<Vector3<T>, Vector3<T>>& t) noexcept : minimum(t.first), maximum(t.second) {}
-	explicit AxisAlignedRectangle(const std::tuple<Vector3<T>, Vector3<T>>& t) noexcept : minimum(std::get<0>(t)), maximum(std::get<1>(t)) {}
+	explicit AxisAlignedRectangle(const std::pair<Vector2<T>, Vector2<T>>& t) noexcept : minimum(t.first), maximum(t.second) {}
+	explicit AxisAlignedRectangle(const std::tuple<Vector2<T>, Vector2<T>>& t) noexcept : minimum(std::get<0>(t)), maximum(std::get<1>(t)) {}
 
-	//explicit operator std::pair<Vector3<T>, Vector3<T>>() { return { minimum, maximum }; }
-	//explicit operator std::tuple<Vector3<T>, Vector3<T>>() { return { minimum, maximum }; }
+	//explicit operator std::pair<Vector2<T>, Vector2<T>>() { return { minimum, maximum }; }
+	//explicit operator std::tuple<Vector2<T>, Vector2<T>>() { return { minimum, maximum }; }
 	bool operator==(const AxisAlignedRectangle& rectangle) const noexcept { return (minimum == rectangle.minimum) && (maximum == rectangle.maximum); }
 	bool operator!=(const AxisAlignedRectangle& rectangle) const noexcept { return !(*this == rectangle); }
 
@@ -68,8 +68,11 @@ struct AxisAlignedRectangle
 	T getArea() const noexcept;
 
 	// Vertices
-	template<std::output_iterator<Vector2<T>> O, std::sentinel_for<O> S> O copyVertices(O first, S last) const noexcept;
-	void copyVertices(std::vector<Vector2>& vertices) const;
+	template<std::output_iterator<Vector2<T>> O> O copyVertices(O target) const noexcept;
+	std::vector<Vector2> getVertices() const;
+
+	// Circumscribed sphere
+	Circle2<T> getCircumscribedCircle() const noexcept;
 
 	// Transformation
 	AxisAlignedRectangle& inflate(const Vector2<T>& halfDims) noexcept { minimum -= halfDims; maximum += halfDims; return *this; }
@@ -82,9 +85,10 @@ struct AxisAlignedRectangle
 	static AxisAlignedRectangle makeIntersection(const AxisAlignedRectangle& a, const AxisAlignedRectangle& b) noexcept { return AxisAlignedRectangle(Uninitialized()).setIntersection(a, b); }
 	AxisAlignedRectangle& extendBy(const Vector2<T>& point) noexcept;
 	AxisAlignedRectangle& extendBy(const AxisAlignedRectangle& rectangle) noexcept { return setUnion(*this, rectangle); }
+	AxisAlignedRectangle& extendBy(const Circle2<T>& circle) noexcept;
 
 	// Closest point
-	Vector2<T> getClosestPoint(const Vector2<T>& point) const noexcept;
+	Vector2<T> getClosestPoint(const Vector2<T>& point) const noexcept { return clamp(point, minimum, maximum); }
 	T getDistanceTo(const Vector2<T>& point) const noexcept { return distance(point, getClosestPoint(point)); }
 
 	// Containment and intersection
@@ -169,24 +173,26 @@ inline T AxisAlignedRectangle<T>::getArea() const
 }
 
 template<typename T>
-template<std::output_iterator<Vector2<T>> O, std::sentinel_for<O> S> 
-inline O AxisAlignedRectangle<T>::copyVertices(O first, S last) const
+template<std::output_iterator<Vector2<T>> O> 
+inline O AxisAlignedRectangle<T>::copyVertices(O target) const
 {
-	*first++ = minimum;
-	(first++)->set(maximum.x, minimum.y);
-	(first++)->set(minimum.x, maximum.y);
-	*first++ = maximum;
-	return first;
+	*target++ = minimum;
+	(target++)->set(maximum.x, minimum.y);
+	(target++)->set(minimum.x, maximum.y);
+	*target++ = maximum;
+	return target;
 }
 
 template<typename T>
-inline void AxisAlignedRectangle<T>::getVertices(std::vector<Vector2>& vertices) const
+inline std::vector<Vector2<T>> AxisAlignedRectangle<T>::getVertices() const
 {
+	std::vector<Vector2<T>> vertices;
 	vertices.resize(4);
 	vertices[0] = minimum;
 	vertices[1].set(maximum.x, minimum.y);
 	vertices[2].set(minimum.x, maximum.y);
 	vertices[3] = maximum;
+	return vertices;
 }
 
 template<typename T>
@@ -214,30 +220,21 @@ inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::extendBy(const Vector2<
 }
 
 template<typename T>
-inline Vector2<T> AxisAlignedRectangle<T>::getClosestPoint(const Vector2<T>& point) const
-{
-	return minimum(maximum(point, this->minimum), this->maximum);
-}
-
-template<typename T>
 inline bool AxisAlignedRectangle<T>::contains(const Vector2<T>& point) const
 {
-	return (minimum.x <= point.x) && (maximum.x >= point.x) && // #TODO SIMD
-		(minimum.y <= point.y) && (maximum.y >= point.y);
+	return minimum.allLessThanEqual(point) && maximum.allGreaterThanEqual(point);
 }
 
 template<typename T>
 inline bool AxisAlignedRectangle<T>::contains(const AxisAlignedRectangle<T>& rectangle) const
 {
-	return (minimum.x <= rectangle.minimum.x) && (maximum.x >= rectangle.maximum.x) && // #TODO SIMD
-		(minimum.y <= rectangle.minimum.y) && (maximum.y >= rectangle.maximum.y);
+	return minimum.allLessThanEqual(rectangle.minimum) && maximum.allGreaterThanEqual(rectangle.maximum);
 }
 
 template<typename T>
 inline bool AxisAlignedRectangle<T>::intersects(const AxisAlignedRectangle<T>& rectangle) const
 {
-	return (minimum.x <= rectangle.maximum.x) && (maximum.x >= rectangle.minimum.x) && // #TODO SIMD
-		(minimum.y <= rectangle.maximum.y) && (maximum.y >= rectangle.minimum.y);
+	return minimum.allLessThanEqual(rectangle.maximum) && maximum.allGreaterThanEqual(rectangle.minimum);
 }
 
 } // namespace templates
@@ -276,12 +273,27 @@ struct hash<::core::mathematics::templates::AxisAlignedRectangle<T>>
 #include "Circle2.hpp"
 
 namespace core::mathematics::templates {
+	
+template<typename T>
+inline Circle2<T> AxisAlignedRectangle<T>::getCircumscribedCircle() const
+{
+	Vector2<T> center = (minimum + maximum)*T(0.5);
+	return Circle2<T>(center, distance(center, maximum));
+}
+
+template<typename T>
+inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::extendBy(const Circle2<T>& circle)
+{
+	Vector2<T> radius(circle.radius);
+	setUnion(*this, AxisAlignedRectangle<T>(circle.center - radius, circle.center + radius));
+	return *this;
+}
 
 template<typename T>
 inline bool AxisAlignedRectangle<T>::contains(const Circle2<T>& circle) const
 {
-	return (minimum.x <= (circle.center.x - circle.radius)) && (maximum.x >= (circle.center.x + circle.radius)) && // #TODO SIMD
-		(minimum.y <= (circle.center.y - circle.radius)) && (maximum.y >= (circle.center.y + circle.radius));
+	Vector2<T> radius(circle.radius);
+	return minimum.allLessThanEqual(circle.center - radius) && maximum.allGreaterThanEqual(circle.center + radius);
 }
 
 template<typename T>
