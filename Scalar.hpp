@@ -55,6 +55,13 @@ inline T frac(T x) noexcept
 	return x - std::floor(x);
 }
 
+template<typename T>
+	requires (std::floating_point<T> || std::integral<T>)
+inline T sqr(T x) noexcept
+{
+	return x*x;
+}
+
 template<std::floating_point T>
 inline bool approxEquals(T a, T b) noexcept
 { 
