@@ -126,6 +126,10 @@ struct Vector4<T>
 	static const Vector4 UNIT_Y;
 	static const Vector4 UNIT_Z; 
 	static const Vector4 UNIT_W; 
+	static const Vector4 MINUS_UNIT_X;
+	static const Vector4 MINUS_UNIT_Y;
+	static const Vector4 MINUS_UNIT_Z;
+	static const Vector4 MINUS_UNIT_W;
 	static const Vector4 ONE;
 	static const Vector4 TOLERANCE;
 	static const Vector4 INF;
@@ -139,6 +143,10 @@ template<std::floating_point T> const Vector4<T> Vector4<T>::UNIT_X{ T(1), T(0),
 template<std::floating_point T> const Vector4<T> Vector4<T>::UNIT_Y{ T(0), T(1), T(0), T(0) };
 template<std::floating_point T> const Vector4<T> Vector4<T>::UNIT_Z{ T(0), T(0), T(1), T(0) };
 template<std::floating_point T> const Vector4<T> Vector4<T>::UNIT_W{ T(0), T(0), T(0), T(1) };
+template<std::floating_point T> const Vector4<T> Vector4<T>::MINUS_UNIT_X{ T(-1), T(0), T(0), T(0) };
+template<std::floating_point T> const Vector4<T> Vector4<T>::MINUS_UNIT_Y{ T(0), T(-1), T(0), T(0) };
+template<std::floating_point T> const Vector4<T> Vector4<T>::MINUS_UNIT_Z{ T(0), T(0), T(-1), T(0) };
+template<std::floating_point T> const Vector4<T> Vector4<T>::MINUS_UNIT_W{ T(0), T(0), T(0), T(-1) };
 template<std::floating_point T> const Vector4<T> Vector4<T>::ONE{ T(1), T(1), T(1), T(1) };
 template<std::floating_point T> const Vector4<T> Vector4<T>::TOLERANCE{ Constants<T>::TOLERANCE, Constants<T>::TOLERANCE, Constants<T>::TOLERANCE, Constants<T>::TOLERANCE };
 template<std::floating_point T> const Vector4<T> Vector4<T>::INF{ std::numeric_limits<T>::infinity(), std::numeric_limits<T>::infinity(), std::numeric_limits<T>::infinity(), std::numeric_limits<T>::infinity() };
@@ -332,6 +340,10 @@ struct Vector4<float>
 	static const Vector4 UNIT_Y;
 	static const Vector4 UNIT_Z;
 	static const Vector4 UNIT_W;
+	static const Vector4 MINUS_UNIT_X;
+	static const Vector4 MINUS_UNIT_Y;
+	static const Vector4 MINUS_UNIT_Z;
+	static const Vector4 MINUS_UNIT_W;
 	static const Vector4 ONE;
 	static const Vector4 TOLERANCE;
 	static const Vector4 INF;
@@ -349,6 +361,10 @@ const Vector4<float> Vector4<float>::UNIT_X{ 1.f, 0.f, 0.f, 0.f };
 const Vector4<float> Vector4<float>::UNIT_Y{ 0.f, 1.f, 0.f, 0.f };
 const Vector4<float> Vector4<float>::UNIT_Z{ 0.f, 0.f, 1.f, 0.f };
 const Vector4<float> Vector4<float>::UNIT_W{ 0.f, 0.f, 0.f, 1.f };
+const Vector4<float> Vector4<float>::MINUS_UNIT_X{ -1.f, 0.f, 0.f, 0.f };
+const Vector4<float> Vector4<float>::MINUS_UNIT_Y{ 0.f, -1.f, 0.f, 0.f };
+const Vector4<float> Vector4<float>::MINUS_UNIT_Z{ 0.f, 0.f, -1.f, 0.f };
+const Vector4<float> Vector4<float>::MINUS_UNIT_W{ 0.f, 0.f, 0.f, -1.f };
 const Vector4<float> Vector4<float>::ONE{ 1.f, 1.f, 1.f, 1.f };
 const Vector4<float> Vector4<float>::TOLERANCE{ Constants<float>::TOLERANCE, Constants<float>::TOLERANCE, Constants<float>::TOLERANCE, Constants<float>::TOLERANCE };
 const Vector4<float> Vector4<float>::INF{ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() };
@@ -757,12 +773,47 @@ inline const T&& get(const Vector4<T>&& v) noexcept
 	static_assert(false);
 }
 
-//template<typename T>
-//	requires std::floating_point<T>
-//inline Vector4<T> abs(const Vector4<T>& v) noexcept // #TODO
-//{
-//	return Vector4<T>(std::fabs(v.x), std::fabs(v.y), std::fabs(v.z), std::fabs(v.w));
-//}
+template<typename T>
+	requires (std::floating_point<T> || std::integral<T>)
+inline Vector4<T> abs(const Vector4<T>& v) noexcept
+{
+	if constexpr (std::is_float_v<T>)
+		return Vector4<T>(std::fabs(v.x), std::fabs(v.y), std::fabs(v.z), std::fabs(v.w));
+	else // integral
+		return Vector4<T>(abs(v.x), abs(v.y), abs(v.z), abs(v.w));
+}
+
+template<typename T>
+#if SIMD_HAS_FLOAT4
+	requires ((std::floating_point<T> || std::integral<T>) && !std::same_as<T, float>)
+#else
+	requires (std::floating_point<T> || std::integral<T>)
+#endif
+inline Vector4<T> abs(Vector4<T>&& v) noexcept
+{
+	if constexpr (std::is_float_v<T>)
+	{
+		v.x = std::fabs(v.x);
+		v.y = std::fabs(v.y);
+		v.z = std::fabs(v.z);
+		v.w = std::fabs(v.w);
+	}
+	else // integral
+	{
+		v.x = abs(v.x);
+		v.y = abs(v.y);
+		v.z = abs(v.z);
+		v.w = abs(v.w);
+	}
+	return v;
+}
+
+template<typename T>
+	requires (std::floating_point<T> || std::integral<T>)
+inline T sum(const Vector4<T>& v) noexcept
+{
+	return v.x + v.y + v.z + v.w;
+}
 
 template<typename T>
 	requires std::floating_point<T>
@@ -836,6 +887,14 @@ inline Vector4<T> max(const Vector4<T>& v1, const Vector4<T>& v2)
 }
 
 template<typename T>
+	requires (std::floating_point<T> || std::integral<T>)
+inline Vector4<T> clamp(const Vector4<T>& v, const Vector4<T>& low, const Vector4<T>& high)
+{
+	return Vector4<T>(std::clamp(v.x, low.x, high.x), std::clamp(v.y, low.y, high.y), std::clamp(v.z, low.z, high.z), 
+		std::clamp(v.w, low.w, high.w));
+}
+
+template<typename T>
 	requires std::floating_point<T>
 inline Vector4<T> lerp(const Vector4<T>& v1, const Vector4<T>& v2, T t) noexcept
 {
@@ -863,20 +922,19 @@ inline Vector4<T> slerp(const Vector4<T>& v1, const Vector4<T>& v2, T t)
 	return Vector4<T>(v1.x*ct + c.x*st, v1.y*ct + c.y*st, v1.z*ct + c.z*st, v1.w*ct + c.w*st);
 }
 
-//template<typename T>
-//	requires std::integral<T>
-//inline Vector4<T> abs(const Vector4<T>& v) noexcept // #TODO
-//{
-//	return Vector4<T>(abs(v.x), abs(v.y), abs(v.z), abs(v.w));
-//}
-
 #if SIMD_HAS_FLOAT4
 
-//template<>
-//inline Vector4<float> abs(const Vector4<float>& v) noexcept // #TODO
-//{
-//	return Vector4<float>(simd::abs4(v));
-//}
+template<>
+inline Vector4<float> abs(const Vector4<float>& v) noexcept
+{
+	return Vector4<float>(simd::abs4(v));
+}
+
+template<>
+inline T sum(const Vector4<float>& v) noexcept
+{
+	return simd::toFloat(simd::hAdd4(v));
+}
 
 template<>
 inline float dot(const Vector4<float>& v1, const Vector4<float>& v2) noexcept
@@ -933,6 +991,12 @@ template<>
 inline Vector4<float> max(const Vector4<float>& v1, const Vector4<float>& v2)
 {
 	return Vector4<float>(simd::max4(v1, v2));
+}
+
+template<>
+inline Vector4<float> clamp(const Vector4<float>& v, const Vector4<float>& low, const Vector4<float>& high)
+{
+	return Vector4<float>(simd::min4(simd::max4(v, low), high));
 }
 
 template<>

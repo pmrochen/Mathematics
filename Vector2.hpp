@@ -140,6 +140,8 @@ struct Vector2<T>
 	static const Vector2 ZERO;
 	static const Vector2 UNIT_X;
 	static const Vector2 UNIT_Y;
+	static const Vector2 MINUS_UNIT_X;
+	static const Vector2 MINUS_UNIT_Y;
 	static const Vector2 ONE;
 	static const Vector2 TOLERANCE;
 	static const Vector2 INF;
@@ -151,6 +153,8 @@ struct Vector2<T>
 template<std::floating_point T> const Vector2<T> Vector2<T>::ZERO{};
 template<std::floating_point T> const Vector2<T> Vector2<T>::UNIT_X{ T(1), T(0) };
 template<std::floating_point T> const Vector2<T> Vector2<T>::UNIT_Y{ T(0), T(1) };
+template<std::floating_point T> const Vector2<T> Vector2<T>::MINUS_UNIT_X{ T(-1), T(0) };
+template<std::floating_point T> const Vector2<T> Vector2<T>::MINUS_UNIT_Y{ T(0), T(-1) };
 template<std::floating_point T> const Vector2<T> Vector2<T>::ONE{ T(1), T(1) };
 template<std::floating_point T> const Vector2<T> Vector2<T>::TOLERANCE{ Constants<T>::TOLERANCE, Constants<T>::TOLERANCE };
 template<std::floating_point T> const Vector2<T> Vector2<T>::INF{ std::numeric_limits<T>::infinity(), std::numeric_limits<T>::infinity() };
@@ -357,6 +361,8 @@ struct Vector2<float>
 	static const Vector2 ZERO;
 	static const Vector2 UNIT_X;
 	static const Vector2 UNIT_Y;
+	static const Vector2 MINUS_UNIT_X;
+	static const Vector2 MINUS_UNIT_Y;
 	static const Vector2 ONE;
 	static const Vector2 TOLERANCE;
 	static const Vector2 INF;
@@ -372,6 +378,8 @@ struct Vector2<float>
 const Vector2<float> Vector2<float>::ZERO{};
 const Vector2<float> Vector2<float>::UNIT_X{ 1.f, 0.f };
 const Vector2<float> Vector2<float>::UNIT_Y{ 0.f, 1.f };
+const Vector2<float> Vector2<float>::MINUS_UNIT_X{ -1.f, 0.f };
+const Vector2<float> Vector2<float>::MINUS_UNIT_Y{ 0.f, -1.f };
 const Vector2<float> Vector2<float>::ONE{ 1.f, 1.f };
 const Vector2<float> Vector2<float>::TOLERANCE{ Constants<float>::TOLERANCE, Constants<float>::TOLERANCE };
 const Vector2<float> Vector2<float>::INF{ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() };
@@ -762,12 +770,43 @@ inline const T&& get(const Vector2<T>&& v) noexcept
 	static_assert(false);
 }
 
-//template<typename T>
-//	requires std::floating_point<T>
-//inline Vector2<T> abs(const Vector2<T>& v) noexcept // #TODO
-//{
-//	return Vector2<T>(std::fabs(v.x), std::fabs(v.y));
-//}
+template<typename T>
+	requires (std::floating_point<T> || std::integral<T>)
+inline Vector2<T> abs(const Vector2<T>& v) noexcept
+{
+	if constexpr (std::is_float_v<T>)
+		return Vector2<T>(std::fabs(v.x), std::fabs(v.y));
+	else // integral
+		return Vector2<T>(abs(v.x), abs(v.y));
+}
+
+template<typename T>
+#if SIMD_HAS_FLOAT4
+	requires ((std::floating_point<T> || std::integral<T>) && !std::same_as<T, float>)
+#else
+	requires (std::floating_point<T> || std::integral<T>)
+#endif
+inline Vector2<T> abs(Vector2<T>&& v) noexcept
+{
+	if constexpr (std::is_float_v<T>)
+	{
+		v.x = std::fabs(v.x);
+		v.y = std::fabs(v.y);
+	}
+	else // integral
+	{
+		v.x = abs(v.x);
+		v.y = abs(v.y);
+	}
+	return v;
+}
+
+template<typename T>
+	requires (std::floating_point<T> || std::integral<T>)
+inline T sum(const Vector2<T>& v) noexcept
+{
+	return v.x + v.y;
+}
 
 template<typename T>
 	requires std::floating_point<T>
@@ -830,6 +869,13 @@ inline Vector2<T> max(const Vector2<T>& v1, const Vector2<T>& v2)
 }
 
 template<typename T>
+	requires (std::floating_point<T> || std::integral<T>)
+inline Vector2<T> clamp(const Vector2<T>& v, const Vector2<T>& low, const Vector2<T>& high)
+{
+	return Vector2<T>(std::clamp(v.x, low.x, high.x), std::clamp(v.y, low.y, high.y));
+}
+
+template<typename T>
 	requires std::floating_point<T>
 inline Vector2<T> lerp(const Vector2<T>& v1, const Vector2<T>& v2, T t) noexcept
 {
@@ -864,20 +910,19 @@ inline Vector2<T> perpendicular(const Vector2<T>& v) noexcept
 	return Vector2<T>(-v.y, v.x);
 }
 
-//template<typename T>
-//	requires std::integral<T>
-//inline Vector2<T> abs(const Vector2<T>& v) noexcept // #TODO
-//{
-//	return Vector2<T>(abs(v.x), abs(v.y));
-//}
-
 #if SIMD_HAS_FLOAT4
 
-//template<>
-//inline Vector2<float> abs(const Vector2<float>& v) noexcept // #TODO
-//{
-//	return Vector2<float>(simd::abs4(v));
-//}
+template<>
+inline Vector2<float> abs(const Vector2<float>& v) noexcept
+{
+	return Vector2<float>(simd::abs4(v));
+}
+
+template<>
+inline T sum(const Vector2<float>& v) noexcept
+{
+	return simd::toFloat(simd::hAdd2(v));
+}
 
 template<>
 inline float dot(const Vector2<float>& v1, const Vector2<float>& v2) noexcept
@@ -927,6 +972,12 @@ template<>
 inline Vector2<float> max(const Vector2<float>& v1, const Vector2<float>& v2)
 {
 	return Vector2<float>(simd::max4(v1, v2));
+}
+
+template<>
+inline Vector2<float> clamp(const Vector2<float>& v, const Vector2<float>& low, const Vector2<float>& high)
+{
+	return Vector2<float>(simd::min4(simd::max4(v, low), high));
 }
 
 template<>
