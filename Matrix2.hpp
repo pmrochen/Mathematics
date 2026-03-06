@@ -997,6 +997,22 @@ inline Matrix2<T> inverse(Matrix2<T>&& m) noexcept
 
 template<typename T>
 	requires std::floating_point<T>
+inline Matrix2<T> inverseTranspose(const Matrix2<T>& m) noexcept
+{
+	return Matrix2<T>(Uninitialized()).setInverseTranspose(m);
+}
+
+template<typename T>
+	requires std::floating_point<T>
+inline Matrix2<T> inverseTranspose(Matrix2<T>&& m) noexcept
+{
+	m.invert();
+	m.transpose();
+	return m;
+}
+
+template<typename T>
+	requires std::floating_point<T>
 inline Matrix2<T> adjoint(const Matrix2<T>& m) noexcept
 {
 	return Matrix2<T>(m.m11, -m.m10, -m.m01, m.m00);

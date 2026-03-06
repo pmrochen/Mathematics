@@ -1510,6 +1510,22 @@ inline Matrix3<T> inverse(Matrix3<T>&& m) noexcept
 
 template<typename T>
 	requires std::floating_point<T>
+inline Matrix3<T> inverseTranspose(const Matrix3<T>& m) noexcept
+{
+	return Matrix3<T>(Uninitialized()).setInverseTranspose(m);
+}
+
+template<typename T>
+	requires std::floating_point<T>
+inline Matrix3<T> inverseTranspose(Matrix3<T>&& m) noexcept
+{
+	m.invert();
+	m.transpose();
+	return m;
+}
+
+template<typename T>
+	requires std::floating_point<T>
 inline Matrix3<T> adjoint(const Matrix3<T>& m) noexcept
 {
 	auto det2 = [](T m00, T m01, T m10, T m11) -> T { return m00*m11 - m01*m10; };
