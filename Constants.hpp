@@ -11,7 +11,7 @@
 #define MATHEMATICS_FAST_NORMALIZE 1
 #endif
 
-namespace core::mathematics {
+namespace mathematics {
 
 //template<typename T> constexpr T /*ZERO_*/TOLERANCE = T();
 //template<> constexpr float /*ZERO_*/TOLERANCE = 1e-6f;
@@ -72,4 +72,4 @@ struct Constants<double>
 	static constexpr double RAD_TO_DEG = 57.29577951308232286465;
 };
 
-} // namespace core::mathematics
+} // namespace mathematics

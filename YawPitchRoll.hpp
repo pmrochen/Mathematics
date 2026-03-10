@@ -21,7 +21,7 @@
 #include "Matrix3.hpp"
 #include "Quaternion.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 namespace templates {
 
 template<typename T>
@@ -298,7 +298,7 @@ using YawPitchRoll = templates::YawPitchRoll<double>;
 using YawPitchRoll = templates::YawPitchRoll<float>;
 #endif
 
-} // namespace core::mathematics
+} // namespace mathematics
 
 namespace std {
 
@@ -306,7 +306,7 @@ template<size_t I, typename T>
 struct tuple_element;
 
 template<size_t I, typename T>
-struct tuple_element<I, ::core::mathematics::templates::YawPitchRoll<T>>
+struct tuple_element<I, ::mathematics::templates::YawPitchRoll<T>>
 {
 	using type = T;
 };
@@ -315,7 +315,7 @@ template<typename T>
 struct tuple_size;
 
 template<typename T>
-struct tuple_size<::core::mathematics::templates::YawPitchRoll<T>> : integral_constant<size_t, 3> 
+struct tuple_size<::mathematics::templates::YawPitchRoll<T>> : integral_constant<size_t, 3> 
 {
 };
 
@@ -323,9 +323,9 @@ template<typename T>
 struct hash;
 
 template<typename T>
-struct hash<::core::mathematics::templates::YawPitchRoll<T>>
+struct hash<::mathematics::templates::YawPitchRoll<T>>
 {
-	std::size_t operator()(const ::core::mathematics::templates::YawPitchRoll<T>& r) const noexcept
+	std::size_t operator()(const ::mathematics::templates::YawPitchRoll<T>& r) const noexcept
 	{
 		std::hash<T> hasher;
 		std::size_t seed = hasher(r.yaw) + 0x9e3779b9;
@@ -339,7 +339,7 @@ struct hash<::core::mathematics::templates::YawPitchRoll<T>>
 
 #include "Euler.hpp"
 
-namespace core::mathematics::templates {
+namespace mathematics::templates {
 
 template<typename T>
 inline YawPitchRoll<T>::YawPitchRoll(const Euler<T>& e)
@@ -370,4 +370,4 @@ inline YawPitchRoll<T>::YawPitchRoll(const Matrix3<T>& m) : YawPitchRoll<T>(Eule
 {
 }
 
-} // namespace core::mathematics::templates
+} // namespace mathematics::templates

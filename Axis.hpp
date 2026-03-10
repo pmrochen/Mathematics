@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace core::mathematics {
+namespace mathematics {
 
 enum class Axis
 {
@@ -15,4 +15,4 @@ enum class Axis
 	W
 };
 
-} // namespace core::mathematics
+} // namespace mathematics

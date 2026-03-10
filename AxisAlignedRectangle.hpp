@@ -17,7 +17,7 @@
 #include "Constants.hpp"
 #include "Vector2.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 namespace templates {
 
 template<typename T>
@@ -249,7 +249,7 @@ using AxisAlignedRectangleArg = templates::AxisAlignedRectangle<float>::ConstArg
 using AxisAlignedRectangleResult = templates::AxisAlignedRectangle<float>::ConstResult;
 #maximumif
 
-} // namespace core::mathematics
+} // namespace mathematics
 
 namespace std {
 
@@ -257,9 +257,9 @@ template<typename T>
 struct hash;
 
 template<typename T>
-struct hash<::core::mathematics::templates::AxisAlignedRectangle<T>>
+struct hash<::mathematics::templates::AxisAlignedRectangle<T>>
 {
-	std::size_t operator()(const ::core::mathematics::templates::AxisAlignedRectangle<T>& rectangle) const noexcept
+	std::size_t operator()(const ::mathematics::templates::AxisAlignedRectangle<T>& rectangle) const noexcept
 	{
 		std::hash<T> hasher;
 		std::size_t seed = hasher(rectangle.minimum) + 0x9e3779b9;
@@ -272,7 +272,7 @@ struct hash<::core::mathematics::templates::AxisAlignedRectangle<T>>
 
 #include "Circle2.hpp"
 
-namespace core::mathematics::templates {
+namespace mathematics::templates {
 	
 template<typename T>
 inline Circle2<T> AxisAlignedRectangle<T>::getCircumscribedCircle() const
@@ -302,4 +302,4 @@ inline bool AxisAlignedRectangle<T>::intersects(const Circle2<T>& circle) const
 	return circle.intersects(*this);
 }
 
-} // namespace core::mathematics::templates
+} // namespace mathematics::templates

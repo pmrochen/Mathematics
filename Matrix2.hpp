@@ -21,12 +21,9 @@
 #include "Vector3.hpp"
 #include "Vector4.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 	
-struct Identity
-{
-};
-
+struct Identity {};
 //constexpr Identity IDENTITY{};
 
 namespace templates {
@@ -1066,4 +1063,4 @@ using Matrix2Arg = templates::Matrix2<float>::ConstArg;
 using Matrix2Result = templates::Matrix2<float>::ConstResult;
 #endif
 
-} // namespace core::mathematics
+} // namespace mathematics

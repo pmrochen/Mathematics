@@ -23,11 +23,9 @@
 #include "Matrix2.hpp"
 #include "Matrix3.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 
-//struct Orthogonal
-//{
-//};
+//struct Orthogonal {};
 
 namespace templates {
 
@@ -1531,14 +1529,14 @@ using AffineTransformArg = templates::AffineTransform<float>::ConstArg;
 using AffineTransformResult = templates::AffineTransform<float>::ConstResult;
 #endif
 
-} // namespace core::mathematics
+} // namespace mathematics
 
 #include "Quaternion.hpp"
 #include "YawPitchRoll.hpp"
 #include "Euler.hpp"
 #include "Plane.hpp"
 
-namespace core::mathematics::templates {
+namespace mathematics::templates {
 
 template<typename T>
 inline AffineTransform<T>& AffineTransform<T>::setRotation(const YawPitchRoll<T>& r)
@@ -1771,4 +1769,4 @@ inline AffineTransform<float>& AffineTransform<float>::setReflection(const Plane
 
 #endif /* SIMD_HAS_FLOAT4 */
 
-} // namespace core::mathematics::templates
+} // namespace mathematics::templates

@@ -13,7 +13,7 @@
 #include <cmath>
 #include "Constants.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 
 template<typename T>
 	requires (std::floating_point<T> || std::integral<T>)
@@ -174,4 +174,4 @@ inline T smootherStep(T a, T b, T t) noexcept
 	return t*t*t*(t*(t*T(6) - T(15)) + T(10));
 }
 
-} // namespace core::mathematics
+} // namespace mathematics

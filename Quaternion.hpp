@@ -21,7 +21,7 @@
 #include "Matrix2.hpp"
 #include "Matrix3.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 namespace templates {
 
 template<typename T>
@@ -1216,7 +1216,7 @@ using QuaternionArg = templates::Quaternion<float>::ConstArg;
 using QuaternionResult = templates::Quaternion<float>::ConstResult;
 #endif
 
-} // namespace core::mathematics
+} // namespace mathematics
 
 namespace std {
 
@@ -1224,7 +1224,7 @@ template<size_t I, typename T>
 struct tuple_element;
 
 template<size_t I, typename T>
-struct tuple_element<I, ::core::mathematics::templates::Quaternion<T>>
+struct tuple_element<I, ::mathematics::templates::Quaternion<T>>
 {
 	using type = T;
 };
@@ -1233,7 +1233,7 @@ template<typename T>
 struct tuple_size;
 
 template<typename T>
-struct tuple_size<::core::mathematics::templates::Quaternion<T>> : integral_constant<size_t, 4> 
+struct tuple_size<::mathematics::templates::Quaternion<T>> : integral_constant<size_t, 4> 
 {
 };
 
@@ -1241,9 +1241,9 @@ template<typename T>
 struct hash;
 
 template<typename T>
-struct hash<::core::mathematics::templates::Quaternion<T>>
+struct hash<::mathematics::templates::Quaternion<T>>
 {
-	std::size_t operator()(const ::core::mathematics::templates::Quaternion<T>& q) const noexcept
+	std::size_t operator()(const ::mathematics::templates::Quaternion<T>& q) const noexcept
 	{
 		std::hash<T> hasher;
 		std::size_t seed = hasher(q.x) + 0x9e3779b9;
@@ -1259,7 +1259,7 @@ struct hash<::core::mathematics::templates::Quaternion<T>>
 #include "YawPitchRoll.hpp"
 #include "Euler.hpp"
 
-namespace core::mathematics::templates {
+namespace mathematics::templates {
 
 template<typename T>
 inline Quaternion<T>::Quaternion(const YawPitchRoll<T>& r)
@@ -1403,4 +1403,4 @@ inline Quaternion<float>::Quaternion(const Euler<float>& e)
 
 #endif /* SIMD_HAS_FLOAT4 */
 
-} // namespace core::mathematics::templates
+} // namespace mathematics::templates

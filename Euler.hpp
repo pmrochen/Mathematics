@@ -25,13 +25,13 @@
 #include "Quaternion.hpp"
 #include "YawPitchRoll.hpp"
 
-namespace core::mathematics::templates {
+namespace mathematics::templates {
 
 template<typename T>
 	requires std::floating_point<T>
 struct Euler;
 
-} // namespace core::mathematics::templates
+} // namespace mathematics::templates
 
 namespace std {
 
@@ -39,13 +39,13 @@ template<size_t I, typename T>
 struct tuple_element;
 
 template<size_t I, typename T>
-struct tuple_element<I, ::core::mathematics::templates::Euler<T>>
+struct tuple_element<I, ::mathematics::templates::Euler<T>>
 {
 	using type = T;
 };
 
 template<typename T>
-struct tuple_element<3, ::core::mathematics::templates::Euler<T>>
+struct tuple_element<3, ::mathematics::templates::Euler<T>>
 {
 	using type = EulerOrder;
 };
@@ -54,13 +54,13 @@ template<typename T>
 struct tuple_size;
 
 template<typename T>
-struct tuple_size<::core::mathematics::templates::Euler<T>> : integral_constant<size_t, 4> 
+struct tuple_size<::mathematics::templates::Euler<T>> : integral_constant<size_t, 4> 
 {
 };
 
 } // namespace std
 
-namespace core::mathematics {
+namespace mathematics {
 namespace templates {
 
 template<typename T>
@@ -472,7 +472,7 @@ using Euler = templates::Euler<double>;
 using Euler = templates::Euler<float>;
 #endif
 
-} // namespace core::mathematics
+} // namespace mathematics
 
 namespace std {
 
@@ -480,9 +480,9 @@ template<typename T>
 struct hash;
 
 template<typename T>
-struct hash<::core::mathematics::templates::Euler<T>>
+struct hash<::mathematics::templates::Euler<T>>
 {
-	std::size_t operator()(const ::core::mathematics::templates::Euler<T>& e) const noexcept
+	std::size_t operator()(const ::mathematics::templates::Euler<T>& e) const noexcept
 	{
 		std::hash<T> hasher;
 		std::size_t seed = hasher(e.x) + 0x9e3779b9;

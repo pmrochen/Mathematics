@@ -21,21 +21,13 @@
 #include "Scalar.hpp"
 #include "Axis.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 
-struct Uninitialized
-{
-};
-
+struct Uninitialized {};
 constexpr Uninitialized UNINITIALIZED{};
 
-struct Normalized
-{
-};
-
-struct Unnormalized
-{
-};
+struct Normalized {};
+struct Unnormalized {};
 
 template<typename T>
 concept Normalization = (std::same_as<T, Normalized> || std::same_as<T, Unnormalized>); // #TODO Move to Concepts.hpp
@@ -1085,7 +1077,7 @@ using IntVector2 = templates::Vector2<int>;
 using IntVector2Arg = templates::Vector2<int>::ConstArg;
 using IntVector2Result = templates::Vector2<int>::ConstResult;
 
-} // namespace core::mathematics
+} // namespace mathematics
 
 namespace std {
 
@@ -1093,7 +1085,7 @@ template<size_t I, typename T>
 struct tuple_element;
 
 template<size_t I, typename T>
-struct tuple_element<I, ::core::mathematics::templates::Vector2<T>>
+struct tuple_element<I, ::mathematics::templates::Vector2<T>>
 {
 	using type = T;
 };
@@ -1102,7 +1094,7 @@ template<typename T>
 struct tuple_size;
 
 template<typename T>
-struct tuple_size<::core::mathematics::templates::Vector2<T>> : integral_constant<size_t, 2> 
+struct tuple_size<::mathematics::templates::Vector2<T>> : integral_constant<size_t, 2> 
 {
 };
 
@@ -1110,9 +1102,9 @@ template<typename T>
 struct hash;
 
 template<typename T>
-struct hash<::core::mathematics::templates::Vector2<T>>
+struct hash<::mathematics::templates::Vector2<T>>
 {
-	std::size_t operator()(const ::core::mathematics::templates::Vector2<T>& v) const noexcept
+	std::size_t operator()(const ::mathematics::templates::Vector2<T>& v) const noexcept
 	{
 		std::hash<T> hasher;
 		std::size_t seed = hasher(v.x) + 0x9e3779b9;
@@ -1125,7 +1117,7 @@ struct hash<::core::mathematics::templates::Vector2<T>>
 
 #include "Matrix2.hpp"
 
-namespace core::mathematics::templates {
+namespace mathematics::templates {
 
 template<typename T>
 inline Vector2<T>& Vector2<T>::operator*=(const Matrix2<T>& m)
@@ -1214,4 +1206,4 @@ inline Vector2<float> transform(const Vector2<float>& v, const Matrix2<float>& m
 
 #endif /* SIMD_HAS_FLOAT4 */
 
-} // namespace core::mathematics::templates
+} // namespace mathematics::templates

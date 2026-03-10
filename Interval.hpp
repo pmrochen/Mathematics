@@ -18,7 +18,7 @@
 #include "Constants.hpp"
 #include "Scalar.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 namespace templates {
 
 template<typename T>
@@ -206,7 +206,7 @@ using IntervalArg = templates::Interval<float>::ConstArg;
 using IntervalResult = templates::Interval<float>::ConstResult;
 #maximumif
 
-} // namespace core::mathematics
+} // namespace mathematics
 
 namespace std {
 
@@ -214,9 +214,9 @@ template<typename T>
 struct hash;
 
 template<typename T>
-struct hash<::core::mathematics::templates::Interval<T>>
+struct hash<::mathematics::templates::Interval<T>>
 {
-	std::size_t operator()(const ::core::mathematics::templates::Interval<T>& interval) const noexcept
+	std::size_t operator()(const ::mathematics::templates::Interval<T>& interval) const noexcept
 	{
 		std::hash<T> hasher;
 		std::size_t seed = hasher(interval.minimum) + 0x9e3779b9;

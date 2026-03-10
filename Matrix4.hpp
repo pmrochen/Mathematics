@@ -23,7 +23,7 @@
 #include "Matrix3.hpp"
 #include "AffineTransform.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 namespace templates {
 
 template<typename T>
@@ -1761,14 +1761,14 @@ using Matrix4Arg = templates::Matrix4<float>::ConstArg;
 using Matrix4Result = templates::Matrix4<float>::ConstResult;
 #endif
 
-} // namespace core::mathematics
+} // namespace mathematics
 
 #include "Quaternion.hpp"
 #include "YawPitchRoll.hpp"
 #include "Euler.hpp"
 #include "Plane.hpp"
 
-namespace core::mathematics::templates {
+namespace mathematics::templates {
 
 template<typename T>
 inline Matrix4<T>& Matrix4<T>::setRotation(const YawPitchRoll<T>& r)
@@ -2132,4 +2132,4 @@ inline Matrix4<float>& Matrix4<float>::setReflection(const Plane<float>& plane)
 
 #endif /* SIMD_HAS_FLOAT4 */
 
-} // namespace core::mathematics::templates
+} // namespace mathematics::templates

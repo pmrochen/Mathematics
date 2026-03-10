@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace core::mathematics {
+namespace mathematics {
 
 enum class EulerOrder
 {
@@ -18,4 +18,4 @@ enum class EulerOrder
     ZYX	= ((((((2 << 1) | 1) << 1) | 0) << 1) | 1),
 };
 
-} // namespace core::mathematics
+} // namespace mathematics

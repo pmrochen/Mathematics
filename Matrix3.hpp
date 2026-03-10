@@ -20,7 +20,7 @@
 #include "Vector3.hpp"
 #include "Matrix2.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 namespace templates {
 
 template<typename T>
@@ -1584,13 +1584,13 @@ using Matrix3Arg = templates::Matrix3<float>::ConstArg;
 using Matrix3Result = templates::Matrix3<float>::ConstResult;
 #endif
 
-} // namespace core::mathematics
+} // namespace mathematics
 
 #include "Quaternion.hpp"
 #include "YawPitchRoll.hpp"
 #include "Euler.hpp"
 
-namespace core::mathematics::templates {
+namespace mathematics::templates {
 
 template<typename T>
 inline Matrix3<T>::Matrix3(const Quaternion<T>& q)
@@ -1826,4 +1826,4 @@ inline Matrix3<float>& Matrix3<float>::setRotation(const Quaternion<float>& q)
 
 #endif /* SIMD_HAS_FLOAT4 */
 
-} // namespace core::mathematics::templates
+} // namespace mathematics::templates

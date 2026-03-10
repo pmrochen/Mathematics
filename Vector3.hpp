@@ -22,7 +22,7 @@
 #include "Axis.hpp"
 #include "Vector2.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 namespace templates {
 
 template<typename T>
@@ -1213,7 +1213,7 @@ using IntVector3 = templates::Vector3<int>;
 using IntVector3Arg = templates::Vector3<int>::ConstArg;
 using IntVector3Result = templates::Vector3<int>::ConstResult;
 
-} // namespace core::mathematics
+} // namespace mathematics
 
 namespace std {
 
@@ -1221,7 +1221,7 @@ template<size_t I, typename T>
 struct tuple_element;
 
 template<size_t I, typename T>
-struct tuple_element<I, ::core::mathematics::templates::Vector3<T>>
+struct tuple_element<I, ::mathematics::templates::Vector3<T>>
 {
 	using type = T;
 };
@@ -1230,7 +1230,7 @@ template<typename T>
 struct tuple_size;
 
 template<typename T>
-struct tuple_size<::core::mathematics::templates::Vector3<T>> : integral_constant<size_t, 3> 
+struct tuple_size<::mathematics::templates::Vector3<T>> : integral_constant<size_t, 3> 
 {
 };
 
@@ -1238,9 +1238,9 @@ template<typename T>
 struct hash;
 
 template<typename T>
-struct hash<::core::mathematics::templates::Vector3<T>>
+struct hash<::mathematics::templates::Vector3<T>>
 {
-	std::size_t operator()(const ::core::mathematics::templates::Vector3<T>& v) const noexcept
+	std::size_t operator()(const ::mathematics::templates::Vector3<T>& v) const noexcept
 	{
 		std::hash<T> hasher;
 		std::size_t seed = hasher(v.x) + 0x9e3779b9;
@@ -1256,7 +1256,7 @@ struct hash<::core::mathematics::templates::Vector3<T>>
 #include "AffineTransform.hpp"
 #include "Quaternion.hpp"
 
-namespace core::mathematics::templates {
+namespace mathematics::templates {
 
 template<typename T>
 inline Vector3<T>& Vector3<T>::operator*=(const Matrix3<T>& m)
@@ -1431,4 +1431,4 @@ inline Matrix3<float> tensor(const Vector3<float>& v1, const Vector3<float>& v2)
 
 #endif /* SIMD_HAS_FLOAT4 */
 
-} // namespace core::mathematics::templates
+} // namespace mathematics::templates
