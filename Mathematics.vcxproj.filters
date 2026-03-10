@@ -24,30 +24,10 @@
     <ClInclude Include="Vector3.hpp" />
     <ClInclude Include="Vector4.hpp" />
     <ClInclude Include="YawPitchRoll.hpp" />
-    <ClInclude Include="Simd\AvxIntrinsics.hpp">
-      <Filter>Simd</Filter>
-    </ClInclude>
-    <ClInclude Include="Simd\Float4.hpp">
-      <Filter>Simd</Filter>
-    </ClInclude>
-    <ClInclude Include="Simd\Intrinsics.hpp">
-      <Filter>Simd</Filter>
-    </ClInclude>
-    <ClInclude Include="Simd\Simd.hpp">
-      <Filter>Simd</Filter>
-    </ClInclude>
-    <ClInclude Include="Simd\SseIntrinsics.hpp">
-      <Filter>Simd</Filter>
-    </ClInclude>
     <ClInclude Include="AxisAlignedRectangle.hpp" />
     <ClInclude Include="Circle2.hpp" />
     <ClInclude Include="Interval.hpp" />
     <ClInclude Include="AxisAlignedBox.hpp" />
     <ClInclude Include="Sphere.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="Simd">
-      <UniqueIdentifier>{5e89e8a5-ab03-4f55-af97-cdce31e28fd4}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
 </Project>
