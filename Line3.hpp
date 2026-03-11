@@ -19,7 +19,7 @@
 #include "AffineTransform.hpp"
 #include "Interval.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 namespace templates {
 
 //template<typename T, typename U>
@@ -99,10 +99,10 @@ struct Line3
 	void setDirection(const Vector3<T>& direction) noexcept { this->direction = direction; }
 
 	// Transformation
-	void translate(const Vector3<T>& offset) noexcept { origin += offset; }
-	void transform(const Matrix3<T>& matrix) noexcept;
-	void transform(const AffineTransform<T>& transformation) noexcept;
-	void normalize() noexcept { direction.normalize(); }
+	Line3& translate(const Vector3<T>& offset) noexcept { origin += offset; return *this; }
+	Line3& transform(const Matrix3<T>& matrix) noexcept;
+	Line3& transform(const AffineTransform<T>& transformation) noexcept;
+	Line3& normalize() noexcept { direction.normalize(); return *this; }
 
 	// Evaluation
 	Vector3<T> evaluate(T t) const noexcept { return (origin + t*direction); }
@@ -125,8 +125,8 @@ struct Line3
 	std::optional<T> findIntersection(const Plane<T>& plane) const noexcept;
 	std::optional<T> findIntersection(const Triangle3<T>& triangle) const noexcept; // #TODO
 	//template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Plane<T>& plane) const noexcept;
-	std::optional<Interval<T>> findIntersection(const AxisAlignedBox& box) const noexcept; // #TODO
-	std::optional<Interval<T>> findIntersection(const OrientedBox& box) const noexcept; // #TODO
+	std::optional<Interval<T>> findIntersection(const AxisAlignedBox& box) const noexcept;
+	std::optional<Interval<T>> findIntersection(const OrientedBox& box) const noexcept;
 	std::optional<Interval<T>> findIntersection(const Sphere<T>& sphere) const noexcept;
 	template<Normalization U> std::optional<Interval<T>> findIntersection(const Sphere<T>& sphere) const noexcept;
 	std::optional<Interval<T>> findIntersection(const Ellipsoid<T>& ellipsoid) const noexcept; // #TODO
@@ -163,17 +163,19 @@ inline bool Line3<T>::approxEquals(const Line3<T>& line, T tolerance) const
 }
 
 template<typename T>
-inline void Line3<T>::transform(const Matrix3<T>& matrix)
+inline Line3<T>& Line3<T>::transform(const Matrix3<T>& matrix)
 {
 	origin *= matrix;
 	direction *= matrix;
+	return *this;
 }
 
 template<typename T>
-inline void Line3<T>::transform(const AffineTransform<T>& transformation)
+inline Line3<T>& Line3<T>::transform(const AffineTransform<T>& transformation)
 {
 	origin.transform(transformation);
 	direction *= transformation.getBasis();
+	return *this;
 }
 
 template<typename T>
@@ -221,7 +223,7 @@ using Line3Arg = templates::Line3<float>::ConstArg;
 using Line3Result = templates::Line3<float>::ConstResult;
 #endif
 
-} // namespace core::mathematics
+} // namespace mathematics
 
 namespace std {
 
@@ -229,9 +231,9 @@ template<typename T>
 struct hash;
 
 template<typename T>
-struct hash<::core::mathematics::templates::Line3<T>>
+struct hash<::mathematics::templates::Line3<T>>
 {
-	std::size_t operator()(const ::core::mathematics::templates::Line3<T>& line) const noexcept
+	std::size_t operator()(const ::mathematics::templates::Line3<T>& line) const noexcept
 	{
 		std::hash<T> hasher;
 		std::size_t seed = hasher(line.origin) + 0x9e3779b9;
@@ -249,8 +251,9 @@ struct hash<::core::mathematics::templates::Line3<T>>
 #include "OrientedBox.hpp"
 #include "Sphere.hpp"
 #include "Ellipsoid.hpp"
+#include "Intersections.inl"
 
-namespace core::mathematics::templates {
+namespace mathematics::templates {
 
 template<typename T>
 inline Line3<T>::Line3(const Ray3<T>& ray) : origin(ray.origin), direction(ray.direction)
@@ -266,45 +269,29 @@ inline const Ray3<T>& Line3<T>::asRay() const
 template<typename T>
 inline bool Line3<T>::intersects(const Plane<T>& plane) const
 {
-	return (std::fabs(dot(plane.getNormal(), direction)) >= Constants<T>::TOLERANCE);
+	return intersections::testLinePlane(direction, plane.getNormal());
 }
 
 template<typename T>
 inline bool Line3<T>::intersects(const Sphere<T>& sphere) const
 {
-	Vector3<T> diff = line.origin - sphere.center;
-	T a = dot(line.direction, line.direction);
-	T b = T(2)*dot(line.direction, diff);
-	T c = dot(diff, diff) - sphere.radius*sphere.radius;
-	return !((b*b - T(4)*a*c) < T(0));
+	return intersections::testLineNSphere(origin, direction, sphere.center, sphere.radius);
 }
 
 template<typename T>
 template<Normalization U>
 inline bool Line3<T>::intersects(const Sphere<T>& sphere) const
 {
-	Vector3<T> diff = origin - sphere.center;
-	T c = dot(diff, diff) - sphere.radius*sphere.radius;
 	if costexpr(std::is_same_v<U, Normalized>)
-	{
-		T halfB = dot(direction, diff);
-		return !((halfB*halfB - c) < T(0));
-	}
+		return intersections::testNormalizedLineNSphere(origin, direction, sphere.center, sphere.radius);
 	else
-	{
-		T a = dot(direction, direction);
-		T b = T(2)*dot(direction, diff);
-		return !((b*b - T(4)*a*c) < T(0));
-	}
+		return intersections::testLineNSphere(origin, direction, sphere.center, sphere.radius);
 }
 
 template<typename T>
 inline std::optional<T> Line3<T>::findIntersection(const Plane<T>& plane) const
 {
-	T nd = dot(plane.getNormal(), direction);
-	if (std::fabs(nd) < Constants<T>::TOLERANCE)
-		return {};
-	return { (-plane.d - dot(plane.getNormal(), origin))/nd };
+	return intersections::findLinePlane<std::optional<T>>(origin, direction, plane.getNormal(), plane.d);
 }
 
 //template<typename T>
@@ -319,76 +306,33 @@ inline std::optional<T> Line3<T>::findIntersection(const Plane<T>& plane) const
 //}
 
 template<typename T>
+inline std::optional<Interval<T>> Line3<T>::findIntersection(const AxisAlignedBox& box) const
+{
+	return intersections::findLineAxisAlignedBox<std::optional<Interval<T>>>(origin, direction, box.minimum, box.maximum);
+}
+
+template<typename T>
+inline std::optional<Interval<T>> Line3<T>::findIntersection(const OrientedBox& box) const
+{
+	//Matrix3<T> basisTranspose(transpose(box.basis));
+	return intersections::findLineAxisAlignedBox<std::optional<Interval<T>>>(box.basis*(origin - box.center)/*(origin - box.center)*basisTranspose*/,
+		box.basis*direction/*direction*basisTranspose*/, -box.halfDims, box.halfDims);
+}
+
+template<typename T>
 inline std::optional<Interval<T>> Line3<T>::findIntersection(const Sphere<T>& sphere) const
 {
-	Vector3<T> diff = origin - sphere.center;
-	T a = dot(direction, direction);
-	T b = T(2)*dot(direction, diff);
-	T c = dot(diff, diff) - sphere.radius*sphere.radius;
-	T delta = b*b - T(4)*a*c;
-
-	if (delta < T(0))
-	{
-		return {};
-	}
-	else if (delta > T(0))
-	{
-		delta = std::sqrt(delta);
-		a = T(0.5)/a;
-		return { std::in_place, (-b - delta)*a, (-b + delta)*a };
-	}
-	else // delta == 0
-	{
-		return { std::in_place, -b*T(0.5)/a };
-	}
+	return intersections::findLineNSphere<std::optional<Interval<T>>>(origin, direction, sphere.center, sphere.radius);
 }
 
 template<typename T>
 template<Normalization U>
 inline std::optional<Interval<T>> Line3<T>::findIntersection(const Sphere<T>& sphere) const
 {
-	Vector3<T> diff = origin - sphere.center;
-	T c = dot(diff, diff) - sphere.radius*sphere.radius;
 	if costexpr(std::is_same_v<U, Normalized>)
-	{
-		T halfB = dot(direction, diff);
-		T delta = halfB*halfB - c;
-
-		if (delta < T(0))
-		{
-			return {};
-		}
-		else if (delta > T(0))
-		{
-			delta = std::sqrt(delta);
-			return { std::in_place, -halfB - delta, -halfB + delta };
-		}
-		else // delta == 0
-		{
-			return { std::in_place, -halfB };
-		}
-	}
+		return intersections::findNormalizedLineNSphere<std::optional<Interval<T>>>(origin, direction, sphere.center, sphere.radius);
 	else
-	{
-		T a = dot(direction, direction);
-		T b = T(2)*dot(direction, diff);
-		T delta = b*b - T(4)*a*c;
-
-		if (delta < T(0))
-		{
-			return {};
-		}
-		else if (delta > T(0))
-		{
-			delta = std::sqrt(delta);
-			a = T(0.5)/a;
-			return { std::in_place, (-b - delta)*a, (-b + delta)*a };
-		}
-		else // delta == 0
-		{
-			return { std::in_place, -b*T(0.5)/a };
-		}
-	}
+		return intersections::findLineNSphere<std::optional<Interval<T>>>(origin, direction, sphere.center, sphere.radius);
 }
 
-} // namespace core::mathematics::templates
+} // namespace mathematics::templates

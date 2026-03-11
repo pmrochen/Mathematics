@@ -22,7 +22,7 @@
 #include "Line3.hpp"
 #include "Ray3.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 namespace templates {
 	
 template<typename T>
@@ -103,9 +103,9 @@ struct Segment3
 	Vector3<T> getCenter() const noexcept { return lerp(start, end, T(0.5)); }
 
 	// Transformation
-	void translate(const Vector3<T>& offset) noexcept { start += offset; end += offset; }
-	void transform(const Matrix3<T>& matrix) noexcept;
-	void transform(const AffineTransform<T>& transformation) noexcept;
+	Segment3& translate(const Vector3<T>& offset) noexcept { start += offset; end += offset; return *this; }
+	Segment3& transform(const Matrix3<T>& matrix) noexcept;
+	Segment3& transform(const AffineTransform<T>& transformation) noexcept;
 
 	// Evaluation
 	Vector3<T> evaluate(T t) const noexcept { return lerp(start, end, t); }
@@ -162,17 +162,19 @@ inline bool Segment3<T>::approxEquals(const Segment3<T>& segment, T tolerance) c
 }
 
 template<typename T>
-inline void Segment3<T>::transform(const Matrix3<T>& matrix)
+inline Segment3<T>& Segment3<T>::transform(const Matrix3<T>& matrix)
 {
 	start *= matrix;
 	end *= matrix;
+	return *this;
 }
 
 template<typename T>
-inline void Segment3<T>::transform(const AffineTransform<T>& transformation)
+inline Segment3<T>& Segment3<T>::transform(const AffineTransform<T>& transformation)
 {
 	start.transform(transformation);
 	end.transform(transformation);
+	return *this;
 }
 
 template<typename T>
@@ -194,7 +196,7 @@ using Segment3Arg = templates::Segment3<float>::ConstArg;
 using Segment3Result = templates::Segment3<float>::ConstResult;
 #endif
 
-} // namespace core::mathematics
+} // namespace mathematics
 
 namespace std {
 
@@ -202,9 +204,9 @@ template<typename T>
 struct hash;
 
 template<typename T>
-struct hash<::core::mathematics::templates::Segment3<T>>
+struct hash<::mathematics::templates::Segment3<T>>
 {
-	std::size_t operator()(const ::core::mathematics::templates::Segment3<T>& segment) const noexcept
+	std::size_t operator()(const ::mathematics::templates::Segment3<T>& segment) const noexcept
 	{
 		std::hash<T> hasher;
 		std::size_t seed = hasher(segment.start) + 0x9e3779b9;
@@ -222,8 +224,9 @@ struct hash<::core::mathematics::templates::Segment3<T>>
 #include "OrientedBox.hpp"
 #include "Sphere.hpp"
 #include "Ellipsoid.hpp"
+#include "Intersections.inl"
 
-namespace core::mathematics::templates {
+namespace mathematics::templates {
 
 template<typename T>
 inline bool Segment3<T>::intersects(const HalfSpace<T>& halfSpace) const
@@ -234,7 +237,7 @@ inline bool Segment3<T>::intersects(const HalfSpace<T>& halfSpace) const
 template<typename T>
 inline std::optional<T> Segment3<T>::findIntersection(const Plane<T>& plane) const
 {
-	std::optional<T> result = Line3<T>(start, end - start).findIntersection(plane);
+	std::optional<T> result = intersections::findLinePlane<std::optional<T>>(start, end - start, plane.getNormal(), plane.d);
 	return (result.has_value() && (result.value() >= T(0)) && (result.value() <= T(1))) ? result : {};
 }
 
@@ -252,7 +255,9 @@ inline std::optional<T> Segment3<T>::findIntersection(const Plane<T>& plane) con
 template<typename T>
 inline std::optional<Interval<T>> Segment3<T>::findIntersection(const AxisAlignedBox<T>& box) const
 {
-	std::optional<Interval<T>> result = Line3(segment.start, segment.end - segment.start).findIntersection(box);
+	std::optional<Interval<T>> result = intersections::findLineAxisAlignedBox<std::optional<Interval<T>>>(start, end - start, 
+		box.minimum, box.maximum);
+	
 	if (result.has_value() && (result.value().maximum >= T(0)) && (result.value().minimum <= T(1)))
 	{
 		const Interval<T>& interval = result.value();
@@ -270,7 +275,10 @@ inline std::optional<Interval<T>> Segment3<T>::findIntersection(const AxisAligne
 template<typename T>
 inline std::optional<Interval<T>> Segment3<T>::findIntersection(const OrientedBox<T>& box) const
 {
-	std::optional<Interval<T>> result = Line3(segment.start, segment.end - segment.start).findIntersection(box);
+	//Matrix3<T> basisTranspose(transpose(box.basis));
+	std::optional<Interval<T>> result = intersections::findLineAxisAlignedBox<std::optional<Interval<T>>>(box.basis*(start - box.center)/*(start - box.center)*basisTranspose*/,
+		box.basis*(end - start)/*(end - start)*basisTranspose*/, -box.halfDims, box.halfDims);
+	
 	if (result.has_value() && (result.value().maximum >= T(0)) && (result.value().minimum <= T(1)))
 	{
 		const Interval<T>& interval = result.value();
@@ -288,7 +296,8 @@ inline std::optional<Interval<T>> Segment3<T>::findIntersection(const OrientedBo
 template<typename T>
 inline std::optional<Interval<T>> Segment3<T>::findIntersection(const Sphere<T>& sphere) const
 {
-	std::optional<Interval<T>> result = Line3(segment.start, segment.end - segment.start).findIntersection(sphere);
+	std::optional<Interval<T>> result = intersections::findLineNSphere<std::optional<Interval<T>>>(start, end - start, sphere.center, sphere.radius);
+
 	if (result.has_value() && (result.value().maximum >= T(0)) && (result.value().minimum <= T(1)))
 	{
 		const Interval<T>& interval = result.value();
@@ -303,4 +312,4 @@ inline std::optional<Interval<T>> Segment3<T>::findIntersection(const Sphere<T>&
 	}
 }
 
-} // namespace core::mathematics::templates
+} // namespace mathematics::templates

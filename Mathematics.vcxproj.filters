@@ -29,5 +29,7 @@
     <ClInclude Include="Interval.hpp" />
     <ClInclude Include="AxisAlignedBox.hpp" />
     <ClInclude Include="Sphere.hpp" />
+    <ClInclude Include="Distances.inl" />
+    <ClInclude Include="Intersections.inl" />
   </ItemGroup>
 </Project>

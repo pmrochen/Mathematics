@@ -14,7 +14,6 @@
 #include <cstddef>
 #include <cmath>
 #include "Constants.hpp"
-#include "Scalar.hpp"
 #include "Vector3.hpp"
 #include "HalfSpace.hpp"
 #include "Plane.hpp"
@@ -22,7 +21,7 @@
 #include "AxisAlignedBox.hpp"
 #include "OrientedBox.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 namespace templates {
 
 template<typename T>
@@ -66,7 +65,7 @@ struct Sphere
 	void setRadius(T radius) noexcept { this->radius = radius; }
 	T getDiameter() const noexcept { return radius*T(2); }
 	void setDiameter(T diameter) noexcept { radius = diameter*T(0.5); }
-	T getArea() const noexcept { return T(4)*Constants<T>::PI*radius*radius; }
+	T getSurfaceArea() const noexcept { return T(4)*Constants<T>::PI*radius*radius; }
 	T getVolume() const noexcept { return T(4)*Constants<T>::PI*radius*radius*radius/T(3); }
 
 	// Circumscribed box
@@ -74,6 +73,8 @@ struct Sphere
 
 	// Transformation
 	Sphere& translate(const Vector3<T>& offset) { center += offset; return *this; }
+	Sphere& transform(const Matrix3<T>& matrix, bool orthogonal = false) noexcept;
+	Sphere& transform(const AffineTransform<T>& transformation, bool orthogonal = false) noexcept;
 
 	// Closest point
 	//Vector3<T> getClosestPoint(const Vector3<T>& point) const noexcept; // #TODO
@@ -144,40 +145,6 @@ inline bool Sphere<T>::intersects(const Plane<T>& plane) const
 }
 
 template<typename T>
-inline bool Sphere<T>::intersects(const Triangle3<T>& triangle) const
-{
-	return (triangle.getDistanceSquaredTo(center) <= radius*radius);
-}
-
-template<typename T>
-inline bool Sphere<T>::intersects(const AxisAlignedBox<T>& box) const
-{
-	T d = T(0);
-	if (center.x < box.minimum.x)
-		d += sqr(center.x - box.minimum.x);
-	else if (center.x > box.maximum.x)
-		d += sqr(center.x - box.maximum.x);
-	if (center.y < box.minimum.y)
-		d += sqr(center.y - box.minimum.y);
-	else if (center.y > box.maximum.y)
-		d += sqr(center.y - box.maximum.y);
-	if (center.z < box.minimum.z)
-		d += sqr(center.z - box.minimum.z);
-	else if (center.z > box.maximum.z)
-		d += sqr(center.z - box.maximum.z);
-	return (d <= radius*radius);
-}
-
-template<typename T>
-inline bool Sphere<T>::intersects(const OrientedBox<T>& box) const
-{
-	//Matrix3<T> boxBasisT(transpose(box.basis));
-	//Sphere<T> sphere((center - box.center)*boxBasisT, radius);
-	Sphere<T> sphere(box.basis*(center - box.center), radius);
-	return sphere.testIntersection(AxisAlignedBox<T>(-box.halfDims, box.halfDims));
-}
-
-template<typename T>
 inline bool Sphere<T>::intersects(const Sphere<T>& sphere) const
 {
 	T d = sphere.radius + radius;
@@ -196,7 +163,7 @@ using SphereArg = templates::Sphere<float>::ConstArg;
 using SphereResult = templates::Sphere<float>::ConstResult;
 #endif
 
-} // namespace core::mathematics
+} // namespace mathematics
 
 namespace std {
 
@@ -204,9 +171,9 @@ template<typename T>
 struct hash;
 
 template<typename T>
-struct hash<::core::mathematics::templates::Sphere<T>>
+struct hash<::mathematics::templates::Sphere<T>>
 {
-	std::size_t operator()(const ::core::mathematics::templates::Sphere<T>& sphere) const noexcept
+	std::size_t operator()(const ::mathematics::templates::Sphere<T>& sphere) const noexcept
 	{
 		std::hash<T> hasher;
 		std::size_t seed = hasher(sphere.center) + 0x9e3779b9;
@@ -220,14 +187,54 @@ struct hash<::core::mathematics::templates::Sphere<T>>
 #include "Ellipsoid.hpp"
 #include "Cone.hpp"
 #include "SymmetricFrustum.hpp"
+#include "Distances.inl"
+#include "Intersections.inl"
 
-namespace core::mathematics::templates {
+namespace mathematics::templates {
 
 template<typename T>
 inline Sphere<T>::Sphere(const Ellipsoid<T>& ellipsoid) :
 	center(ellipsoid.center),
 	radius(ellipsoid.radii.getMaxComponent())
 {
+}
+
+template<typename T>
+inline Sphere<T>& Sphere<T>::transform(const Matrix3<T>& matrix, bool orthogonal)
+{
+	if (!orthogonal)
+		*this = Sphere<T>(Ellipsoid<T>(*this, matrix, orthogonal));
+	return *this;
+}
+
+template<typename T>
+inline Sphere<T>& Sphere<T>::transform(const AffineTransform<T>& transformation, bool orthogonal)
+{
+	if (orthogonal)
+		center.transform(transformation);
+	else
+		*this = Sphere<T>(Ellipsoid<T>(*this, transformation, orthogonal));
+	return *this;
+}
+
+template<typename T>
+inline bool Sphere<T>::intersects(const Triangle3<T>& triangle) const
+{
+	return (distances::getPointTriangleSquared(center, triangle.vertex0, triangle.vertex1, triangle.vertex2) <= radius*radius);
+}
+
+template<typename T>
+inline bool Sphere<T>::intersects(const AxisAlignedBox<T>& box) const
+{
+	return intersections::testAxisAlignedBoxSphere(box.minimum, box.maximum, center, radius);
+}
+
+template<typename T>
+inline bool Sphere<T>::intersects(const OrientedBox<T>& box) const
+{
+	//Matrix3<T> boxBasisT(transpose(box.basis));
+	return intersections::testAxisAlignedBoxSphere(-box.halfDims, box.halfDims, 
+		box.basis*(center - box.center)/*(center - box.center)*boxBasisT*/, radius);
 }
 
 template<typename T>
@@ -242,4 +249,4 @@ inline bool Sphere<T>::intersects(const SymmetricFrustum<T>& frustum) const
 	return frustum.intersects(*this);
 }
 
-} // namespace core::mathematics::templates
+} // namespace mathematics::templates

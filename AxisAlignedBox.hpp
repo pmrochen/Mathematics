@@ -22,7 +22,7 @@
 #include "Plane.hpp"
 #include "Triangle3.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 namespace templates {
 
 template<typename T>
@@ -78,7 +78,7 @@ struct AxisAlignedBox
 	Vector3<T> getCenter() const noexcept { return (minimum + maximum)*T(0.5); }
 	void setCenter(const Vector3<T>& center) noexcept;
 	T getDiagonal() const noexcept { return distance(minimum, maximum); }
-	T getArea() const noexcept;
+	T getSurfaceArea() const noexcept;
 	T getVolume() const noexcept;
 
 	// Vertices
@@ -189,7 +189,7 @@ inline void AxisAlignedBox<T>::setCenter(const Vector3<T>& center)
 }
 
 template<typename T>
-inline T AxisAlignedBox<T>::getArea() const
+inline T AxisAlignedBox<T>::getSurfaceArea() const
 {
 	Vector3<T> dim = maximum - minimum;
 	return T(2)*(dim.x*dim.y + dim.y*dim.z + dim.z*dim.x); // T(2)*dot(dim, dim.yzx())
@@ -334,36 +334,6 @@ inline bool AxisAlignedBox<T>::contains(const AxisAlignedBox<T>& box) const
 }
 
 template<typename T>
-inline bool AxisAlignedBox<T>::intersects(const HalfSpace<T>& halfSpace) const
-{
-	// #TODO LUT-based implementation
-	Vector3<T> halfDims = (maximum - minimum)*T(0.5);
-	Vector3<T> center = (minimum + maximum)*T(0.5);
-	Vector3<T> normal = halfSpace.getNormal();
-	T r = sum(abs(halfDims*normal));
-	return ((dot(normal, center) + halfSpace.d) <= r);
-}
-
-template<typename T>
-inline bool AxisAlignedBox<T>::intersects(const Plane<T>& plane) const
-{
-	// #TODO LUT-based implementation
-	Vector3<T> halfDims = (maximum - minimum)*T(0.5);
-	Vector3<T> center = (minimum + maximum)*T(0.5);
-	Vector3<T> normal = plane.getNormal();
-	T r = sum(abs(halfDims*normal));
-	return (std::fabs(dot(normal, center) + plane.d) <= r);
-}
-
-template<typename T>
-inline bool AxisAlignedBox<T>::intersects(const Triangle3<T>& triangle) const
-{
-	Vector3 center = (minimum + maximum)*T(0.5);
-	return intersections::testAxisAlignedBoxTriangle((maximum - minimum)*T(0.5), // #TODO
-		triangle.vertices[0] - center, triangle.vertices[1] - center, triangle.vertices[2] - center);
-}
-
-template<typename T>
 inline bool AxisAlignedBox<T>::intersects(const AxisAlignedBox<T>& box) const
 {
 	return minimum.allLessThanEqual(box.maximum) && maximum.allGreaterThanEqual(box.minimum);
@@ -381,7 +351,7 @@ using AxisAlignedBoxArg = templates::AxisAlignedBox<float>::ConstArg;
 using AxisAlignedBoxResult = templates::AxisAlignedBox<float>::ConstResult;
 #maximumif
 
-} // namespace core::mathematics
+} // namespace mathematics
 
 namespace std {
 
@@ -389,9 +359,9 @@ template<typename T>
 struct hash;
 
 template<typename T>
-struct hash<::core::mathematics::templates::AxisAlignedBox<T>>
+struct hash<::mathematics::templates::AxisAlignedBox<T>>
 {
-	std::size_t operator()(const ::core::mathematics::templates::AxisAlignedBox<T>& box) const noexcept
+	std::size_t operator()(const ::mathematics::templates::AxisAlignedBox<T>& box) const noexcept
 	{
 		std::hash<T> hasher;
 		std::size_t seed = hasher(box.minimum) + 0x9e3779b9;
@@ -405,8 +375,9 @@ struct hash<::core::mathematics::templates::AxisAlignedBox<T>>
 #include "OrientedBox.hpp"
 #include "Sphere.hpp"
 #include "SymmetricFrustum.hpp"
+#include "Intersections.inl"
 
-namespace core::mathematics::templates {
+namespace mathematics::templates {
 
 template<typename T>
 inline AxisAlignedBox<T>::AxisAlignedBox(const OrientedBox<T>& box)
@@ -424,14 +395,14 @@ inline Sphere<T> AxisAlignedBox<T>::getCircumscribedSphere() const
 }
 
 template<typename T>
-inline AxisAlignedBox<T>& AxisAlignedBox::transform(const Matrix3<T>& matrix, bool orthogonal)
+inline AxisAlignedBox<T>& AxisAlignedBox<T>::transform(const Matrix3<T>& matrix, bool orthogonal)
 {
 	*this = AxisAlignedBox<T>(OrientedBox<T>(*this, matrix, orthogonal));
 	return *this;
 }
 
 template<typename T>
-inline AxisAlignedBox<T>& AxisAlignedBox::transform(const AffineTransform<T>& transformation, bool orthogonal)
+inline AxisAlignedBox<T>& AxisAlignedBox<T>::transform(const AffineTransform<T>& transformation, bool orthogonal)
 {
 	*this = AxisAlignedBox<T>(OrientedBox<T>(*this, transformation, orthogonal));
 	return *this;
@@ -453,6 +424,27 @@ inline bool AxisAlignedBox<T>::contains(const Sphere<T>& sphere) const
 }
 
 template<typename T>
+inline bool AxisAlignedBox<T>::intersects(const HalfSpace<T>& halfSpace) const
+{
+	return intersections::testAxisAlignedBoxHalfSpace((minimum + maximum)*T(0.5), (maximum - minimum)*T(0.5),
+		halfSpace.getNormal(), halfSpace.d);
+}
+
+template<typename T>
+inline bool AxisAlignedBox<T>::intersects(const Plane<T>& plane) const
+{
+	return intersections::testAxisAlignedBoxPlane((minimum + maximum)*T(0.5), (maximum - minimum)*T(0.5),
+		plane.getNormal(), plane.d);
+}
+
+template<typename T>
+inline bool AxisAlignedBox<T>::intersects(const Triangle3<T>& triangle) const
+{
+	return intersections::testAxisAlignedBoxTriangle((minimum + maximum)*T(0.5), (maximum - minimum)*T(0.5),
+		triangle.vertices[0], triangle.vertices[1], triangle.vertices[2]);
+}
+
+template<typename T>
 inline bool AxisAlignedBox<T>::intersects(const OrientedBox<T>& box) const
 {
 	return box.intersects(*this);
@@ -461,7 +453,7 @@ inline bool AxisAlignedBox<T>::intersects(const OrientedBox<T>& box) const
 template<typename T>
 inline bool AxisAlignedBox<T>::intersects(const Sphere<T>& sphere) const
 {
-	return sphere.intersects(*this);
+	return intersections::testAxisAlignedBoxSphere(minimum, maximum, sphere.center, sphere.radius);
 }
 
 template<typename T>
@@ -470,4 +462,4 @@ inline bool AxisAlignedBox<T>::intersects(const SymmetricFrustum<T>& frustum) co
 	return frustum.intersects(*this);
 }
 
-} // namespace core::mathematics::templates
+} // namespace mathematics::templates

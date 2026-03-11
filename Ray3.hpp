@@ -20,7 +20,7 @@
 #include "Interval.hpp"
 #include "Line3.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 namespace templates {
 
 template<typename T>
@@ -87,10 +87,10 @@ struct Ray3
 	void setDirection(const Vector3<T>& direction) noexcept { this->direction = direction; }
 
 	// Transformation
-	void translate(const Vector3<T>& offset) noexcept { origin += offset; }
-	void transform(const Matrix3<T>& matrix) noexcept;
-	void transform(const AffineTransform<T>& transformation) noexcept;
-	void normalize() noexcept { direction.normalize(); }
+	Ray3& translate(const Vector3<T>& offset) noexcept { origin += offset; return *this; }
+	Ray3& transform(const Matrix3<T>& matrix) noexcept;
+	Ray3& transform(const AffineTransform<T>& transformation) noexcept;
+	Ray3& normalize() noexcept { direction.normalize(); return *this; }
 
 	// Evaluation
 	Vector3<T> evaluate(T t) const noexcept { return (origin + t*direction); }
@@ -150,17 +150,19 @@ inline bool Ray3<T>::approxEquals(const Ray3<T>& ray, T tolerance) const
 }
 
 template<typename T>
-inline void Ray3<T>::transform(const Matrix3<T>& matrix)
+inline Ray3<T>& Ray3<T>::transform(const Matrix3<T>& matrix)
 {
 	origin *= matrix;
 	direction *= matrix;
+	return *this;
 }
 
 template<typename T>
-inline void Ray3<T>::transform(const AffineTransform<T>& transformation)
+inline Ray3<T>& Ray3<T>::transform(const AffineTransform<T>& transformation)
 {
 	origin.transform(transformation);
 	direction *= transformation.getBasis();
+	return *this;
 }
 
 template<typename T>
@@ -208,7 +210,7 @@ using Ray3Arg = templates::Ray3<float>::ConstArg;
 using Ray3Result = templates::Ray3<float>::ConstResult;
 #endif
 
-} // namespace core::mathematics
+} // namespace mathematics
 
 namespace std {
 
@@ -216,9 +218,9 @@ template<typename T>
 struct hash;
 
 template<typename T>
-struct hash<::core::mathematics::templates::Ray3<T>>
+struct hash<::mathematics::templates::Ray3<T>>
 {
-	std::size_t operator()(const ::core::mathematics::templates::Ray3<T>& ray) const noexcept
+	std::size_t operator()(const ::mathematics::templates::Ray3<T>& ray) const noexcept
 	{
 		std::hash<T> hasher;
 		std::size_t seed = hasher(ray.origin) + 0x9e3779b9;
@@ -235,13 +237,14 @@ struct hash<::core::mathematics::templates::Ray3<T>>
 #include "OrientedBox.hpp"
 #include "Sphere.hpp"
 #include "Ellipsoid.hpp"
+#include "Intersections.inl"
 
-namespace core::mathematics::templates {
+namespace mathematics::templates {
 
 template<typename T>
 inline std::optional<T> Ray3<T>::findIntersection(const Plane<T>& plane) const
 {
-	std::optional<T> result = asLine().findIntersection(plane);
+	std::optional<T> result = intersections::findLinePlane<std::optional<T>>(origin, direction, plane.getNormal(), plane.d);
 	return (result.has_value() && (result.value() >= T(0))) ? result : {};
 }
 
@@ -259,7 +262,9 @@ inline std::optional<T> Ray3<T>::findIntersection(const Plane<T>& plane) const
 template<typename T>
 inline std::optional<Interval<T>> Ray3<T>::findIntersection(const AxisAlignedBox<T>& box) const
 {
-	std::optional<Interval<T>> result = asLine().findIntersection(box);
+	std::optional<Interval<T>> result = intersections::findLineAxisAlignedBox<std::optional<Interval<T>>>(origin, direction,
+		box.minimum, box.maximum);
+
 	if (result.has_value() && (result.value().maximum >= T(0)))
 	{
 		const Interval<T>& interval = result.value();
@@ -277,7 +282,10 @@ inline std::optional<Interval<T>> Ray3<T>::findIntersection(const AxisAlignedBox
 template<typename T>
 inline std::optional<Interval<T>> Ray3<T>::findIntersection(const OrientedBox<T>& box) const
 {
-	std::optional<Interval<T>> result = asLine().findIntersection(box);
+	//Matrix3<T> basisTranspose(transpose(box.basis));
+	std::optional<Interval<T>> result = intersections::findLineAxisAlignedBox<std::optional<Interval<T>>>(box.basis*(origin - box.center)/*(origin - box.center)*basisTranspose*/,
+		box.basis*direction/*direction*basisTranspose*/, -box.halfDims, box.halfDims);
+
 	if (result.has_value() && (result.value().maximum >= T(0)))
 	{
 		const Interval<T>& interval = result.value();
@@ -295,7 +303,8 @@ inline std::optional<Interval<T>> Ray3<T>::findIntersection(const OrientedBox<T>
 template<typename T>
 inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Sphere<T>& sphere) const
 {
-	std::optional<Interval<T>> result = asLine().findIntersection(sphere);
+	std::optional<Interval<T>> result = intersections::findLineNSphere<std::optional<Interval<T>>>(origin, direction, sphere.center, sphere.radius);
+	
 	if (result.has_value() && (result.value().maximum >= T(0)))
 	{
 		const Interval<T>& interval = result.value();
@@ -314,7 +323,12 @@ template<typename T>
 template<Normalization U>
 inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Sphere<T>& sphere) const
 {
-	std::optional<Interval<T>> result = asLine().findIntersection<U>(sphere);
+	std::optional<Interval<T>> result;
+	if costexpr(std::is_same_v<U, Normalized>)
+		result = intersections::findNormalizedLineNSphere<std::optional<Interval<T>>>(origin, direction, sphere.center, sphere.radius);
+	else
+		result = intersections::findLineNSphere<std::optional<Interval<T>>>(origin, direction, sphere.center, sphere.radius);
+
 	if (result.has_value() && (result.value().maximum >= T(0)))
 	{
 		const Interval<T>& interval = result.value();
@@ -329,4 +343,4 @@ inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Sphere<T>& sph
 	}
 }
 
-} // namespace core::mathematics::templates
+} // namespace mathematics::templates

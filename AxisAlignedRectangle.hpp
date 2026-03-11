@@ -271,6 +271,7 @@ struct hash<::mathematics::templates::AxisAlignedRectangle<T>>
 } // namespace std
 
 #include "Circle2.hpp"
+#include "Intersections.inl"
 
 namespace mathematics::templates {
 	
@@ -299,7 +300,7 @@ inline bool AxisAlignedRectangle<T>::contains(const Circle2<T>& circle) const
 template<typename T>
 inline bool AxisAlignedRectangle<T>::intersects(const Circle2<T>& circle) const
 {
-	return circle.intersects(*this);
+	return intersections::testAxisAlignedRectangleCircle(minimum, maximum, circle.center, circle.radius);
 }
 
 } // namespace mathematics::templates

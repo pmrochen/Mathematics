@@ -21,7 +21,7 @@
 #include "Matrix3.hpp"
 #include "AffineTransform.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 namespace templates {
 
 template<typename T>
@@ -102,7 +102,7 @@ struct HalfSpace
 	HalfSpace& normalize() noexcept;
 
 	// Distances
-	T getDistanceTo(const Vector3<T>& point) const { return std::max(dot(getNormal(), point) + d, 0.f); }	// normalized half-space
+	T getDistanceTo(const Vector3<T>& point) const { return std::max(dot(getNormal(), point) + d, T(0)); }	// normalized half-space
 	template<Normalization U> T getDistanceTo(const Vector3<T>& point) const;
 	T getSignedDistanceTo(const Vector3<T>& point) const noexcept { return (dot(getNormal(), point) + d); }	// normalized half-space
 	template<Normalization U> T getSignedDistanceTo(const Vector3<T>& point) const noexcept;
@@ -290,8 +290,7 @@ inline bool HalfSpace<T>::approxEquals(const HalfSpace<T>& h, T tolerance) const
 template<typename T>
 inline HalfSpace<T>& HalfSpace<T>::translate(const Vector3<T>& offset)
 {
-	Vector3 p(-getConstant()*getNormal());
-	setConstant(-dot(getNormal(), p + offset));
+	setConstant(-dot(getNormal(), getNormal()*(-getConstant()) + offset));
 	return *this;
 }
 
@@ -299,17 +298,9 @@ template<typename T>
 inline HalfSpace<T>& HalfSpace<T>::transform(const Matrix3<T>& matrix, bool orthogonal)
 {
 	if (orthogonal)
-	{
-		Vector3 p(-getConstant()*getNormal());
-		set(getNormal()*matrix, -dot(getNormal(), p*matrix);
-	}
+		set(getNormal()*matrix, -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
 	else
-	{
-		Matrix3 normalMatrix;
-		normalMatrix.inverseTransposeOf(matrix);
-		Vector3 p(-getConstant()*getNormal());
-		set(::normalize(getNormal()*normalMatrix), -dot(getNormal(), p*matrix);
-	}
+		set(::normalize(getNormal()*inverseTranspose(matrix)), -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
 	return *this;
 }
 
@@ -317,17 +308,9 @@ template<typename T>
 inline HalfSpace<T>& HalfSpace<T>::transform(const AffineTransform<T>& transformation, bool orthogonal)
 {
 	if (orthogonal)
-	{
-		Vector3 p(-getConstant()*getNormal());
-		set(getNormal()*transformation.getBasis(), -dot(getNormal(), ::transform(p, transformation));
-	}
+		set(getNormal()*transformation.getBasis(), -dot(getNormal(), ::transform(getNormal()*(-getConstant()), transformation)));
 	else
-	{
-		Matrix3 normalMatrix;
-		normalMatrix.inverseTransposeOf(transformation.getBasis());
-		Vector3 p(-getConstant()*getNormal());
-		set(::normalize(getNormal()*normalMatrix), -dot(getNormal(), ::transform(p, transformation));
-	}
+		set(::normalize(getNormal()*inverseTranspose(transformation.getBasis())), -dot(getNormal(), ::transform(getNormal()*(-getConstant()), transformation)));
 	return *this;
 }
 
@@ -356,32 +339,6 @@ inline HalfSpace<T>& HalfSpace<T>::normalize()
 	}
 	return *this;
 }
-
-template<typename T>
-template<Normalization U>
-inline T HalfSpace<T>::getDistanceTo(const Vector3<T>& point) const
-{
-	if costexpr(std::is_same_v<U, Normalized>)
-		return std::max(dot(getNormal(), point) + d, T(0));
-	else
-		return std::max((dot(getNormal(), point) + d)/getNormal().getMagnitude(), T(0));
-}
-
-template<typename T>
-template<Normalization U> 
-inline T HalfSpace<T>::getSignedDistanceTo(const Vector3<T>& point) const
-{
-	if costexpr(std::is_same_v<U, Normalized>)
-		return dot(getNormal(), point) + d;
-	else
-		return (dot(getNormal(), point) + d)/getNormal().getMagnitude(), T(0);
-}
-
-//template<typename T>
-//inline bool HalfSpace<T>::intersects(const Triangle3<T>& triangle) const
-//{
-//	return contains(triangle.vertices[0]) || contains(triangle.vertices[1]) || contains(triangle.vertices[2]);
-//}
 
 #if SIMD_HAS_FLOAT4
 
@@ -439,42 +396,25 @@ inline const float& HalfSpace<float>::get() const
 
 inline HalfSpace<float>& HalfSpace<float>::translate(const Vector3<float>& offset)
 {
-	Vector3 p(-getConstant()*getNormal());
-	setConstant(-dot(getNormal(), p + offset));
+	setConstant(-dot(getNormal(), getNormal()*(-getConstant()) + offset));
 	return *this;
 }
 
 inline HalfSpace<float>& HalfSpace<float>::transform(const Matrix3<float>& matrix, bool orthogonal)
 {
 	if (orthogonal)
-	{
-		Vector3 p(-getConstant()*getNormal());
-		set(getNormal()*matrix, -dot(getNormal(), p*matrix);
-	}
+		set(getNormal()*matrix, -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
 	else
-	{
-		Matrix3 normalMatrix;
-		normalMatrix.inverseTransposeOf(matrix);
-		Vector3 p(-getConstant()*getNormal());
-		set(::normalize(getNormal()*normalMatrix), -dot(getNormal(), p*matrix);
-	}
+		set(::normalize(getNormal()*inverseTranspose(matrix)), -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
 	return *this;
 }
 
 inline HalfSpace<float>& HalfSpace<float>::transform(const AffineTransform<float>& transformation, bool orthogonal)
 {
 	if (orthogonal)
-	{
-		Vector3 p(-getConstant()*getNormal());
-		set(getNormal()*transformation.getBasis(), -dot(getNormal(), ::transform(p, transformation));
-	}
+		set(getNormal()*transformation.getBasis(), -dot(getNormal(), ::transform(getNormal()*(-getConstant()), transformation)));
 	else
-	{
-		Matrix3 normalMatrix;
-		normalMatrix.inverseTransposeOf(transformation.getBasis());
-		Vector3 p(-getConstant()*getNormal());
-		set(::normalize(getNormal()*normalMatrix), -dot(getNormal(), ::transform(p, transformation));
-	}
+		set(::normalize(getNormal()*inverseTranspose(transformation.getBasis())), -dot(getNormal(), ::transform(getNormal()*(-getConstant()), transformation)));
 	return *this;
 }
 
@@ -491,29 +431,6 @@ inline HalfSpace<float>& HalfSpace<float>::normalize()
 #endif
 	return *this;
 }
-
-template<Normalization U>
-inline float HalfSpace<float>::getDistanceTo(const Vector3<float>& point) const
-{
-	if costexpr(std::is_same_v<U, Normalized>)
-		return std::max(dot(getNormal(), point) + d, T(0));
-	else
-		return std::max((dot(getNormal(), point) + d)/getNormal().getMagnitude(), T(0));
-}
-
-template<Normalization U>
-inline float HalfSpace<float>::getSignedDistanceTo(const Vector3<float>& point) const
-{
-	if costexpr(std::is_same_v<U, Normalized>)
-		return dot(getNormal(), point) + d;
-	else
-		return (dot(getNormal(), point) + d)/getNormal().getMagnitude(), T(0);
-}
-
-//inline bool HalfSpace<float>::intersects(const Triangle3<float>& triangle) const
-//{
-//	return contains(triangle.vertices[0]) || contains(triangle.vertices[1]) || contains(triangle.vertices[2]);
-//}
 
 #endif /* SIMD_HAS_FLOAT4 */
 
@@ -610,7 +527,7 @@ using HalfSpaceArg = templates::HalfSpace<float>::ConstArg;
 using HalfSpaceResult = templates::HalfSpace<float>::ConstResult;
 #endif
 
-} // namespace core::mathematics
+} // namespace mathematics
 
 namespace std {
 
@@ -618,7 +535,7 @@ template<size_t I, typename T>
 struct tuple_element;
 
 template<size_t I, typename T>
-struct tuple_element<I, ::core::mathematics::templates::HalfSpace<T>>
+struct tuple_element<I, ::mathematics::templates::HalfSpace<T>>
 {
 	using type = T;
 };
@@ -627,7 +544,7 @@ template<typename T>
 struct tuple_size;
 
 template<typename T>
-struct tuple_size<::core::mathematics::templates::HalfSpace<T>> : integral_constant<size_t, 4> 
+struct tuple_size<::mathematics::templates::HalfSpace<T>> : integral_constant<size_t, 4> 
 {
 };
 
@@ -635,9 +552,9 @@ template<typename T>
 struct hash;
 
 template<typename T>
-struct hash<::core::mathematics::templates::HalfSpace<T>>
+struct hash<::mathematics::templates::HalfSpace<T>>
 {
-	std::size_t operator()(const ::core::mathematics::templates::HalfSpace<T>& h) const noexcept
+	std::size_t operator()(const ::mathematics::templates::HalfSpace<T>& h) const noexcept
 	{
 		std::hash<T> hasher;
 		std::size_t seed = hasher(h.a) + 0x9e3779b9;
@@ -655,8 +572,9 @@ struct hash<::core::mathematics::templates::HalfSpace<T>>
 #include "AxisAlignedBox.hpp"
 #include "OrientedBox.hpp"
 #include "Sphere.hpp"
+#include "Distances.inl"
 
-namespace core::mathematics::templates {
+namespace mathematics::templates {
 
 template<typename T>
 inline HalfSpace<T>::HalfSpace(const Plane<T>& p) : a(p.a), b(p.b), c(p.c), d(p.d)
@@ -667,6 +585,26 @@ template<typename T>
 inline const Plane<T>& HalfSpace<T>::asPlane() const 
 { 
 	return reinterpret_cast<const Plane<T>&>(*this); 
+}
+
+template<typename T>
+template<Normalization U>
+inline T HalfSpace<T>::getDistanceTo(const Vector3<T>& point) const
+{
+	if costexpr(std::is_same_v<U, Normalized>)
+		return distances::getPointNormalizedHalfSpace(point, getNormal(), d);
+	else
+		return distances::getPointHalfSpace(point, getNormal(), d);
+}
+
+template<typename T>
+template<Normalization U>
+inline T HalfSpace<T>::getSignedDistanceTo(const Vector3<T>& point) const
+{
+	if costexpr(std::is_same_v<U, Normalized>)
+		return distances::getPointNormalizedPlaneSigned(point, getNormal(), d);
+	else
+		return distances::getPointPlaneSigned(point, getNormal(), d);
 }
 
 template<typename T>
@@ -704,6 +642,24 @@ inline const Plane<float> HalfSpace<float>::asPlane() const
 	return Plane<float>(abcd); 
 }
 
+template<Normalization U>
+inline float HalfSpace<float>::getDistanceTo(const Vector3<float>& point) const
+{
+	if costexpr(std::is_same_v<U, Normalized>)
+		return distances::getPointNormalizedHalfSpace(point, getNormal(), d);
+	else
+		return distances::getPointHalfSpace(point, getNormal(), d);
+}
+
+template<Normalization U>
+inline float HalfSpace<float>::getSignedDistanceTo(const Vector3<float>& point) const
+{
+	if costexpr(std::is_same_v<U, Normalized>)
+		return distances::getPointNormalizedPlaneSigned(point, getNormal(), d);
+	else
+		return distances::getPointPlaneSigned(point, getNormal(), d);
+}
+
 inline bool HalfSpace<float>::intersects(const Triangle3<float>& triangle) const
 {
 	return triangle.intersects(*this);
@@ -726,4 +682,4 @@ inline bool HalfSpace<float>::intersects(const Sphere<float>& sphere) const
 
 #endif /* SIMD_HAS_FLOAT4 */
 
-} // namespace core::mathematics::templates
+} // namespace mathematics::templates

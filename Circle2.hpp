@@ -14,11 +14,10 @@
 #include <cstddef>
 #include <cmath>
 #include "Constants.hpp"
-#include "Scalar.hpp"
 #include "Vector2.hpp"
 #include "AxisAlignedRectangle.hpp"
 
-namespace core::mathematics {
+namespace mathematics {
 namespace templates {
 
 template<typename T>
@@ -110,21 +109,6 @@ inline AxisAlignedRectangle<T> Circle2<T>::getCircumscribedRectangle() const
 }
 
 template<typename T>
-inline bool Circle2<T>::intersects(const AxisAlignedRectangle<T>& rectangle) const
-{
-	T d = T(0);
-	if (center.x < rectangle.minimum.x)
-		d += sqr(center.x - rectangle.minimum.x);
-	else if (center.x > rectangle.maximum.x)
-		d += sqr(center.x - rectangle.maximum.x);
-	if (center.y < rectangle.minimum.y)
-		d += sqr(center.y - rectangle.minimum.y);
-	else if (center.y > rectangle.maximum.y)
-		d += sqr(center.y - rectangle.maximum.y);
-	return (d <= radius*radius);
-}
-
-template<typename T>
 inline bool Circle2<T>::intersects(const Circle2<T>& circle) const
 {
 	T d = circle.radius + radius;
@@ -143,7 +127,7 @@ using Circle2Arg = templates::Circle2<float>::ConstArg;
 using Circle2Result = templates::Circle2<float>::ConstResult;
 #endif
 
-} // namespace core::mathematics
+} // namespace mathematics
 
 namespace std {
 
@@ -151,9 +135,9 @@ template<typename T>
 struct hash;
 
 template<typename T>
-struct hash<::core::mathematics::templates::Circle2<T>>
+struct hash<::mathematics::templates::Circle2<T>>
 {
-	std::size_t operator()(const ::core::mathematics::templates::Circle2<T>& circle) const noexcept
+	std::size_t operator()(const ::mathematics::templates::Circle2<T>& circle) const noexcept
 	{
 		std::hash<T> hasher;
 		std::size_t seed = hasher(circle.center) + 0x9e3779b9;
@@ -163,3 +147,15 @@ struct hash<::core::mathematics::templates::Circle2<T>>
 };
 
 } // namespace std
+
+#include "Intersections.inl"
+
+namespace mathematics::templates {
+
+template<typename T>
+inline bool Circle2<T>::intersects(const AxisAlignedRectangle<T>& rectangle) const
+{
+	return intersections::testAxisAlignedRectangleCircle(rectangle.minimum, rectangle.maximum, center, radius);
+}
+
+} // namespace mathematics::templates
