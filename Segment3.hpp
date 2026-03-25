@@ -123,10 +123,10 @@ struct Segment3
 	bool intersects(const Sphere<T>& sphere) const noexcept { return findIntersection(sphere).has_value(); }
 	bool intersects(const Ellipsoid<T>& ellipsoid) const noexcept; // #TODO
 	std::optional<T> findIntersection(const Plane<T>& plane) const noexcept;
-	std::optional<T> findIntersection(const Triangle3<T>& triangle) const noexcept; // #TODO
+	std::optional<T> findIntersection(const Triangle3<T>& triangle) const noexcept;
 	//template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Plane<T>& plane) const noexcept;
-	std::optional<Interval<T>> findIntersection(const AxisAlignedBox& box) const noexcept;
-	std::optional<Interval<T>> findIntersection(const OrientedBox& box) const noexcept;
+	std::optional<Interval<T>> findIntersection(const AxisAlignedBox<T>& box) const noexcept;
+	std::optional<Interval<T>> findIntersection(const OrientedBox<T>& box) const noexcept;
 	std::optional<Interval<T>> findIntersection(const Sphere<T>& sphere) const noexcept;
 	std::optional<Interval<T>> findIntersection(const Ellipsoid<T>& ellipsoid) const noexcept; // #TODO
 
@@ -237,7 +237,7 @@ inline bool Segment3<T>::intersects(const HalfSpace<T>& halfSpace) const
 template<typename T>
 inline std::optional<T> Segment3<T>::findIntersection(const Plane<T>& plane) const
 {
-	std::optional<T> result = intersections::findLinePlane<std::optional<T>>(start, end - start, plane.getNormal(), plane.d);
+	auto result = intersections::findLinePlane<std::optional<T>>(start, end - start, plane.getNormal(), plane.d);
 	return (result.has_value() && (result.value() >= T(0)) && (result.value() <= T(1))) ? result : {};
 }
 
@@ -253,10 +253,19 @@ inline std::optional<T> Segment3<T>::findIntersection(const Plane<T>& plane) con
 //}
 
 template<typename T>
+inline std::optional<T> Segment3<T>::findIntersection(const Triangle3<T>& triangle) const
+{
+	//return intersections::findSegmentTriangle<std::optional<T>>(start, end, triangle.vertices[0], triangle.vertices[1],
+	//	triangle.vertices[2]);
+	auto result = intersections::findLineTriangle<std::optional<T>>(start, end - start, triangle.vertices[0], triangle.vertices[1],
+		triangle.vertices[2]);
+	return (result.has_value() && (result.value() >= T(0)) && (result.value() <= T(1))) ? result : {};
+}
+
+template<typename T>
 inline std::optional<Interval<T>> Segment3<T>::findIntersection(const AxisAlignedBox<T>& box) const
 {
-	std::optional<Interval<T>> result = intersections::findLineAxisAlignedBox<std::optional<Interval<T>>>(start, end - start, 
-		box.minimum, box.maximum);
+	auto result = intersections::findLineAxisAlignedBox<std::optional<Interval<T>>>(start, end - start, box.minimum, box.maximum);
 	
 	if (result.has_value() && (result.value().maximum >= T(0)) && (result.value().minimum <= T(1)))
 	{
@@ -275,9 +284,7 @@ inline std::optional<Interval<T>> Segment3<T>::findIntersection(const AxisAligne
 template<typename T>
 inline std::optional<Interval<T>> Segment3<T>::findIntersection(const OrientedBox<T>& box) const
 {
-	//Matrix3<T> basisTranspose(transpose(box.basis));
-	std::optional<Interval<T>> result = intersections::findLineAxisAlignedBox<std::optional<Interval<T>>>(box.basis*(start - box.center)/*(start - box.center)*basisTranspose*/,
-		box.basis*(end - start)/*(end - start)*basisTranspose*/, -box.halfDims, box.halfDims);
+	auto result = intersections::findLineOrientedBox<std::optional<Interval<T>>>(start, end - start, box.center, box.basis, box.halfDims);
 	
 	if (result.has_value() && (result.value().maximum >= T(0)) && (result.value().minimum <= T(1)))
 	{
@@ -296,7 +303,7 @@ inline std::optional<Interval<T>> Segment3<T>::findIntersection(const OrientedBo
 template<typename T>
 inline std::optional<Interval<T>> Segment3<T>::findIntersection(const Sphere<T>& sphere) const
 {
-	std::optional<Interval<T>> result = intersections::findLineNSphere<std::optional<Interval<T>>>(start, end - start, sphere.center, sphere.radius);
+	auto result = intersections::findLineNSphere<std::optional<Interval<T>>>(start, end - start, sphere.center, sphere.radius);
 
 	if (result.has_value() && (result.value().maximum >= T(0)) && (result.value().minimum <= T(1)))
 	{

@@ -12,6 +12,7 @@
 #include <concepts>
 #include <utility>
 #include <tuple>
+#include <iterator>
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -607,6 +608,7 @@ struct hash<::mathematics::templates::Plane<T>>
 #include "Sphere.hpp"
 #include "Ellipsoid.hpp"
 #include "Distances.inl"
+#include "Intersections.inl"
 
 namespace mathematics::templates {
 
@@ -639,13 +641,13 @@ inline bool Plane<T>::intersects(const Triangle3<T>& triangle) const
 template<typename T>
 inline bool Plane<T>::intersects(const AxisAlignedBox<T>& box) const
 {
-	return box.intersects(*this);
+	return intersections::testAxisAlignedBoxPlane(box.getCenter(), box.getHalfDimensions(), getNormal(), d);
 }
 
 template<typename T>
 inline bool Plane<T>::intersects(const OrientedBox<T>& box) const
 {
-	return box.intersects(*this);
+	return intersections::testOrientedBoxPlane(box.center, box.basis, box.halfDims, getNormal(), d);
 }
 
 template<typename T>
@@ -687,12 +689,12 @@ inline bool Plane<float>::intersects(const Triangle3<float>& triangle) const
 
 inline bool Plane<float>::intersects(const AxisAlignedBox<float>& box) const
 {
-	return box.intersects(*this);
+	return intersections::testAxisAlignedBoxPlane(box.getCenter(), box.getHalfDimensions(), getNormal(), d);
 }
 
 inline bool Plane<float>::intersects(const OrientedBox<float>& box) const
 {
-	return box.intersects(*this);
+	return intersections::testOrientedBoxPlane(box.center, box.basis, box.halfDims, getNormal(), d);
 }
 
 inline bool Plane<float>::intersects(const Sphere<float>& sphere) const

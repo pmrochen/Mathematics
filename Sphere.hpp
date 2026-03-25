@@ -232,15 +232,13 @@ inline bool Sphere<T>::intersects(const AxisAlignedBox<T>& box) const
 template<typename T>
 inline bool Sphere<T>::intersects(const OrientedBox<T>& box) const
 {
-	//Matrix3<T> boxBasisT(transpose(box.basis));
-	return intersections::testAxisAlignedBoxSphere(-box.halfDims, box.halfDims, 
-		box.basis*(center - box.center)/*(center - box.center)*boxBasisT*/, radius);
+	return intersections::testOrientedBoxSphere(box.center, box.basis, box.halfDims, center, radius);
 }
 
 template<typename T>
 inline bool Sphere<T>::intersects(const Cone<T>& cone) const
 {
-	return cone.intersects(*this);
+	return intersections::testConeSphere(cone.vertex, cone.axis, cone.height, cone.radius, center, radius);
 }
 
 template<typename T>

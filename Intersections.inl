@@ -397,6 +397,99 @@ inline O findLinePlane(const Vector3<T>& origin, const Vector3<T>& direction, co
 
 template<typename O, typename T>
 	requires std::floating_point<T>
+inline O findLineTriangle(const Vector3<T>& origin, const Vector3<T>& direction, const Vector3<T>& vertex0, const Vector3<T>& vertex1,
+	const Vector3<T>& vertex2) noexcept
+{
+	// http://fileadmin.cs.lth.se/cs/Personal/Tomas_Akenine-Moller/code/
+
+	Vector3<T> edge1 = vertex1 - vertex0;
+	Vector3<T> edge2 = vertex2 - vertex0;
+	Vector3<T> pVec = cross(direction, edge2);
+	T det = dot(edge1, pVec);
+	if (std::fabs(det) < Constants<T>::TOLERANCE)
+		return detail::infinity<O, T>();
+
+	T invDet = T(1)/det;
+	Vector3<T> tVec = origin - vertex0;
+	T u = dot(tVec, pVec)*invDet;
+	if ((u < T(0)) || (u > T(1)))
+		return detail::infinity<O, T>();
+
+	Vector3<T> qVec = cross(tVec, edge1);
+	T v = dot(direction, qVec)*invDet;
+	if ((v < T(0)) || ((u + v) > T(1)))
+		return detail::infinity<O, T>();
+
+	return { dot(edge2, qVec)*invDet };
+}
+
+//template<typename O, typename T>
+//	requires std::floating_point<T>
+//inline O findRayTriangle(const Vector3<T>& origin, const Vector3<T>& direction, const Vector3<T>& vertex0, const Vector3<T>& vertex1,
+//	const Vector3<T>& vertex2) noexcept
+//{
+//	// http://fileadmin.cs.lth.se/cs/Personal/Tomas_Akenine-Moller/code/
+//
+//	Vector3<T> edge1 = vertex1 - vertex0;
+//	Vector3<T> edge2 = vertex2 - vertex0;
+//	Vector3<T> pVec = cross(ray.direction, edge2);
+//	T det = dot(edge1, pVec);
+//	if (std::fabs(det) < Constants<T>::TOLERANCE)
+//		return detail::infinity<O, T>();
+//
+//	T invDet = T(1)/det;
+//	Vector3<T> tVec = origin - vertex0;
+//	T u = dot(tVec, pVec)*invDet;
+//	if ((u < T(0)) || (u > T(1)))
+//		return detail::infinity<O, T>();
+//
+//	Vector3<T> qVec = cross(tVec, edge1);
+//	T v = dot(direction, qVec)*invDet;
+//	if ((v < T(0)) || ((u + v) > T(1)))
+//		return detail::infinity<O, T>();
+//
+//	T t = dot(edge2, qVec)*invDet;
+//	if (t >= T(0))
+//		return { t };
+//	else
+//		return detail::infinity<O, T>();
+//}
+//
+//template<typename O, typename T>
+//	requires std::floating_point<T>
+//inline O findSegmentTriangle(const Vector3<T>& start, const Vector3<T>& end, const Vector3<T>& vertex0, const Vector3<T>& vertex1,
+//	const Vector3<T>& vertex2) noexcept
+//{
+//	// http://fileadmin.cs.lth.se/cs/Personal/Tomas_Akenine-Moller/code/
+//
+//	Vector3<T> edge1 = vertex1 - vertex0;
+//	Vector3<T> edge2 = vertex2 - vertex0;
+//	Vector3<T> direction = segment.end - segment.start;
+//	Vector3<T> pVec = cross(direction, edge2);
+//	T det = dot(edge1, pVec);
+//	if (std::fabs(det) < Constants<T>::TOLERANCE)
+//		return detail::infinity<O, T>();
+//
+//	T invDet = T(1)/det;
+//	Vector3<T> tVec = start - vertex0;
+//	T u = dot(tVec, pVec)*invDet;
+//	if ((u < T(0)) || (u > T(1)))
+//		return detail::infinity<O, T>();
+//
+//	Vector3<T> qVec = cross(tVec, edge1);
+//	T v = dot(direction, qVec)*invDet;
+//	if ((v < T(0)) || ((u + v) > T(1)))
+//		return detail::infinity<O, T>();
+//
+//	T t = dot(edge2, qVec)*invDet;
+//	if ((t >= T(0)) && (t <= T(1)))
+//		return { t };
+//	else
+//		return detail::infinity<O, T>();
+//}
+
+template<typename O, typename T>
+	requires std::floating_point<T>
 inline O findLineAxisAlignedRectangle(const Vector2<T>& origin, const Vector2<T>& direction, const Vector2<T>& minimum,
 	const Vector2<T>& maximum) noexcept
 {
@@ -497,6 +590,54 @@ inline O findLineAxisAlignedBox(const Vector3<T>& origin, const Vector3<T>& dire
 		tMax = tzMax;
 
 	return detail::intervalChecked<O>(tMin, tMax);
+}
+
+#if SIMD_HAS_FLOAT4
+
+//template<typename O>
+//inline O findLineAxisAlignedRectangle(const Vector2<float>& origin, const Vector2<float>& direction, 
+//	const Vector2<float>& minimum, const Vector2<float>& maximum) noexcept // #TODO
+//{
+//}
+
+template<typename O>
+inline O findLineAxisAlignedBox(const Vector3<float>& origin, const Vector3<float>& direction,
+	const Vector3<float>& minimum, const Vector3<float>& maximum) noexcept
+{
+	auto invDir = simd::div4(Vector4<float>::ONE, direction);
+	auto l1 = simd::mul4(simd::sub4(minimum, origin), invDir);
+	auto l2 = simd::mul4(simd::sub4(maximum, origin), invDir);
+
+	// The order we use for those min/max is vital to filter out NaNs that happens
+	// when an invDir is +/- inf and (minimum - origin) is 0. inf*0 = NaN
+	auto filteredL1a = simd::min4(l1, Vector4<float>::INF);
+	auto filteredL2a = simd::min4(l2, Vector4<float>::INF);
+	auto filteredL1b = simd::max4(l1, Vector4<float>::MINUS_INF);
+	auto filteredL2b = simd::max4(l2, Vector4<float>::MINUS_INF);
+	auto lMax = simd::max4(filteredL1a, filteredL2a);
+	auto lMin = simd::min4(filteredL1b, filteredL2b);
+	auto lMax0 = simd::swizzle<1, 2, 3, 0>(lMax);
+	auto lMin0 = simd::swizzle<1, 2, 3, 0>(lMin);
+	lMax = simd::min4/*min1*/(lMax, lMax0);
+	lMin = simd::max4/*max1*/(lMin, lMin0);
+	auto lMax1 = simd::swizzle<2, 3, 2, 3>(lMax);
+	auto lMin1 = simd::swizzle<2, 3, 2, 3>(lMin);
+	lMax = simd::min4/*min1*/(lMax, lMax1);
+	lMin = simd::max4/*max1*/(lMin, lMin1);
+
+	return detail::intervalChecked<O>(simd::toFloat(lMin), simd::toFloat(lMax));
+}
+
+#endif /* SIMD_HAS_FLOAT4 */
+
+template<typename O, typename T>
+	requires std::floating_point<T>
+inline O findLineOrientedBox(const Vector3<T>& origin, const Vector3<T>& direction, const Vector3<T>& center,
+	const Matrix3<T>& basis, const Vector3<T>& halfDims) noexcept
+{
+	//Matrix3<T> basisTranspose(transpose(basis));
+	return findLineAxisAlignedBox<O, T>(basis*(origin - center)/*(origin - center)*basisTranspose*/,
+		basis*direction/*direction*basisTranspose*/, -box.halfDims, box.halfDims);
 }
 
 template<typename T, typename V>
@@ -828,47 +969,27 @@ inline bool testAxisAlignedBoxSphere(const Vector3<T>& minimum, const Vector3<T>
 
 template<typename T>
 	requires std::floating_point<T>
+inline bool testOrientedBoxAxisAlignedBox(const Vector3<T>& centerA, const Matrix3<T>& basisA, const Vector3<T>& halfDimsA,
+	const Vector3<T>& centerB, const Vector3<T>& halfDimsB) noexcept
+{
+	return testOrientedBoxOrientedBox(centerA, basisA, halfDimsA, centerB, Matrix3<T>::IDENTITY, halfDimsB);
+}
+
+template<typename T>
+	requires std::floating_point<T>
+inline bool testOrientedBoxSphere(const Vector3<T>& centerA, const Matrix3<T>& basisA, const Vector3<T>& halfDimsA, 
+	const Vector3<T>& centerB, T radiusB) noexcept
+{
+	//Matrix3<T> boxBasisT(transpose(basisA));
+	return testAxisAlignedBoxSphere(-halfDimsA, halfDimsA,
+		basisA*(centerB - centerA)/*(centerB - centerA)*boxBasisT*/, radiusB);
+}
+
+template<typename T>
+	requires std::floating_point<T>
 inline bool testEllipsoidPlane(const Vector3<T>& center, const Matrix3<T>& inverseMatrix, const Vector3<T>& normal, T constant) noexcept
 {
 	return (distances::getPointPlaneSquared(center, normal, constant) <= std::fabs(dot(normal, normal*inverseMatrix)));
 }
-
-#if SIMD_HAS_FLOAT4
-
-//template<typename O>
-//inline O findLineAxisAlignedRectangle(const Vector2<float>& origin, const Vector2<float>& direction, 
-//	const Vector2<float>& minimum, const Vector2<float>& maximum) noexcept // #TODO
-//{
-//}
-
-template<typename O>
-inline O findLineAxisAlignedBox(const Vector3<float>& origin, const Vector3<float>& direction, 
-	const Vector3<float>& minimum, const Vector3<float>& maximum) noexcept
-{
-	auto invDir = simd::div4(Vector4<float>::ONE, direction);
-	auto l1 = simd::mul4(simd::sub4(minimum, origin), invDir);
-	auto l2 = simd::mul4(simd::sub4(maximum, origin), invDir);
-
-	// The order we use for those min/max is vital to filter out NaNs that happens
-	// when an invDir is +/- inf and (minimum - origin) is 0. inf*0 = NaN
-	auto filteredL1a = simd::min4(l1, Vector4<float>::INF);
-	auto filteredL2a = simd::min4(l2, Vector4<float>::INF);
-	auto filteredL1b = simd::max4(l1, Vector4<float>::MINUS_INF);
-	auto filteredL2b = simd::max4(l2, Vector4<float>::MINUS_INF);
-	auto lMax = simd::max4(filteredL1a, filteredL2a);
-	auto lMin = simd::min4(filteredL1b, filteredL2b);
-	auto lMax0 = simd::swizzle<1, 2, 3, 0>(lMax);
-	auto lMin0 = simd::swizzle<1, 2, 3, 0>(lMin);
-	lMax = simd::min4/*min1*/(lMax, lMax0);
-	lMin = simd::max4/*max1*/(lMin, lMin0);
-	auto lMax1 = simd::swizzle<2, 3, 2, 3>(lMax);
-	auto lMin1 = simd::swizzle<2, 3, 2, 3>(lMin);
-	lMax = simd::min4/*min1*/(lMax, lMax1);
-	lMin = simd::max4/*max1*/(lMin, lMin1);
-
-	return detail::intervalChecked<O>(simd::toFloat(lMin), simd::toFloat(lMax));
-}
-
-#endif /* SIMD_HAS_FLOAT4 */
 
 } // namespace mathematics::intersections

@@ -573,6 +573,7 @@ struct hash<::mathematics::templates::HalfSpace<T>>
 #include "OrientedBox.hpp"
 #include "Sphere.hpp"
 #include "Distances.inl"
+#include "Intersections.inl"
 
 namespace mathematics::templates {
 
@@ -616,13 +617,13 @@ inline bool HalfSpace<T>::intersects(const Triangle3<T>& triangle) const
 template<typename T>
 inline bool HalfSpace<T>::intersects(const AxisAlignedBox<T>& box) const
 {
-	return box.intersects(*this);
+	return intersections::testAxisAlignedBoxHalfSpace(box.getCenter(), box.getHalfDimensions(), getNormal(), d);
 }
 
 template<typename T>
 inline bool HalfSpace<T>::intersects(const OrientedBox<T>& box) const
 {
-	return box.intersects(*this);
+	return intersections::testOrientedBoxHalfSpace(box.center, box.basis, box.halfDims, getNormal(), d);
 }
 
 template<typename T>
@@ -667,12 +668,12 @@ inline bool HalfSpace<float>::intersects(const Triangle3<float>& triangle) const
 
 inline bool HalfSpace<float>::intersects(const AxisAlignedBox<float>& box) const
 {
-	return box.intersects(*this);
+	return intersections::testAxisAlignedBoxHalfSpace(box.getCenter(), box.getHalfDimensions(), getNormal(), d);
 }
 
 inline bool HalfSpace<float>::intersects(const OrientedBox<float>& box) const
 {
-	return box.intersects(*this);
+	return intersections::testOrientedBoxHalfSpace(box.center, box.basis, box.halfDims, getNormal(), d);
 }
 
 inline bool HalfSpace<float>::intersects(const Sphere<float>& sphere) const

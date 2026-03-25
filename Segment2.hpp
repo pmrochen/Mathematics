@@ -87,12 +87,12 @@ struct Segment2
 	bool intersects(const Line2<T>& line) const noexcept { return findIntersection(line).has_value(); }
 	//bool intersects(const Ray2<T>& ray) const noexcept { return findIntersection(ray).has_value(); } // #TODO
 	bool intersects(const Segment2& segment) const noexcept { return findIntersection(segment).has_value(); }
-	bool intersects(const AxisAlignedRectangle& rectangle) const noexcept { return findIntersection(rectangle).has_value(); }
+	bool intersects(const AxisAlignedRectangle<T>& rectangle) const noexcept { return findIntersection(rectangle).has_value(); }
 	bool intersects(const Circle2<T>& circle) const noexcept { return findIntersection(circle).has_value(); }
 	std::optional<T> findIntersection(const Line2<T>& line) const noexcept;
 	//std::optional<T> findIntersection(const Ray2<T>& ray) const noexcept; // #TODO
 	std::optional<T> findIntersection(const Segment2& segment) const;
-	std::optional<Interval<T>> findIntersection(const AxisAlignedRectangle& rectangle) const noexcept;
+	std::optional<Interval<T>> findIntersection(const AxisAlignedRectangle<T>& rectangle) const noexcept;
 	std::optional<Interval<T>> findIntersection(const Circle2<T>& circle) const noexcept;
 	//template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Line2<T>& line) const noexcept;
 	//template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Ray2<T>& ray) const noexcept;

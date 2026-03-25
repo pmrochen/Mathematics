@@ -11,6 +11,7 @@
 #include <concepts>
 #include <utility>
 #include <optional>
+#include <iterator>
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -117,16 +118,16 @@ struct Line3
 	// Intersection
 	bool intersects(const Plane<T>& plane) const noexcept;
 	bool intersects(const Triangle3<T>& triangle) const noexcept { return findIntersection(triangle).has_value(); }
-	bool intersects(const AxisAlignedBox& box) const noexcept { return findIntersection(box).has_value(); }
-	bool intersects(const OrientedBox& box) const noexcept { return findIntersection(box).has_value(); }
+	bool intersects(const AxisAlignedBox<T>& box) const noexcept { return findIntersection(box).has_value(); }
+	bool intersects(const OrientedBox<T>& box) const noexcept { return findIntersection(box).has_value(); }
 	bool intersects(const Sphere<T>& sphere) const noexcept;
 	template<Normalization U> bool intersects(const Sphere<T>& sphere) const noexcept;
 	bool intersects(const Ellipsoid<T>& ellipsoid) const noexcept; // #TODO
 	std::optional<T> findIntersection(const Plane<T>& plane) const noexcept;
-	std::optional<T> findIntersection(const Triangle3<T>& triangle) const noexcept; // #TODO
+	std::optional<T> findIntersection(const Triangle3<T>& triangle) const noexcept;
 	//template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Plane<T>& plane) const noexcept;
-	std::optional<Interval<T>> findIntersection(const AxisAlignedBox& box) const noexcept;
-	std::optional<Interval<T>> findIntersection(const OrientedBox& box) const noexcept;
+	std::optional<Interval<T>> findIntersection(const AxisAlignedBox<T>& box) const noexcept;
+	std::optional<Interval<T>> findIntersection(const OrientedBox<T>& box) const noexcept;
 	std::optional<Interval<T>> findIntersection(const Sphere<T>& sphere) const noexcept;
 	template<Normalization U> std::optional<Interval<T>> findIntersection(const Sphere<T>& sphere) const noexcept;
 	std::optional<Interval<T>> findIntersection(const Ellipsoid<T>& ellipsoid) const noexcept; // #TODO
@@ -306,6 +307,13 @@ inline std::optional<T> Line3<T>::findIntersection(const Plane<T>& plane) const
 //}
 
 template<typename T>
+inline std::optional<T> Line3<T>::findIntersection(const Triangle3<T>& triangle) const
+{
+	return intersections::findLineTriangle<std::optional<T>>(origin, direction, triangle.vertices[0], triangle.vertices[1],
+		triangle.vertices[2]);
+}
+
+template<typename T>
 inline std::optional<Interval<T>> Line3<T>::findIntersection(const AxisAlignedBox& box) const
 {
 	return intersections::findLineAxisAlignedBox<std::optional<Interval<T>>>(origin, direction, box.minimum, box.maximum);
@@ -314,9 +322,7 @@ inline std::optional<Interval<T>> Line3<T>::findIntersection(const AxisAlignedBo
 template<typename T>
 inline std::optional<Interval<T>> Line3<T>::findIntersection(const OrientedBox& box) const
 {
-	//Matrix3<T> basisTranspose(transpose(box.basis));
-	return intersections::findLineAxisAlignedBox<std::optional<Interval<T>>>(box.basis*(origin - box.center)/*(origin - box.center)*basisTranspose*/,
-		box.basis*direction/*direction*basisTranspose*/, -box.halfDims, box.halfDims);
+	return intersections::findLineOrientedBox<std::optional<Interval<T>>>(origin, direction, box.center, box.basis, box.halfDims);
 }
 
 template<typename T>

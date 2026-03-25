@@ -11,6 +11,8 @@
 #include <concepts>
 #include <utility>
 #include <tuple>
+#include <vector>
+#include <iterator>
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -82,7 +84,7 @@ struct AxisAlignedBox
 	T getVolume() const noexcept;
 
 	// Vertices
-	template<std::output_iterator<Vector3<T>> O> O copyVertices(O target) const noexcept;
+	template<std::output_iterator<Vector3<T>> O> O copyVertices(O target) const;
 	std::vector<Vector3> getVertices() const;
 
 	// Primitives
@@ -90,7 +92,7 @@ struct AxisAlignedBox
 	std::size_t getPrimitiveCount(int nVerticesPerPrimitive) const noexcept;
 
 	// Half spaces
-	template<std::output_iterator<HalfSpace<T>> O> O copyHalfSpaces(O target) const noexcept;
+	template<std::output_iterator<HalfSpace<T>> O> O copyHalfSpaces(O target) const;
 	std::vector<HalfSpace> getHalfSpaces() const;
 
 	// Circumscribed sphere
@@ -426,28 +428,26 @@ inline bool AxisAlignedBox<T>::contains(const Sphere<T>& sphere) const
 template<typename T>
 inline bool AxisAlignedBox<T>::intersects(const HalfSpace<T>& halfSpace) const
 {
-	return intersections::testAxisAlignedBoxHalfSpace((minimum + maximum)*T(0.5), (maximum - minimum)*T(0.5),
-		halfSpace.getNormal(), halfSpace.d);
+	return intersections::testAxisAlignedBoxHalfSpace(getCenter(), getHalfDimensions(), halfSpace.getNormal(), halfSpace.d);
 }
 
 template<typename T>
 inline bool AxisAlignedBox<T>::intersects(const Plane<T>& plane) const
 {
-	return intersections::testAxisAlignedBoxPlane((minimum + maximum)*T(0.5), (maximum - minimum)*T(0.5),
-		plane.getNormal(), plane.d);
+	return intersections::testAxisAlignedBoxPlane(getCenter(), getHalfDimensions(), plane.getNormal(), plane.d);
 }
 
 template<typename T>
 inline bool AxisAlignedBox<T>::intersects(const Triangle3<T>& triangle) const
 {
-	return intersections::testAxisAlignedBoxTriangle((minimum + maximum)*T(0.5), (maximum - minimum)*T(0.5),
-		triangle.vertices[0], triangle.vertices[1], triangle.vertices[2]);
+	return intersections::testAxisAlignedBoxTriangle(getCenter(), getHalfDimensions(), triangle.vertices[0], triangle.vertices[1], 
+		triangle.vertices[2]);
 }
 
 template<typename T>
 inline bool AxisAlignedBox<T>::intersects(const OrientedBox<T>& box) const
 {
-	return box.intersects(*this);
+	return intersections::testOrientedBoxAxisAlignedBox(box.center, box.basis, box.halfDims, getCenter(), getHalfDimensions());
 }
 
 template<typename T>
