@@ -31,5 +31,11 @@
     <ClInclude Include="Sphere.hpp" />
     <ClInclude Include="Distances.inl" />
     <ClInclude Include="Intersections.inl" />
+    <ClInclude Include="OrientedBox.hpp" />
+    <ClInclude Include="Quadrilateral3.hpp" />
+    <ClInclude Include="Tetrahedron.hpp" />
+    <ClInclude Include="Triangle3.hpp" />
+    <ClInclude Include="Containment.inl" />
+    <ClInclude Include="Triangulation.inl" />
   </ItemGroup>
 </Project>

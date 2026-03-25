@@ -202,7 +202,9 @@
     <ClInclude Include="Matrix2.hpp" />
     <ClInclude Include="Matrix3.hpp" />
     <ClInclude Include="Matrix4.hpp" />
+    <ClInclude Include="OrientedBox.hpp" />
     <ClInclude Include="Plane.hpp" />
+    <ClInclude Include="Quadrilateral3.hpp" />
     <ClInclude Include="Quaternion.hpp" />
     <ClInclude Include="Ray2.hpp" />
     <ClInclude Include="Ray3.hpp" />
@@ -210,12 +212,16 @@
     <ClInclude Include="Segment2.hpp" />
     <ClInclude Include="Segment3.hpp" />
     <ClInclude Include="Sphere.hpp" />
+    <ClInclude Include="Tetrahedron.hpp" />
+    <ClInclude Include="Triangle3.hpp" />
     <ClInclude Include="Vector2.hpp" />
     <ClInclude Include="Vector3.hpp" />
     <ClInclude Include="Vector4.hpp" />
     <ClInclude Include="YawPitchRoll.hpp" />
     <ClInclude Include="Distances.inl" />
     <ClInclude Include="Intersections.inl" />
+    <ClInclude Include="Containment.inl" />
+    <ClInclude Include="Triangulation.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
