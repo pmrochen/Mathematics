@@ -10,7 +10,7 @@
 #include <type_traits>
 #include <concepts>
 #include <utility>
-#include <vector>
+#include <array>
 #include <iterator>
 #include <algorithm>
 #include <cstddef>
@@ -67,12 +67,12 @@ struct OrientedBox
 	Vector3<T> getDimensions() const noexcept { return halfDims*T(2); }
 	void setDimensions(const Vector3<T>& dimensions) noexcept { halfDims = dimensions*T(0.5); }
 	T getDiagonal() const noexcept { return halfDims.getMagnitude()*T(2); }
-	T getArea() const noexcept;
+	T getSurfaceArea() const noexcept;
 	T getVolume() const noexcept;
 
 	// Vertices
 	template<std::output_iterator<Vector3<T>> O> O copyVertices(O target) const;
-	std::vector<Vector3> getVertices() const;
+	std::array<Vector3<T>, 8> getVertices() const noexcept;
 
 	// Primitives
 	template<std::integral U> std::pair<const U*, const U*> getPrimitives(int nVerticesPerPrimitive) const noexcept; // #TODO return range
@@ -80,11 +80,11 @@ struct OrientedBox
 
 	// Half spaces
 	template<std::output_iterator<HalfSpace<T>> O> O copyHalfSpaces(O target) const;
-	std::vector<HalfSpace> getHalfSpaces() const;
+	std::array<HalfSpace<T>, 6> getHalfSpaces() const noexcept;
 
 	// Circumscribed box and sphere
 	AxisAlignedBox<T> getCircumscribedBox() const noexcept;
-	Sphere<T> getCircumscribedSphere() const noexcept;
+	Sphere<T> getCircumscribedSphere() const noexcept { return { center, halfDims.getMagnitude() }; }
 
 	// Transformation
 	OrientedBox& translate(const Vector3<T>& offset) noexcept { center += offset; return *this; }
@@ -98,7 +98,7 @@ struct OrientedBox
 
 	// Containment and intersection
 	bool contains(const Vector3<T>& point) const noexcept;
-	//int classify(const HalfSpace<T>& halfSpace) const noexcept; // -1 = inside, 1 = outside, 0 = partial // #TODO return enum
+	int classify(const HalfSpace<T>& halfSpace) const noexcept; // -1 = inside, 1 = outside, 0 = partial // #TODO return enum
 	bool intersects(const HalfSpace<T>& halfSpace) const noexcept;
 	bool intersects(const Plane<T>& plane) const noexcept;
 	bool intersects(const Triangle3<T>& triangle) const noexcept;
@@ -111,6 +111,26 @@ struct OrientedBox
 	Matrix3<T> basis;
 	Vector3<T> halfDims;
 };
+
+//template<typename T>
+//inline OrientedBox<T>::OrientedBox(const AxisAlignedBox<T>& box, const Matrix3<T>& orientation, bool orthogonal) :
+//	center(box.getCenter()*orientation),
+//	basis(transformation.getBasis()),
+//	halfDims(box.getHalfDimensions())
+//{
+//	if (!orthogonal)
+//		orthonormalize();
+//}
+
+template<typename T>
+inline OrientedBox<T>::OrientedBox(const AxisAlignedBox<T>& box, const AffineTransform<T>& transformation, bool orthogonal) :
+	center(transform(box.getCenter(), transformation)),
+	basis(transformation.getBasis()),
+	halfDims(box.getHalfDimensions())
+{
+	if (!orthogonal)
+		orthonormalize();
+}
 
 template<typename T>
 inline bool OrientedBox<T>::operator==(const OrientedBox<T>& box) const
@@ -155,6 +175,161 @@ inline OrientedBox<T>& OrientedBox<T>::set(const Vector3<T>& center, const Matri
 	return *this;
 }
 
+template<typename T>
+inline T OrientedBox<T>::getSurfaceArea() const
+{
+	Vector3<T> dim = halfDims*T(2);
+	return T(2)*(dim.x*dim.y + dim.y*dim.z + dim.z*dim.x); // T(2)*dot(dim, dim.yzx())
+}
+
+template<typename T>
+inline T OrientedBox<T>::getVolume() const
+{
+	Vector3<T> dim = halfDims*T(2);
+	return dim.x*dim.y*dim.z;
+}
+
+template<typename T>
+template<std::output_iterator<Vector3<T>> O>
+inline O OrientedBox<T>::copyVertices(O target) const
+{
+	AffineTransform<T> m(basis, center);
+	*target++ = transform(-halfDims, m);
+	*target++ = transform(Vector3<T>(halfDims.x, -halfDims.y, -halfDims.z), m);
+	*target++ = transform(Vector3<T>(-halfDims.x, halfDims.y, -halfDims.z), m);
+	*target++ = transform(Vector3<T>(halfDims.x, halfDims.y, -halfDims.z), m);
+	*target++ = transform(Vector3<T>(-halfDims.x, -halfDims.y, halfDims.z), m);
+	*target++ = transform(Vector3<T>(halfDims.x, -halfDims.y, halfDims.z), m);
+	*target++ = transform(Vector3<T>(-halfDims.x, halfDims.y, halfDims.z), m);
+	*target++ = transform(halfDims, m);
+	return target;
+}
+
+template<typename T>
+inline std::array<Vector3<T>, 8> OrientedBox<T>::getVertices() const
+{
+	AffineTransform<T> m(basis, center);
+	return { transform(-halfDims, m), transform(Vector3<T>(halfDims.x, -halfDims.y, -halfDims.z), m),
+		transform(Vector3<T>(-halfDims.x, halfDims.y, -halfDims.z), m), transform(Vector3<T>(halfDims.x, halfDims.y, -halfDims.z), m),
+		transform(Vector3<T>(-halfDims.x, -halfDims.y, halfDims.z), m), transform(Vector3<T>(halfDims.x, -halfDims.y, halfDims.z), m),
+		transform(Vector3<T>(-halfDims.x, halfDims.y, halfDims.z), m), transform(halfDims, m) };
+}
+
+template<typename T>
+template<std::integral U>
+std::pair<const U*, const U*> OrientedBox<T>::getPrimitives(int nVerticesPerPrimitive) const
+{
+	static const U edges[24] = { 0, 2, 2, 3, 3, 1, 1, 0, 3, 7, 5, 1, 6, 2, 0, 4, 5, 7, 7, 6, 6, 4, 4, 5 };
+	static const U triangles[36] = { 0, 2, 1, 3, 1, 2, 1, 3, 5, 7, 5, 3, 5, 7, 4, 6, 4, 7, 4, 6, 0, 2, 0, 6, 2, 6, 3, 7, 3, 6, 4, 0, 5, 1, 5, 0 };
+	static const U quads[24] = { 0, 2, 3, 1, 1, 3, 7, 5, 5, 7, 6, 4, 4, 6, 2, 0, 2, 6, 7, 3, 4, 0, 1, 5 };
+
+	switch (nVerticesPerPrimitive)
+	{
+		case 2:
+			return { edges, edges + 24 };
+		case 3:
+			return { triangles, triangles + 36 };
+		case 4:
+			return { quads, quads + 24 };
+		default:
+			return { nullptr, nullptr };
+	}
+}
+
+template<typename T>
+inline std::size_t OrientedBox<T>::getPrimitiveCount(int nVerticesPerPrimitive) const
+{
+	switch (nVerticesPerPrimitive)
+	{
+		case 2:
+			return 12;
+		case 3:
+			return 12;
+		case 4:
+			return 6;
+		default:
+			return 0;
+	}
+}
+
+template<typename T>
+template<std::output_iterator<HalfSpace<T>> O>
+inline O OrientedBox<T>::copyHalfSpaces(O target) const
+{
+	*target++ = HalfSpace<T>(-basis[0], -halfDims.x*basis[0] + center);
+	*target++ = HalfSpace<T>(basis[0], halfDims.x*basis[0] + center);
+	*target++ = HalfSpace<T>(-basis[1], -halfDims.y*basis[1] + center);
+	*target++ = HalfSpace<T>(basis[1], halfDims.y*basis[1] + center);
+	*target++ = HalfSpace<T>(-basis[2], -halfDims.z*basis[2] + center);
+	*target++ = HalfSpace<T>(basis[2], halfDims.z*basis[2] + center);
+	return target;
+}
+
+template<typename T>
+inline std::array<HalfSpace<T>, 6> OrientedBox<T>::getHalfSpaces() const
+{
+	return { HalfSpace<T>(-basis[0], -halfDims.x*basis[0] + center),
+		HalfSpace<T>(basis[0], halfDims.x*basis[0] + center),
+		HalfSpace<T>(-basis[1], -halfDims.y*basis[1] + center),
+		HalfSpace<T>(basis[1], halfDims.y*basis[1] + center),
+		HalfSpace<T>(-basis[2], -halfDims.z*basis[2] + center),
+		HalfSpace<T>(basis[2], halfDims.z*basis[2] + center) };
+}
+
+template<typename T>
+inline AxisAlignedBox<T> OrientedBox<T>::getCircumscribedBox() const
+{
+	Vector3<T> halfDims = abs(halfDims.x*basis[0]) + abs(halfDims.y*basis[1]) + abs(halfDims.z*basis[2]);
+	return { center - halfDims, center + halfDims };
+}
+
+template<typename T>
+inline OrientedBox<T> OrientedBox<T>::transform(const Matrix3<T>& matrix, bool orthogonal)
+{
+	basis *= matrix;
+	center *= matrix;
+	if (!orthogonal)
+		orthonormalize();
+	return *this;
+}
+
+template<typename T>
+inline OrientedBox<T> OrientedBox<T>::transform(const AffineTransform<T>& transformation, bool orthogonal)
+{
+	basis *= transformation.getBasis();
+	center.transform(transformation);
+	if (!orthogonal)
+		orthonormalize();
+	return *this;
+}
+
+template<typename T>
+inline OrientedBox<T> OrientedBox<T>::orthonormalize()
+{
+	halfDims *= Vector3<T>(basis[0].getMagnitude(), basis[1].getMagnitude(), basis[2].getMagnitude());
+	//halfDims.x *= basis[0].getMagnitude();
+	//halfDims.y *= basis[1].getMagnitude();
+	//halfDims.z *= basis[2].getMagnitude();
+	basis.orthonormalize();
+	return *this;
+}
+
+template<typename T>
+inline Vector3 OrientedBox<T>::getClosestPoint(const Vector3<T>& point) const
+{
+	//Vector3<T> ptLocal = (point - center)*transpose(basis);
+	Vector3<T> ptLocal = basis*(point - center);
+	return clamp(ptLocal, -halfDims, halfDims)*basis + center;
+}
+
+template<typename T>
+inline bool OrientedBox<T>::contains(const Vector3<T>& point) const
+{
+	//Vector3<T> ptLocal = (point - center)*transpose(basis);
+	Vector3<T> ptLocal = basis*(point - center);
+	return (-halfDims).allLessThanEqual(ptLocal) && halfDims.allGreaterThanEqual(ptLocal);
+}
+
 } // namespace templates
 
 #if MATHEMATICS_DOUBLE
@@ -194,6 +369,12 @@ struct hash<::mathematics::templates::OrientedBox<T>>
 #include "Intersections.inl"
 
 namespace mathematics::templates {
+
+template<typename T>
+inline int OrientedBox<T>::classify(const HalfSpace<T>& halfSpace) const
+{
+	return intersections::classifyOrientedBoxHalfSpace(center, basis, halfDims, halfSpace.getNormal(), halfSpace.d);
+}
 
 template<typename T>
 inline bool OrientedBox<T>::intersects(const HalfSpace<T>& halfSpace) const
