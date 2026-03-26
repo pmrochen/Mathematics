@@ -721,12 +721,34 @@ bool testAxisAlignedBoxHalfSpace(const Vector3<T>& center, const Vector3<T>& hal
 
 template<typename T>
 	requires std::floating_point<T>
-bool testOrientedBoxHalfSpace(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& halfDims, const Vector3<T>& normal, T constant) noexcept
+int classifyAxisAlignedBoxHalfSpace(const Vector3<T>& center, const Vector3<T>& halfDims, const Vector3<T>& normal, T constant) noexcept
+{
+	T r = sum(abs(halfDims*normal));
+	T a = dot(normal, center) + constant;
+	return (a <= r) ? ((a <= -r) ? -1 : 0) : 1;
+}
+
+template<typename T>
+	requires std::floating_point<T>
+bool testOrientedBoxHalfSpace(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& halfDims, const Vector3<T>& normal, 
+	T constant) noexcept
 {
 	//Matrix3 basisTranspose = transpose(basis);
 	//T r = sum(abs(halfDims*(normal*basisTranspose)));
 	T r = sum(abs(halfDims*(basis*normal)));
 	return ((dot(normal, center) + constant) <= r);
+}
+
+template<typename T>
+	requires std::floating_point<T>
+int classifyOrientedBoxHalfSpace(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& halfDims, const Vector3<T>& normal, 
+	T constant) noexcept
+{
+	//Matrix3 basisTranspose = transpose(basis);
+	//T r = sum(abs(halfDims*(normal*basisTranspose)));
+	T r = sum(abs(halfDims*(basis*normal)));
+	T a = dot(normal, center) + constant;
+	return (a <= r) ? ((a <= -r) ? -1 : 0) : 1;
 }
 
 template<typename T>
@@ -921,8 +943,8 @@ bool testAxisAlignedBoxTriangle(/*const Vector3<T>& center,*/ const Vector3<T>& 
 
 template<typename T>
 	requires std::floating_point<T>
-bool testOrientedBoxTriangle(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& halfDims, const Vector3<T>& vertex0,
-	const Vector3<T>& vertex1, const Vector3<T>& vertex2) noexcept
+inline bool testOrientedBoxTriangle(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& halfDims, 
+	const Vector3<T>& vertex0, const Vector3<T>& vertex1, const Vector3<T>& vertex2) noexcept
 {
 	//Matrix3 basisTranspose = transpose(basis);
 	//return detail::testAxisAlignedBoxTriangle(/*Vector3<T>::ZERO,*/ halfDims, (vertex0 - center)*basisTranspose, 
@@ -933,7 +955,8 @@ bool testOrientedBoxTriangle(const Vector3<T>& center, const Matrix3<T>& basis, 
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool testAxisAlignedRectangleCircle(const Vector2<T>& minimum, const Vector2<T>& maximum, const Vector2<T>& center, T radius) noexcept
+inline bool testAxisAlignedRectangleCircle(const Vector2<T>& minimum, const Vector2<T>& maximum, const Vector2<T>& center, 
+	T radius) noexcept
 {
 	T d = T(0);
 	if (center.x < minimum.x)
@@ -965,6 +988,152 @@ inline bool testAxisAlignedBoxSphere(const Vector3<T>& minimum, const Vector3<T>
 	else if (center.z > maximum.z)
 		d += sqr(center.z - maximum.z);
 	return (d <= radius*radius);
+}
+
+template<typename T>
+	requires std::floating_point<T>
+bool testOrientedBoxOrientedBox(const Vector3<T>& centerA, const Matrix3<T>& basisA, const Vector3<T>& halfDimsA,
+	const Vector3<T>& centerB, const Matrix3<T>& basisB, const Vector3<T>& halfDimsB) noexcept
+{
+	// https://www.geometrictools.com/
+
+	constexpr T CUTOFF = T(1) - Constants<T>::TOLERANCE;
+	bool existsParallelPair = false;
+	Vector3<T> kD = centerB - centerA;
+	Vector3<T> aafC0, aafC1, aafC2;
+	Vector3<T> aafAbsC0, aafAbsC1, aafAbsC2;
+	Vector3<T> afAD;
+
+	for (int i = 0; i < 3; i++)
+	{
+		aafC0[i] = dot(basisA[0], basisB[i]);
+		aafAbsC0[i] = std::fabs(aafC0[i]);
+		if (aafAbsC0[i] > CUTOFF)
+			existsParallelPair = true;
+	}
+
+	afAD.X = dot(basisA[0], kD);
+	T fR = std::fabs(afAD.x_);
+	T fR1 = dot(halfDimsB, aafAbsC0);
+	T fR01 = halfDimsA.x_ + fR1;
+	if (fR > fR01)
+		return false;
+
+	for (int i = 0; i < 3; i++)
+	{
+		aafC1[i] = dot(basisA[1], basisB[i]);
+		aafAbsC1[i] = std::fabs(aafC1[i]);
+		if (aafAbsC1[i] > CUTOFF)
+			existsParallelPair = true;
+	}
+
+	afAD.Y = dot(basisA[1], kD);
+	fR = std::fabs(afAD.y_);
+	fR1 = dot(halfDimsB, aafAbsC1);
+	fR01 = halfDimsA.y_ + fR1;
+	if (fR > fR01)
+		return false;
+
+	for (int i = 0; i < 3; i++)
+	{
+		aafC2[i] = dot(basisA[2], basisB[i]);
+		aafAbsC2[i] = std::fabs(aafC2[i]);
+		if (aafAbsC2[i] > CUTOFF)
+			existsParallelPair = true;
+	}
+
+	afAD.Z = dot(basisA[2], kD);
+	fR = std::fabs(afAD.z_);
+	fR1 = dot(halfDimsB, aafAbsC2);
+	fR01 = halfDimsA.z_ + fR1;
+	if (fR > fR01)
+		return false;
+
+	fR = std::fabs(dot(basisB[0], kD));
+	T fR0 = halfDimsA.x_*aafAbsC0.x_ + halfDimsA.y_*aafAbsC1.x_ + halfDimsA.z_*aafAbsC2.x_;
+	fR01 = fR0 + halfDimsB.x_;
+	if (fR > fR01)
+		return false;
+
+	fR = std::fabs(dot(basisB[1], kD));
+	fR0 = halfDimsA.x_*aafAbsC0.y_ + halfDimsA.y_*aafAbsC1.y_ + halfDimsA.z_*aafAbsC2.y_;
+	fR01 = fR0 + halfDimsB.y_;
+	if (fR > fR01)
+		return false;
+
+	fR = std::fabs(dot(basisB[2], kD));
+	fR0 = halfDimsA.x_*aafAbsC0.z_ + halfDimsA.y_*aafAbsC1.z_ + halfDimsA.z_*aafAbsC2.z_;
+	fR01 = fR0 + halfDimsB.z_;
+	if (fR > fR01)
+		return false;
+
+	if (existsParallelPair)
+		return true;
+
+	fR = std::fabs(afAD.z_*aafC1.x_ - afAD.y_*aafC2.x_);
+	fR0 = halfDimsA.y_*aafAbsC2.x_ + halfDimsA.z_*aafAbsC1.x_;
+	fR1 = halfDimsB.y_*aafAbsC0.z_ + halfDimsB.z_*aafAbsC0.y_;
+	fR01 = fR0 + fR1;
+	if (fR > fR01)
+		return false;
+
+	fR = std::fabs(afAD.z_*aafC1.y_ - afAD.y_*aafC2.y_);
+	fR0 = halfDimsA.y_*aafAbsC2.y_ + halfDimsA.z_*aafAbsC1.y_;
+	fR1 = halfDimsB.x_*aafAbsC0.z_ + halfDimsB.z_*aafAbsC0.x_;
+	fR01 = fR0 + fR1;
+	if (fR > fR01)
+		return false;
+
+	fR = std::fabs(afAD.z_*aafC1.z_ - afAD.y_*aafC2.z_);
+	fR0 = halfDimsA.y_*aafAbsC2.z_ + halfDimsA.z_*aafAbsC1.z_;
+	fR1 = halfDimsB.x_*aafAbsC0.y_ + halfDimsB.y_*aafAbsC0.x_;
+	fR01 = fR0 + fR1;
+	if (fR > fR01)
+		return false;
+
+	fR = std::fabs(afAD.x_*aafC2.x_ - afAD.z_*aafC0.x_);
+	fR0 = halfDimsA.x_*aafAbsC2.x_ + halfDimsA.z_*aafAbsC0.x_;
+	fR1 = halfDimsB.y_*aafAbsC1.z_ + halfDimsB.z_*aafAbsC1.y_;
+	fR01 = fR0 + fR1;
+	if (fR > fR01)
+		return false;
+
+	fR = std::fabs(afAD.x_*aafC2.y_ - afAD.z_*aafC0.y_);
+	fR0 = halfDimsA.x_*aafAbsC2.y_ + halfDimsA.z_*aafAbsC0.y_;
+	fR1 = halfDimsB.x_*aafAbsC1.z_ + halfDimsB.z_*aafAbsC1.x_;
+	fR01 = fR0 + fR1;
+	if (fR > fR01)
+		return false;
+
+	fR = std::fabs(afAD.x_*aafC2.z_ - afAD.z_*aafC0.z_);
+	fR0 = halfDimsA.x_*aafAbsC2.z_ + halfDimsA.z_*aafAbsC0.z_;
+	fR1 = halfDimsB.x_*aafAbsC1.y_ + halfDimsB.y_*aafAbsC1.x_;
+	fR01 = fR0 + fR1;
+	if (fR > fR01)
+		return false;
+
+	fR = std::fabs(afAD.y_*aafC0.x_ - afAD.x_*aafC1.x_);
+	fR0 = halfDimsA.x_*aafAbsC1.x_ + halfDimsA.y_*aafAbsC0.x_;
+	fR1 = halfDimsB.y_*aafAbsC2.z_ + halfDimsB.z_*aafAbsC2.y_;
+	fR01 = fR0 + fR1;
+	if (fR > fR01)
+		return false;
+
+	fR = std::fabs(afAD.y_*aafC0.y_ - afAD.x_*aafC1.y_);
+	fR0 = halfDimsA.x_*aafAbsC1.y_ + halfDimsA.y_*aafAbsC0.y_;
+	fR1 = halfDimsB.x_*aafAbsC2.z_ + halfDimsB.z_*aafAbsC2.x_;
+	fR01 = fR0 + fR1;
+	if (fR > fR01)
+		return false;
+
+	fR = std::fabs(afAD.y_*aafC0.z_ - afAD.x_*aafC1.z_);
+	fR0 = halfDimsA.x_*aafAbsC1.z_ + halfDimsA.y_*aafAbsC0.z_;
+	fR1 = halfDimsB.x_*aafAbsC2.y_ + halfDimsB.y_*aafAbsC2.x_;
+	fR01 = fR0 + fR1;
+	if (fR > fR01)
+		return false;
+
+	return true;
 }
 
 template<typename T>
