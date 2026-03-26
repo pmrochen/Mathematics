@@ -11,7 +11,7 @@
 #include <concepts>
 #include <utility>
 #include <tuple>
-#include <vector>
+#include <array>
 #include <iterator>
 #include <algorithm>
 #include <cstddef>
@@ -85,7 +85,7 @@ struct AxisAlignedBox
 
 	// Vertices
 	template<std::output_iterator<Vector3<T>> O> O copyVertices(O target) const;
-	std::vector<Vector3> getVertices() const;
+	std::array<Vector3<T>, 8> getVertices() const noexcept;
 
 	// Primitives
 	template<std::integral U> std::pair<const U*, const U*> getPrimitives(int nVerticesPerPrimitive) const noexcept; // #TODO return range
@@ -93,7 +93,7 @@ struct AxisAlignedBox
 
 	// Half spaces
 	template<std::output_iterator<HalfSpace<T>> O> O copyHalfSpaces(O target) const;
-	std::vector<HalfSpace> getHalfSpaces() const;
+	std::array<HalfSpace<T>, 6> getHalfSpaces() const noexcept;
 
 	// Circumscribed sphere
 	Sphere<T> getCircumscribedSphere() const noexcept;
@@ -121,7 +121,7 @@ struct AxisAlignedBox
 	bool contains(const Vector3<T>& point) const noexcept;
 	bool contains(const AxisAlignedBox& box) const noexcept;
 	bool contains(const Sphere<T>& sphere) const noexcept;
-	//int classify(const HalfSpace<T>& halfSpace) const noexcept; // -1 = inside, 1 = outside, 0 = partial // #TODO return enum
+	int classify(const HalfSpace<T>& halfSpace) const noexcept; // -1 = inside, 1 = outside, 0 = partial // #TODO return enum
 	bool intersects(const HalfSpace<T>& halfSpace) const noexcept;
 	bool intersects(const Plane<T>& plane) const noexcept;
 	bool intersects(const Triangle3<T>& triangle) const noexcept;
@@ -220,19 +220,11 @@ inline O AxisAlignedBox<T>::copyVertices(O target) const
 }
 
 template<typename T>
-inline std::vector<Vector3<T>> AxisAlignedBox<T>::getVertices() const
+inline std::array<Vector3<T>, 8> AxisAlignedBox<T>::getVertices() const
 {
-	std::vector<Vector3<T>> vertices;
-	vertices.resize(8);
-	vertices[0] = minimum;
-	vertices[1].set(maximum.x, minimum.y, minimum.z);
-	vertices[2].set(minimum.x, maximum.y, minimum.z);
-	vertices[3].set(maximum.x, maximum.y, minimum.z);
-	vertices[4].set(minimum.x, minimum.y, maximum.z);
-	vertices[5].set(maximum.x, minimum.y, maximum.z);
-	vertices[6].set(minimum.x, maximum.y, maximum.z);
-	vertices[7] = maximum;
-	return vertices;
+	return { minimum, Vector3<T>(maximum.x, minimum.y, minimum.z), Vector3<T>(minimum.x, maximum.y, minimum.z),
+		Vector3<T>(maximum.x, maximum.y, minimum.z), Vector3<T>(minimum.x, minimum.y, maximum.z),
+		Vector3<T>(maximum.x, minimum.y, maximum.z), Vector3<T>(minimum.x, maximum.y, maximum.z), maximum };
 }
 
 template<typename T>
@@ -286,17 +278,14 @@ inline O AxisAlignedBox<T>::copyHalfSpaces(O target) const
 }
 
 template<typename T>
-inline std::vector<HalfSpace<T>> AxisAlignedBox<T>::getHalfSpaces() const
+inline std::array<HalfSpace<T>, 6> AxisAlignedBox<T>::getHalfSpaces() const
 {
-	std::vector<HalfSpace<T>> halfSpaces;
-	halfSpaces.resize(6);
-	halfSpaces[0] = HalfSpace<T>(Vector3<T>::MINUS_UNIT_X, Vector3<T>(minimum.x, T(0), T(0)));
-	halfSpaces[1] = HalfSpace<T>(Vector3<T>::UNIT_X, Vector3<T>(maximum.x, T(0), T(0)));
-	halfSpaces[2] = HalfSpace<T>(Vector3<T>::MINUS_UNIT_Y, Vector3<T>(T(0), minimum.y, T(0)));
-	halfSpaces[3] = HalfSpace<T>(Vector3<T>::UNIT_Y, Vector3<T>(T(0), maximum.y, T(0)));
-	halfSpaces[4] = HalfSpace<T>(Vector3<T>::MINUS_UNIT_Z, Vector3<T>(T(0), T(0), minimum.z));
-	halfSpaces[5] = HalfSpace<T>(Vector3<T>::UNIT_Z, Vector3<T>(T(0), T(0), maximum.z));
-	return halfSpaces;
+	return { HalfSpace<T>(Vector3<T>::MINUS_UNIT_X, Vector3<T>(minimum.x, T(0), T(0))),
+		HalfSpace<T>(Vector3<T>::UNIT_X, Vector3<T>(maximum.x, T(0), T(0))),
+		HalfSpace<T>(Vector3<T>::MINUS_UNIT_Y, Vector3<T>(T(0), minimum.y, T(0))),
+		HalfSpace<T>(Vector3<T>::UNIT_Y, Vector3<T>(T(0), maximum.y, T(0))),
+		HalfSpace<T>(Vector3<T>::MINUS_UNIT_Z, Vector3<T>(T(0), T(0), minimum.z)),
+		HalfSpace<T>(Vector3<T>::UNIT_Z, Vector3<T>(T(0), T(0), maximum.z)) };
 }
 
 template<typename T>
@@ -393,7 +382,7 @@ template<typename T>
 inline Sphere<T> AxisAlignedBox<T>::getCircumscribedSphere() const
 {
 	Vector3<T> center = (minimum + maximum)*T(0.5);
-	return Sphere<T>(center, distance(center, maximum));
+	return { center, distance(center, maximum) };
 }
 
 template<typename T>
@@ -423,6 +412,12 @@ inline bool AxisAlignedBox<T>::contains(const Sphere<T>& sphere) const
 {
 	Vector3<T> radius(sphere.radius);
 	return minimum.allLessThanEqual(sphere.center - radius) && maximum.allGreaterThanEqual(sphere.center + radius);
+}
+
+template<typename T>
+inline int AxisAlignedBox<T>::classify(const HalfSpace<T>& halfSpace) const
+{
+	return intersections::classifyAxisAlignedBoxHalfSpace(getCenter(), getHalfDimensions(), halfSpace.getNormal(), halfSpace.d);
 }
 
 template<typename T>

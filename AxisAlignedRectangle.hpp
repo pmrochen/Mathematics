@@ -11,6 +11,8 @@
 #include <concepts>
 #include <utility>
 #include <tuple>
+#include <array>
+#include <iterator>
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -68,8 +70,8 @@ struct AxisAlignedRectangle
 	T getArea() const noexcept;
 
 	// Vertices
-	template<std::output_iterator<Vector2<T>> O> O copyVertices(O target) const noexcept;
-	std::vector<Vector2> getVertices() const;
+	template<std::output_iterator<Vector2<T>> O> O copyVertices(O target) const;
+	std::array<Vector2<T>, 4> getVertices() const noexcept;
 
 	// Circumscribed sphere
 	Circle2<T> getCircumscribedCircle() const noexcept;
@@ -184,15 +186,9 @@ inline O AxisAlignedRectangle<T>::copyVertices(O target) const
 }
 
 template<typename T>
-inline std::vector<Vector2<T>> AxisAlignedRectangle<T>::getVertices() const
+inline std::array<Vector2<T>, 4> AxisAlignedRectangle<T>::getVertices() const
 {
-	std::vector<Vector2<T>> vertices;
-	vertices.resize(4);
-	vertices[0] = minimum;
-	vertices[1].set(maximum.x, minimum.y);
-	vertices[2].set(minimum.x, maximum.y);
-	vertices[3] = maximum;
-	return vertices;
+	return { minimum, Vector2<T>(maximum.x, minimum.y), Vector2<T>(minimum.x, maximum.y), maximum };
 }
 
 template<typename T>
