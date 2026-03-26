@@ -11,7 +11,7 @@
 #include <iterator>
 #include <cstddef>
 #include <cmath>
-//#include <malloc.h>
+#include <malloc.h>
 #include "Vector2.hpp"
 #include "Vector3.hpp"
 
@@ -73,10 +73,10 @@ O triangulate2(I firstVertex, I lastVertex, O outIndex)
 		return outIndex;
 	}
 
-	constexpr std::size_t BUFFER_SIZE = 64;
-	U indexBuffer[BUFFER_SIZE];
-	U* vertexIndices = (nVertices > BUFFER_SIZE) ? new U[nVertices] : indexBuffer;
-	//U* vertexIndices = (U*)alloca(nVertices*sizeof(I));
+	//constexpr std::size_t BUFFER_SIZE = 64;
+	//U indexBuffer[BUFFER_SIZE];
+	//U* vertexIndices = (nVertices > BUFFER_SIZE) ? new U[nVertices] : indexBuffer;
+	U* vertexIndices = (U*)alloca(nVertices*sizeof(U));
 
 	bool reverse = (computeSignedPolygonArea(firstVertex, lastVertex) < T(0));
 	if (reverse)
@@ -108,8 +108,8 @@ O triangulate2(I firstVertex, I lastVertex, O outIndex)
 				*outIndex++ = U(i + 2);
 			}
 
-			if (nVertices > BUFFER_SIZE)
-				delete[] vertexIndices;
+			//if (nVertices > BUFFER_SIZE)
+			//	delete[] vertexIndices;
 
 			return outIndex;
 		}
@@ -151,36 +151,27 @@ O triangulate2(I firstVertex, I lastVertex, O outIndex)
 		}
 	}
 
-	if (nVertices > BUFFER_SIZE)
-		delete[] vertexIndices;
+	//if (nVertices > BUFFER_SIZE)
+	//	delete[] vertexIndices;
 
 	return outIndex;
 }
 
-template<std::floating_point T, std::random_access_iterator<Vector2<T>> I, std::integral U, std::random_access_iterator<U> J,
-	std::output_iterator<U> O>
-O triangulate2(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex)
-{
-	//using IndexType = typename std::iterator_traits<O>::value_type;
-
-	// #TODO
-}
-
-template<std::floating_point T, std::random_access_iterator<Vector3<T>> I, std::integral U, std::output_iterator<U> O>
-O triangulate3(I firstVertex, I lastVertex, O outIndex)
-{
-	//using IndexType = typename std::iterator_traits<O>::value_type;
-
-	// #TODO
-}
-
-template<std::floating_point T, std::random_access_iterator<Vector3<T>> I, std::integral U, std::random_access_iterator<U> J, 
-	std::output_iterator<U> O>
-O triangulate3(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex)
-{
-	//using IndexType = typename std::iterator_traits<O>::value_type;
-
-	// #TODO
-}
+//template<std::floating_point T, std::random_access_iterator<Vector2<T>> I, std::integral U, std::random_access_iterator<U> J,
+//	std::output_iterator<U> O>
+//O triangulate2(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex)
+//{
+//}
+//
+//template<std::floating_point T, std::random_access_iterator<Vector3<T>> I, std::integral U, std::output_iterator<U> O>
+//O triangulate3(I firstVertex, I lastVertex, O outIndex)
+//{
+//}
+//
+//template<std::floating_point T, std::random_access_iterator<Vector3<T>> I, std::integral U, std::random_access_iterator<U> J, 
+//	std::output_iterator<U> O>
+//O triangulate3(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex)
+//{
+//}
 
 } // namespace mathematics::triangulation
