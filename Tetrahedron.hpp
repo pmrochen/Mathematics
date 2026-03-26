@@ -12,6 +12,8 @@
 #include <concepts>
 #include <utility>
 #include <tuple>
+#include <array>
+#include <iterator>
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -55,6 +57,10 @@ struct Tetrahedron
 	Vector3<T> getCentroid() const noexcept;
 	//T getSurfaceArea() const noexcept; // #TODO
 	T getVolume() const noexcept;
+
+	// Vertices
+	template<std::output_iterator<Vector3<T>> O> O copyVertices(O target) const;
+	std::array<Vector3<T>, 4> getVertices() const noexcept;
 
 	// Circumscribed box
 	AxisAlignedBox<T> getCircumscribedBox() const noexcept;
@@ -160,6 +166,23 @@ template<typename T>
 inline T Tetrahedron<T>::getVolume() const
 {
 	return std::fabs(dot(vertices[0] - vertices[3], cross(vertices[1] - vertices[3], vertices[2] - vertices[3])))/T(6);
+}
+
+template<typename T>
+template<std::output_iterator<Vector3<T>> O>
+inline O Tetrahedron<T>::copyVertices(O target) const
+{
+	*target++ = vertices[0];
+	*target++ = vertices[1];
+	*target++ = vertices[2];
+	*target++ = vertices[3];
+	return target;
+}
+
+template<typename T>
+inline std::array<Vector3<T>, 4> Tetrahedron<T>::getVertices() const
+{
+	return { vertices[0], vertices[1], vertices[2], vertices[3] };
 }
 
 template<typename T>

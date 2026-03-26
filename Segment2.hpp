@@ -12,6 +12,7 @@
 #include <utility>
 #include <tuple>
 #include <optional>
+#include <iterator>
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -73,6 +74,10 @@ struct Segment2
 	T getSlope() const noexcept { return (end.y - start.y)/(end.x - start.x); }
 	T getInclinationAngle() const noexcept { return std::atan2(end.y - start.y, end.x - start.x); }
 
+	// Endpoints
+	template<std::output_iterator<Vector2<T>> O> O copyEndpoints(O target) const;
+	std::pair<Vector2<T>, Vector2<T>> getEndpoints() const noexcept { return { start, end }; }
+
 	// Transformation
 	Segment2& translate(const Vector2<T>& offset) noexcept { start += offset; end += offset; return *this; }
 
@@ -129,6 +134,15 @@ template<typename T>
 inline bool Segment2<T>::approxEquals(const Segment2<T>& segment, T tolerance) const
 {
 	return start.approxEquals(segment.start, tolerance) && end.approxEquals(segment.end, tolerance);
+}
+
+template<typename T>
+template<std::output_iterator<Vector2<T>> O>
+inline O Segment2<T>::copyEndpoints(O target) const
+{
+	*target++ = start;
+	*target++ = end;
+	return target;
 }
 
 template<typename T>

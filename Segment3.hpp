@@ -12,6 +12,7 @@
 #include <utility>
 #include <tuple>
 #include <optional>
+#include <iterator>
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
@@ -102,6 +103,10 @@ struct Segment3
 	T getLength() const noexcept { return distance(start, end); }
 	Vector3<T> getCenter() const noexcept { return lerp(start, end, T(0.5)); }
 
+	// Endpoints
+	template<std::output_iterator<Vector3<T>> O> O copyEndpoints(O target) const;
+	std::pair<Vector3<T>, Vector3<T>> getEndpoints() const noexcept { return { start, end }; }
+
 	// Transformation
 	Segment3& translate(const Vector3<T>& offset) noexcept { start += offset; end += offset; return *this; }
 	Segment3& transform(const Matrix3<T>& matrix) noexcept;
@@ -159,6 +164,15 @@ template<typename T>
 inline bool Segment3<T>::approxEquals(const Segment3<T>& segment, T tolerance) const
 {
 	return origin.approxEquals(segment.start, tolerance) && direction.approxEquals(segment.end, tolerance);
+}
+
+template<typename T>
+template<std::output_iterator<Vector2<T>> O>
+inline O Segment3<T>::copyEndpoints(O target) const
+{
+	*target++ = start;
+	*target++ = end;
+	return target;
 }
 
 template<typename T>
