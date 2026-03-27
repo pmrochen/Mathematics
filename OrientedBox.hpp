@@ -44,8 +44,9 @@ struct OrientedBox
 
 	OrientedBox() noexcept : center(), basis(Identity()), halfDims() {}
 	explicit OrientedBox(Uninitialized) noexcept : center(Uninitialized()), basis(Uninitialized()), halfDims(Uninitialized()) {}
+	OrientedBox(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& halfDims) noexcept;
 	OrientedBox(const AxisAlignedBox<T>& box) noexcept : center(box.getCenter()), basis(Identity()), halfDims(box.getHalfDimensions()) {}
-	//OrientedBox(const AxisAlignedBox<T>& box, const Matrix3<T>& orientation, bool orthogonal = false) noexcept;
+	OrientedBox(const AxisAlignedBox<T>& box, const Matrix3<T>& orientation, bool orthogonal = false) noexcept;
 	OrientedBox(const AxisAlignedBox<T>& box, const AffineTransform<T>& transformation, bool orthogonal = false) noexcept;
 
 	bool operator==(const OrientedBox& box) const noexcept;
@@ -112,15 +113,23 @@ struct OrientedBox
 	Vector3<T> halfDims;
 };
 
-//template<typename T>
-//inline OrientedBox<T>::OrientedBox(const AxisAlignedBox<T>& box, const Matrix3<T>& orientation, bool orthogonal) :
-//	center(box.getCenter()*orientation),
-//	basis(transformation.getBasis()),
-//	halfDims(box.getHalfDimensions())
-//{
-//	if (!orthogonal)
-//		orthonormalize();
-//}
+template<typename T>
+inline OrientedBox<T>::OrientedBox(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& halfDims) : 
+	center(center), 
+	basis(basis), 
+	halfDims(halfDims) 
+{
+}
+
+template<typename T>
+inline OrientedBox<T>::OrientedBox(const AxisAlignedBox<T>& box, const Matrix3<T>& orientation, bool orthogonal) :
+	center(box.getCenter()*orientation),
+	basis(transformation.getBasis()),
+	halfDims(box.getHalfDimensions())
+{
+	if (!orthogonal)
+		orthonormalize();
+}
 
 template<typename T>
 inline OrientedBox<T>::OrientedBox(const AxisAlignedBox<T>& box, const AffineTransform<T>& transformation, bool orthogonal) :
