@@ -190,8 +190,12 @@
     <ClInclude Include="Axis.hpp" />
     <ClInclude Include="AxisAlignedBox.hpp" />
     <ClInclude Include="AxisAlignedRectangle.hpp" />
+    <ClInclude Include="Capsule.hpp" />
     <ClInclude Include="Circle2.hpp" />
+    <ClInclude Include="Cone.hpp" />
     <ClInclude Include="Constants.hpp" />
+    <ClInclude Include="Cylinder.hpp" />
+    <ClInclude Include="Ellipsoid.hpp" />
     <ClInclude Include="Euler.hpp" />
     <ClInclude Include="EulerOrder.hpp" />
     <ClInclude Include="HalfSpace.hpp" />

@@ -108,7 +108,7 @@ struct Ray3
 	bool intersects(const OrientedBox<T>& box) const noexcept { return findIntersection(box).has_value(); }
 	bool intersects(const Sphere<T>& sphere) const noexcept { return findIntersection(sphere).has_value(); }
 	template<Normalization U> bool intersects(const Sphere<T>& sphere) const noexcept { return findIntersection<U>(sphere).has_value(); }
-	bool intersects(const Ellipsoid<T>& ellipsoid) const noexcept; // #TODO
+	bool intersects(const Ellipsoid<T>& ellipsoid) const noexcept;
 	std::optional<T> findIntersection(const Plane<T>& plane) const noexcept;
 	std::optional<T> findIntersection(const Triangle3<T>& triangle) const noexcept;
 	//template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Plane<T>& plane) const noexcept;
@@ -116,7 +116,7 @@ struct Ray3
 	std::optional<Interval<T>> findIntersection(const OrientedBox<T>& box) const noexcept;
 	std::optional<Interval<T>> findIntersection(const Sphere<T>& sphere) const noexcept;
 	template<Normalization U> std::optional<Interval<T>> findIntersection(const Sphere<T>& sphere) const noexcept;
-	std::optional<Interval<T>> findIntersection(const Ellipsoid<T>& ellipsoid) const noexcept; // #TODO
+	std::optional<Interval<T>> findIntersection(const Ellipsoid<T>& ellipsoid) const noexcept;
 
 	Vector3<T> origin;
 	Vector3<T> direction;
@@ -242,6 +242,12 @@ struct hash<::mathematics::templates::Ray3<T>>
 namespace mathematics::templates {
 
 template<typename T>
+inline bool Ray3<T>::intersects(const Ellipsoid<T>& ellipsoid) const
+{
+	return intersections::testRayEllipsoid(origin, direction, ellipsoid.center, ellipsoid.getMatrix());
+}
+
+template<typename T>
 inline std::optional<T> Ray3<T>::findIntersection(const Plane<T>& plane) const
 {
 	auto result = intersections::findLinePlane<std::optional<T>>(origin, direction, plane.getNormal(), plane.d);
@@ -348,6 +354,12 @@ inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Sphere<T>& sph
 	{
 		return {};
 	}
+}
+
+template<typename T>
+inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Ellipsoid<T>& ellipsoid) const
+{
+	return intersections::findRayEllipsoid<std::optional<Interval<T>>>(origin, direction, ellipsoid.center, ellipsoid.getMatrix());
 }
 
 } // namespace mathematics::templates

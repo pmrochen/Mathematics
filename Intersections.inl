@@ -713,7 +713,202 @@ inline O findNormalizedLineNSphere(const V& origin, const V& direction, const V&
 
 template<typename T>
 	requires std::floating_point<T>
-bool testAxisAlignedBoxHalfSpace(const Vector3<T>& center, const Vector3<T>& halfDims, const Vector3<T>& normal, T constant) noexcept
+inline bool testLineEllipsoid(const Vector3<T>& origin, const Vector3<T>& direction, const Vector3<T>& center, 
+	const Matrix3<T>& matrix) noexcept
+{
+	// http://www.geometrictools.com/
+
+	Vector3<T> diff = origin - center;
+	Vector3<T> matDir = direction*matrix;
+	Vector3<T> matDiff = diff*matrix;
+	T a2 = dot(direction, matDir);
+	T a1 = dot(direction, matDiff);
+	T a0 = dot(diff, matDiff) - T(1);
+
+	T discr = (a1*a1 - a0*a2);
+	return (discr >= T(0));
+}
+
+template<typename O, typename T>
+	requires std::floating_point<T>
+inline O findLineEllipsoid(const Vector3<T>& origin, const Vector3<T>& direction, const Vector3<T>& center, 
+	const Matrix3<T>& matrix) noexcept
+{
+	// http://www.geometrictools.com/
+
+	Vector3<T> diff = origin - center;
+	Vector3<T> matDir = direction*matrix;
+	Vector3<T> matDiff = diff*matrix;
+	T a2 = dot(direction, matDir);
+	T a1 = dot(direction, matDiff);
+	T a0 = dot(diff, matDiff) - T(1);
+
+	T discr = a1*a1 - a0*a2;
+	if (discr < T(0))
+	{
+		return {};
+	}
+	else if (discr > Constants<T>::TOLERANCE)
+	{
+		T root = std::sqrt(discr);
+		T inv = T(1)/a2;
+		return detail::interval<O>((-a1 - root)*inv, (-a1 + root)*inv);
+	}
+	else
+	{
+		return detail::interval<O>(-a1/a2);
+	}
+}
+
+template<typename T>
+	requires std::floating_point<T>
+inline bool testRayEllipsoid(const Vector3<T>& origin, const Vector3<T>& direction, const Vector3<T>& center, 
+	const Matrix3<T>& matrix) noexcept
+{
+	// http://www.geometrictools.com/
+
+	Vector3<T> diff = origin - center;
+	Vector3<T> matDir = direction*matrix;
+	Vector3<T> matDiff = diff*matrix;
+	T a2 = dot(direction, matDir);
+	T a1 = dot(direction, matDiff);
+	T a0 = dot(diff, matDiff) - T(1);
+
+	T discr = a1*a1 - a0*a2;
+	if (discr < T(0))
+		return false;
+	if (a0 <= T(0))
+		return true;
+
+	return (a1 < T(0));
+}
+
+template<typename O, typename T>
+	requires std::floating_point<T>
+inline O findRayEllipsoid(const Vector3<T>& origin, const Vector3<T>& direction, const Vector3<T>& center, 
+	const Matrix3<T>& matrix) noexcept
+{
+	// http://www.geometrictools.com/
+
+	Vector3<T> diff = origin - center;
+	Vector3<T> matDir = direction*matrix;
+	Vector3<T> matDiff = diff*matrix;
+	T a2 = dot(direction, matDir);
+	T a1 = dot(direction, matDiff);
+	T a0 = dot(diff, matDiff) - T(1);
+
+	T discr = a1*a1 - a0*a2;
+	if (discr < T(0))
+	{
+		return {};
+	}
+	else if (discr > T(0))
+	{
+		T root = std::sqrt(discr);
+		T inv = T(1)/a2;
+		T t0 = (-a1 - root)*inv;
+		T t1 = (-a1 + root)*inv;
+
+		if (t0 >= T(0))
+			return detail::interval<O>(t0, t1);
+		else if (t1 >= T(0))
+			return detail::interval<O>(t1);
+		else
+			return {};
+	}
+	else
+	{
+		T t0 = -a1/a2;
+		if (t0 >= T(0))
+			return detail::interval<O>(t0);
+		else
+			return {};
+	}
+}
+
+template<typename T>
+	requires std::floating_point<T>
+inline bool testSegmentEllipsoid(const Vector3<T>& start, const Vector3<T>& end, const Vector3<T>& center, 
+	const Matrix3<T>& matrix) noexcept
+{
+	// http://www.geometrictools.com/
+
+	Vector3<T> direction = end - start;
+	Vector3<T> diff = (start + end)*T(0.5) - center;
+	Vector3<T> matDir = direction*matrix;
+	Vector3<T> matDiff = diff*matrix;
+	T a2 = dot(direction, matDir);
+	T a1 = dot(direction, matDiff);
+	T a0 = dot(diff, matDiff) - T(1);
+
+	T discr = a1*a1 - a0*a2;
+	if (discr < T(0))
+		return false;
+	if (a0 <= T(0))
+		return true;
+
+	constexpr T E = T(0.5);
+	if (a1 >= T(0))
+	{
+		if (((a0 + E*(T(-2)*a1 + a2*E)) <= T(0)) || ((a1 - a2*E) < T(0)))
+			return true;
+	}
+	else
+	{
+		if (((a0 + E*(T(2)*a1 + a2*E)) <= T(0)) || ((a1 + a2*E) < T(0)))
+			return true;
+	}
+
+	return false;
+}
+
+template<typename O, typename T>
+	requires std::floating_point<T>
+inline O findSegmentEllipsoid(const Vector3<T>& start, const Vector3<T>& end, const Vector3<T>& center, 
+	const Matrix3<T>& matrix) noexcept
+{
+	// http://www.geometrictools.com/
+
+	Vector3<T> direction = end - start;
+	Vector3<T> diff = (start + end)*T(0.5) - center;
+	Vector3<T> matDir = direction*matrix;
+	Vector3<T> matDiff = diff*matrix;
+	T a2 = dot(direction, matDir);
+	T a1 = dot(direction, matDiff);
+	T a0 = dot(diff, matDiff) - T(1);
+
+	constexpr T E = T(0.5);
+	T discr = a1*a1 - a0*a2;
+	if (discr < T(0))
+	{
+		return {};
+	}
+	else if (discr > Constants<T>::TOLERANCE)
+	{
+		T root = std::sqrt(discr);
+		T inv = T(1)/a2;
+		T t0 = (-a1 - root)*inv;
+		T t1 = (-a1 + root)*inv;
+
+		auto intersection = Interval<T>(t0, t1).findIntersection(Interval<T>(-e, e));
+		if (intersection.has_value())
+			return detail::interval<O>(intersection.value().minimum + E, intersection.value().maximum + E);
+		else
+			return {};
+	}
+	else
+	{
+		T t0 = -a1/a2;
+		if (std::fabs(t0) <= E)
+			return detail::interval<O>(t0 + E);
+		else
+			return {};
+	}
+}
+
+template<typename T>
+	requires std::floating_point<T>
+inline bool testAxisAlignedBoxHalfSpace(const Vector3<T>& center, const Vector3<T>& halfDims, const Vector3<T>& normal, T constant) noexcept
 {
 	T r = sum(abs(halfDims*normal));
 	return ((dot(normal, center) + constant) <= r);
@@ -721,7 +916,7 @@ bool testAxisAlignedBoxHalfSpace(const Vector3<T>& center, const Vector3<T>& hal
 
 template<typename T>
 	requires std::floating_point<T>
-int classifyAxisAlignedBoxHalfSpace(const Vector3<T>& center, const Vector3<T>& halfDims, const Vector3<T>& normal, T constant) noexcept
+inline int classifyAxisAlignedBoxHalfSpace(const Vector3<T>& center, const Vector3<T>& halfDims, const Vector3<T>& normal, T constant) noexcept
 {
 	T r = sum(abs(halfDims*normal));
 	T a = dot(normal, center) + constant;
@@ -730,7 +925,7 @@ int classifyAxisAlignedBoxHalfSpace(const Vector3<T>& center, const Vector3<T>& 
 
 template<typename T>
 	requires std::floating_point<T>
-bool testOrientedBoxHalfSpace(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& halfDims, const Vector3<T>& normal, 
+inline bool testOrientedBoxHalfSpace(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& halfDims, const Vector3<T>& normal, 
 	T constant) noexcept
 {
 	//Matrix3 basisTranspose = transpose(basis);
@@ -741,7 +936,7 @@ bool testOrientedBoxHalfSpace(const Vector3<T>& center, const Matrix3<T>& basis,
 
 template<typename T>
 	requires std::floating_point<T>
-int classifyOrientedBoxHalfSpace(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& halfDims, const Vector3<T>& normal, 
+inline int classifyOrientedBoxHalfSpace(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& halfDims, const Vector3<T>& normal,
 	T constant) noexcept
 {
 	//Matrix3 basisTranspose = transpose(basis);
@@ -753,7 +948,7 @@ int classifyOrientedBoxHalfSpace(const Vector3<T>& center, const Matrix3<T>& bas
 
 template<typename T>
 	requires std::floating_point<T>
-bool testAxisAlignedBoxPlane(const Vector3<T>& center, const Vector3<T>& halfDims, const Vector3<T>& normal, T constant) noexcept
+inline bool testAxisAlignedBoxPlane(const Vector3<T>& center, const Vector3<T>& halfDims, const Vector3<T>& normal, T constant) noexcept
 {
 	T r = sum(abs(halfDims*normal));
 	return (std::fabs(dot(normal, center) + constant) <= r);
@@ -761,7 +956,7 @@ bool testAxisAlignedBoxPlane(const Vector3<T>& center, const Vector3<T>& halfDim
 
 template<typename T>
 	requires std::floating_point<T>
-bool testOrientedBoxPlane(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& halfDims, const Vector3<T>& normal, T constant) noexcept
+inline bool testOrientedBoxPlane(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& halfDims, const Vector3<T>& normal, T constant) noexcept
 {
 	//Matrix3 basisTranspose = transpose(basis);
 	//T r = sum(abs(halfDims*(normal*basisTranspose)));
@@ -1159,6 +1354,39 @@ template<typename T>
 inline bool testEllipsoidPlane(const Vector3<T>& center, const Matrix3<T>& inverseMatrix, const Vector3<T>& normal, T constant) noexcept
 {
 	return (distances::getPointPlaneSquared(center, normal, constant) <= std::fabs(dot(normal, normal*inverseMatrix)));
+}
+
+template<typename T>
+	requires std::floating_point<T>
+inline bool testConeSphere(const Vector3<T>& vertex, const Vector3<T>& axis, T height, T baseRadius, const Vector3<T>& center, 
+	T radius) noexcept
+{
+	// http://www.geometrictools.com/
+
+	T slantHeight = std::sqrt(radius*radius + height*height);
+	T sinAngle = radius/slantHeight;
+	T cosAngle = height/slantHeight;
+	T invSin = slantHeight/radius; // T(1)/sinAngle;
+	T cosSqr = cosAngle*cosAngle;
+	Vector3<T> cmV = sphere.center - vertex;
+	Vector3<T> d = cmV + (sphere.radius*invSin)*axis;
+	T dSqrLen = d.getMagnitudeSquared();
+	T e = dot(d, axis);
+
+	if ((e > T(0)) && (e*e >= dSqrLen*cosSqr))
+	{
+		T sinSqr = sinAngle*sinAngle;
+		dSqrLen = cmV.getMagnitudeSquared();
+		e = -dot(cmV, axis);
+		if ((e > T(0)) && (e*e >= dSqrLen*sinSqr) && (dSqrLen > sphere.radius*sphere.radius))
+			return false;
+		if (/*(height < std::numeric_limits<T>::max()) &&*/ !((dot(axis, center) - dot(axis, vertex + height*axis)) <= radius))
+			return false;
+
+		return true;
+	}
+
+	return false;
 }
 
 } // namespace mathematics::intersections

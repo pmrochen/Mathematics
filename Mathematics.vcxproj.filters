@@ -37,5 +37,9 @@
     <ClInclude Include="Triangle3.hpp" />
     <ClInclude Include="Containment.inl" />
     <ClInclude Include="Triangulation.inl" />
+    <ClInclude Include="Cylinder.hpp" />
+    <ClInclude Include="Ellipsoid.hpp" />
+    <ClInclude Include="Capsule.hpp" />
+    <ClInclude Include="Cone.hpp" />
   </ItemGroup>
 </Project>

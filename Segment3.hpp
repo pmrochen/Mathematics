@@ -126,14 +126,14 @@ struct Segment3
 	bool intersects(const AxisAlignedBox& box) const noexcept { return findIntersection(box).has_value(); }
 	bool intersects(const OrientedBox& box) const noexcept { return findIntersection(box).has_value(); }
 	bool intersects(const Sphere<T>& sphere) const noexcept { return findIntersection(sphere).has_value(); }
-	bool intersects(const Ellipsoid<T>& ellipsoid) const noexcept; // #TODO
+	bool intersects(const Ellipsoid<T>& ellipsoid) const noexcept;
 	std::optional<T> findIntersection(const Plane<T>& plane) const noexcept;
 	std::optional<T> findIntersection(const Triangle3<T>& triangle) const noexcept;
 	//template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Plane<T>& plane) const noexcept;
 	std::optional<Interval<T>> findIntersection(const AxisAlignedBox<T>& box) const noexcept;
 	std::optional<Interval<T>> findIntersection(const OrientedBox<T>& box) const noexcept;
 	std::optional<Interval<T>> findIntersection(const Sphere<T>& sphere) const noexcept;
-	std::optional<Interval<T>> findIntersection(const Ellipsoid<T>& ellipsoid) const noexcept; // #TODO
+	std::optional<Interval<T>> findIntersection(const Ellipsoid<T>& ellipsoid) const noexcept;
 
 	Vector3<T> start;
 	Vector3<T> end;
@@ -249,6 +249,12 @@ inline bool Segment3<T>::intersects(const HalfSpace<T>& halfSpace) const
 }
 
 template<typename T>
+inline bool Segment3<T>::intersects(const Ellipsoid<T>& ellipsoid) const
+{
+	return intersections::testSegmentEllipsoid(start, end, ellipsoid.center, ellipsoid.getMatrix());
+}
+
+template<typename T>
 inline std::optional<T> Segment3<T>::findIntersection(const Plane<T>& plane) const
 {
 	auto result = intersections::findLinePlane<std::optional<T>>(start, end - start, plane.getNormal(), plane.d);
@@ -331,6 +337,12 @@ inline std::optional<Interval<T>> Segment3<T>::findIntersection(const Sphere<T>&
 	{
 		return {};
 	}
+}
+
+template<typename T>
+inline std::optional<Interval<T>> Segment3<T>::findIntersection(const Ellipsoid<T>& ellipsoid) const
+{
+	return intersections::findSegmentEllipsoid<std::optional<Interval<T>>>(start, end, ellipsoid.center, ellipsoid.getMatrix());
 }
 
 } // namespace mathematics::templates
