@@ -237,9 +237,9 @@ struct hash<::mathematics::templates::Ellipsoid<T>>
 {
 	std::size_t operator()(const ::mathematics::templates::Ellipsoid<T>& ellipsoid) const noexcept
 	{
-		std::hash<T> hasher;
+		std::hash<typename ::mathematics::templates::Vector3<T>> hasher;
 		std::size_t seed = hasher(ellipsoid.center) + 0x9e3779b9;
-		seed ^= hasher(ellipsoid.basis) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= std::hash<typename ::mathematics::templates::Matrix3<T>>(ellipsoid.basis) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(ellipsoid.radii) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
 	}

@@ -222,7 +222,7 @@ struct hash<::mathematics::templates::Segment3<T>>
 {
 	std::size_t operator()(const ::mathematics::templates::Segment3<T>& segment) const noexcept
 	{
-		std::hash<T> hasher;
+		std::hash<typename ::mathematics::templates::Vector3<T>> hasher;
 		std::size_t seed = hasher(segment.start) + 0x9e3779b9;
 		seed ^= hasher(segment.end) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;

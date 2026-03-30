@@ -354,7 +354,7 @@ struct hash<::mathematics::templates::AxisAlignedBox<T>>
 {
 	std::size_t operator()(const ::mathematics::templates::AxisAlignedBox<T>& box) const noexcept
 	{
-		std::hash<T> hasher;
+		std::hash<typename ::mathematics::templates::Vector3<T>> hasher;
 		std::size_t seed = hasher(box.minimum) + 0x9e3779b9;
 		seed ^= hasher(box.maximum) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;

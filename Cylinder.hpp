@@ -204,9 +204,10 @@ struct hash<::mathematics::templates::Cylinder<T>>
 {
 	std::size_t operator()(const ::mathematics::templates::Cylinder<T>& cylinder) const noexcept
 	{
+		std::hash<typename ::mathematics::templates::Vector3<T>> vectorHasher;
 		std::hash<T> hasher;
-		std::size_t seed = hasher(cylinder.center) + 0x9e3779b9;
-		seed ^= hasher(cylinder.axis) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		std::size_t seed = vectorHasher(cylinder.center) + 0x9e3779b9;
+		seed ^= vectorHasher(cylinder.axis) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(cylinder.height) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(cylinder.radius) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;

@@ -203,9 +203,10 @@ struct hash<::mathematics::templates::Capsule<T>>
 {
 	std::size_t operator()(const ::mathematics::templates::Capsule<T>& capsule) const noexcept
 	{
+		std::hash<typename ::mathematics::templates::Vector3<T>> vectorHasher;
 		std::hash<T> hasher;
-		std::size_t seed = hasher(capsule.center) + 0x9e3779b9;
-		seed ^= hasher(capsule.axis) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		std::size_t seed = vectorHasher(capsule.center) + 0x9e3779b9;
+		seed ^= vectorHasher(capsule.axis) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(capsule.height) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(capsule.radius) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;

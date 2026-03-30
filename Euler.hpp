@@ -488,7 +488,7 @@ struct hash<::mathematics::templates::Euler<T>>
 		std::size_t seed = hasher(e.x) + 0x9e3779b9;
 		seed ^= hasher(e.y) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(e.z) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-		seed ^= std::hash<int/*EulerOrder*/>()((int)e.order) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= std::hash<int/*typename ::mathematics::EulerOrder*/>()((int)e.order) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
 	}
 };

@@ -239,7 +239,7 @@ struct hash<::mathematics::templates::Tetrahedron<T>>
 {
 	std::size_t operator()(const ::mathematics::templates::Tetrahedron<T>& tetrahedron) const noexcept
 	{
-		std::hash<T> hasher;
+		std::hash<typename ::mathematics::templates::Vector3<T>> hasher;
 		std::size_t seed = hasher(tetrahedron.vertices[0]) + 0x9e3779b9;
 		seed ^= hasher(tetrahedron.vertices[1]) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(tetrahedron.vertices[2]) + 0x9e3779b9 + (seed << 6) + (seed >> 2);

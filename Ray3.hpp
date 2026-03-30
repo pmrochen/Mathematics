@@ -222,7 +222,7 @@ struct hash<::mathematics::templates::Ray3<T>>
 {
 	std::size_t operator()(const ::mathematics::templates::Ray3<T>& ray) const noexcept
 	{
-		std::hash<T> hasher;
+		std::hash<typename ::mathematics::templates::Vector3<T>> hasher;
 		std::size_t seed = hasher(ray.origin) + 0x9e3779b9;
 		seed ^= hasher(ray.direction) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;

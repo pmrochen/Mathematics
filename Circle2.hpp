@@ -139,9 +139,8 @@ struct hash<::mathematics::templates::Circle2<T>>
 {
 	std::size_t operator()(const ::mathematics::templates::Circle2<T>& circle) const noexcept
 	{
-		std::hash<T> hasher;
-		std::size_t seed = hasher(circle.center) + 0x9e3779b9;
-		seed ^= hasher(circle.radius) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		std::size_t seed = std::hash<typename ::mathematics::templates::Vector2<T>>(circle.center) + 0x9e3779b9;
+		seed ^= std::hash<T>(circle.radius) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
 	}
 };

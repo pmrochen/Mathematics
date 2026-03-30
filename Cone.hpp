@@ -238,9 +238,10 @@ struct hash<::mathematics::templates::Cone<T>>
 {
 	std::size_t operator()(const ::mathematics::templates::Cone<T>& cone) const noexcept
 	{
+		std::hash<typename ::mathematics::templates::Vector3<T>> vectorHasher;
 		std::hash<T> hasher;
-		std::size_t seed = hasher(cone.vertex) + 0x9e3779b9;
-		seed ^= hasher(cone.axis) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		std::size_t seed = vectorHasher(cone.vertex) + 0x9e3779b9;
+		seed ^= vectorHasher(cone.axis) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(cone.height) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(cone.radius) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
