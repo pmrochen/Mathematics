@@ -11,10 +11,12 @@
 #include <type_traits>
 #include <concepts>
 #include <algorithm>
+#include <functional>
 #include <tuple>
 #include <cstddef>
 #include <cmath>
-#include "Simd/Intrinsics.hpp"
+#include <Simd/Intrinsics.hpp>
+#include <Simd/Functional.hpp>
 #include "Constants.hpp"
 #include "Axis.hpp"
 #include "Vector3.hpp"
@@ -1762,6 +1764,57 @@ using Matrix4Result = templates::Matrix4<float>::ConstResult;
 #endif
 
 } // namespace mathematics
+
+namespace std {
+
+template<typename T>
+struct hash;
+
+template<typename T>
+struct hash<::mathematics::templates::Matrix4<T>>
+{
+	size_t operator()(const ::mathematics::templates::Matrix4<T>& m) const noexcept
+	{
+		hash<T> hasher;
+		size_t seed = hasher(m.m00) + 0x9e3779b9;
+		seed ^= hasher(m.m01) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(m.m02) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(m.m03) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(m.m10) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(m.m11) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(m.m12) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(m.m13) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(m.m20) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(m.m21) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(m.m22) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(m.m23) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(m.m30) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(m.m31) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(m.m32) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(m.m33) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		return seed;
+	}
+};
+
+#if SIMD_HAS_FLOAT4
+
+template<>
+struct hash<::mathematics::templates::Matrix4<float>>
+{
+	size_t operator()(const ::mathematics::templates::Matrix4<float>& m) const noexcept
+	{
+		hash<typename ::simd::float4> hasher;
+		size_t seed = hasher(m.row0) + 0x9e3779b9;
+		seed ^= hasher(m.row1) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(m.row2) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(m.row3) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		return seed;
+	}
+};
+
+#endif /* SIMD_HAS_FLOAT4 */
+
+} // namespace std
 
 #include "Quaternion.hpp"
 #include "YawPitchRoll.hpp"
