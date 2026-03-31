@@ -9,8 +9,9 @@
 #include <ostream>
 #include <type_traits>
 #include <concepts>
-#include <utility>
 #include <algorithm>
+#include <functional>
+#include <utility>
 #include <cstddef>
 #include <cmath>
 #include "Constants.hpp"
@@ -137,10 +138,10 @@ struct hash;
 template<typename T>
 struct hash<::mathematics::templates::Circle2<T>>
 {
-	std::size_t operator()(const ::mathematics::templates::Circle2<T>& circle) const noexcept
+	size_t operator()(const ::mathematics::templates::Circle2<T>& circle) const noexcept
 	{
-		std::size_t seed = std::hash<typename ::mathematics::templates::Vector2<T>>(circle.center) + 0x9e3779b9;
-		seed ^= std::hash<T>(circle.radius) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		size_t seed = hash<typename ::mathematics::templates::Vector2<T>>()(circle.center) + 0x9e3779b9;
+		seed ^= hash<T>()(circle.radius) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
 	}
 };

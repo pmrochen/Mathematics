@@ -9,11 +9,12 @@
 #include <ostream>
 #include <type_traits>
 #include <concepts>
+#include <algorithm>
+#include <functional>
 #include <utility>
 #include <tuple>
 #include <optional>
 #include <iterator>
-#include <algorithm>
 #include <cstddef>
 #include <cmath>
 #include "Vector3.hpp"
@@ -220,10 +221,10 @@ struct hash;
 template<typename T>
 struct hash<::mathematics::templates::Segment3<T>>
 {
-	std::size_t operator()(const ::mathematics::templates::Segment3<T>& segment) const noexcept
+	size_t operator()(const ::mathematics::templates::Segment3<T>& segment) const noexcept
 	{
-		std::hash<typename ::mathematics::templates::Vector3<T>> hasher;
-		std::size_t seed = hasher(segment.start) + 0x9e3779b9;
+		hash<typename ::mathematics::templates::Vector3<T>> hasher;
+		size_t seed = hasher(segment.start) + 0x9e3779b9;
 		seed ^= hasher(segment.end) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
 	}

@@ -11,14 +11,14 @@
 #include <limits>
 #include <type_traits>
 #include <concepts>
+#include <algorithm>
+#include <functional>
+#include <utility>
 #include <tuple>
 #include <string>
-#include <algorithm>
-#include <utility>
 #include <cstddef>
 #include <cctype>
 #include <cmath>
-#include "Simd/Intrinsics.hpp"
 #include "Constants.hpp"
 #include "Vector3.hpp"
 #include "Matrix3.hpp"
@@ -482,10 +482,10 @@ struct hash;
 template<typename T>
 struct hash<::mathematics::templates::Euler<T>>
 {
-	std::size_t operator()(const ::mathematics::templates::Euler<T>& e) const noexcept
+	size_t operator()(const ::mathematics::templates::Euler<T>& e) const noexcept
 	{
-		std::hash<T> hasher;
-		std::size_t seed = hasher(e.x) + 0x9e3779b9;
+		hash<T> hasher;
+		size_t seed = hasher(e.x) + 0x9e3779b9;
 		seed ^= hasher(e.y) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(e.z) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= std::hash<int/*typename ::mathematics::EulerOrder*/>()((int)e.order) + 0x9e3779b9 + (seed << 6) + (seed >> 2);

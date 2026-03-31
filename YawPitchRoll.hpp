@@ -11,11 +11,11 @@
 #include <type_traits>
 #include <concepts>
 #include <algorithm>
+#include <functional>
 #include <utility>
 #include <tuple>
 #include <cstddef>
 #include <cmath>
-#include "Simd/Intrinsics.hpp"
 #include "Constants.hpp"
 #include "Vector3.hpp"
 #include "Matrix3.hpp"
@@ -325,10 +325,10 @@ struct hash;
 template<typename T>
 struct hash<::mathematics::templates::YawPitchRoll<T>>
 {
-	std::size_t operator()(const ::mathematics::templates::YawPitchRoll<T>& r) const noexcept
+	size_t operator()(const ::mathematics::templates::YawPitchRoll<T>& r) const noexcept
 	{
-		std::hash<T> hasher;
-		std::size_t seed = hasher(r.yaw) + 0x9e3779b9;
+		hash<T> hasher;
+		size_t seed = hasher(r.yaw) + 0x9e3779b9;
 		seed ^= hasher(r.pitch) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(r.roll) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;

@@ -9,6 +9,7 @@
 #include <ostream>
 #include <type_traits>
 #include <concepts>
+#include <functional>
 #include <utility>
 #include <tuple>
 #include <array>
@@ -255,10 +256,10 @@ struct hash;
 template<typename T>
 struct hash<::mathematics::templates::AxisAlignedRectangle<T>>
 {
-	std::size_t operator()(const ::mathematics::templates::AxisAlignedRectangle<T>& rectangle) const noexcept
+	size_t operator()(const ::mathematics::templates::AxisAlignedRectangle<T>& rectangle) const noexcept
 	{
-		std::hash<typename ::mathematics::templates::Vector2<T>> hasher;
-		std::size_t seed = hasher(rectangle.minimum) + 0x9e3779b9;
+		hash<typename ::mathematics::templates::Vector2<T>> hasher;
+		size_t seed = hasher(rectangle.minimum) + 0x9e3779b9;
 		seed ^= hasher(rectangle.maximum) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
 	}

@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <concepts>
 #include <algorithm>
+#include <functional>
 #include <cstddef>
 #include <cmath>
 #include "Constants.hpp"
@@ -235,11 +236,11 @@ struct hash;
 template<typename T>
 struct hash<::mathematics::templates::Ellipsoid<T>>
 {
-	std::size_t operator()(const ::mathematics::templates::Ellipsoid<T>& ellipsoid) const noexcept
+	size_t operator()(const ::mathematics::templates::Ellipsoid<T>& ellipsoid) const noexcept
 	{
-		std::hash<typename ::mathematics::templates::Vector3<T>> hasher;
-		std::size_t seed = hasher(ellipsoid.center) + 0x9e3779b9;
-		seed ^= std::hash<typename ::mathematics::templates::Matrix3<T>>(ellipsoid.basis) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		hash<typename ::mathematics::templates::Vector3<T>> hasher;
+		size_t seed = hasher(ellipsoid.center) + 0x9e3779b9;
+		seed ^= hash<typename ::mathematics::templates::Matrix3<T>>()(ellipsoid.basis) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(ellipsoid.radii) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
 	}

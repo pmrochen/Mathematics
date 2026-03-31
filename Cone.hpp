@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <concepts>
 #include <algorithm>
+#include <functional>
 #include <cstddef>
 #include <cmath>
 #include "Constants.hpp"
@@ -236,11 +237,11 @@ struct hash;
 template<typename T>
 struct hash<::mathematics::templates::Cone<T>>
 {
-	std::size_t operator()(const ::mathematics::templates::Cone<T>& cone) const noexcept
+	size_t operator()(const ::mathematics::templates::Cone<T>& cone) const noexcept
 	{
-		std::hash<typename ::mathematics::templates::Vector3<T>> vectorHasher;
-		std::hash<T> hasher;
-		std::size_t seed = vectorHasher(cone.vertex) + 0x9e3779b9;
+		hash<typename ::mathematics::templates::Vector3<T>> vectorHasher;
+		hash<T> hasher;
+		size_t seed = vectorHasher(cone.vertex) + 0x9e3779b9;
 		seed ^= vectorHasher(cone.axis) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(cone.height) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(cone.radius) + 0x9e3779b9 + (seed << 6) + (seed >> 2);

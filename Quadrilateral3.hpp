@@ -10,11 +10,12 @@
 #include <ostream>
 #include <type_traits>
 #include <concepts>
+#include <algorithm>
+#include <functional>
 #include <utility>
 #include <tuple>
 #include <array>
 #include <iterator>
-#include <algorithm>
 #include <cstddef>
 #include <cmath>
 #include "Vector3.hpp"
@@ -266,10 +267,10 @@ struct hash;
 template<typename T>
 struct hash<::mathematics::templates::Quadrilateral3<T>>
 {
-	std::size_t operator()(const ::mathematics::templates::Quadrilateral3<T>& quad) const noexcept
+	size_t operator()(const ::mathematics::templates::Quadrilateral3<T>& quad) const noexcept
 	{
-		std::hash<typename ::mathematics::templates::Vector3<T>> hasher;
-		std::size_t seed = hasher(quad.vertices[0]) + 0x9e3779b9;
+		hash<typename ::mathematics::templates::Vector3<T>> hasher;
+		size_t seed = hasher(quad.vertices[0]) + 0x9e3779b9;
 		seed ^= hasher(quad.vertices[1]) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(quad.vertices[2]) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(quad.vertices[3]) + 0x9e3779b9 + (seed << 6) + (seed >> 2);

@@ -11,12 +11,13 @@
 #include <limits>
 #include <type_traits>
 #include <concepts>
+#include <algorithm>
+#include <functional>
 #include <utility>
 #include <tuple>
 #include <array>
 #include <vector>
 #include <iterator>
-#include <algorithm>
 #include <cstddef>
 #include <cmath>
 #include <malloc.h>
@@ -386,10 +387,10 @@ struct hash;
 template<typename T>
 struct hash<::mathematics::templates::Triangle3<T>>
 {
-	std::size_t operator()(const ::mathematics::templates::Triangle3<T>& triangle) const noexcept
+	size_t operator()(const ::mathematics::templates::Triangle3<T>& triangle) const noexcept
 	{
-		std::hash<typename ::mathematics::templates::Vector3<T>> hasher;
-		std::size_t seed = hasher(triangle.vertices[0]) + 0x9e3779b9;
+		hash<typename ::mathematics::templates::Vector3<T>> hasher;
+		size_t seed = hasher(triangle.vertices[0]) + 0x9e3779b9;
 		seed ^= hasher(triangle.vertices[1]) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(triangle.vertices[2]) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;

@@ -9,10 +9,11 @@
 #include <ostream>
 #include <type_traits>
 #include <concepts>
+#include <algorithm>
+#include <functional>
 #include <utility>
 #include <tuple>
 #include <optional>
-#include <algorithm>
 #include <cstddef>
 #include <cmath>
 #include "Constants.hpp"
@@ -216,10 +217,10 @@ struct hash;
 template<typename T>
 struct hash<::mathematics::templates::Interval<T>>
 {
-	std::size_t operator()(const ::mathematics::templates::Interval<T>& interval) const noexcept
+	size_t operator()(const ::mathematics::templates::Interval<T>& interval) const noexcept
 	{
-		std::hash<T> hasher;
-		std::size_t seed = hasher(interval.minimum) + 0x9e3779b9;
+		hash<T> hasher;
+		size_t seed = hasher(interval.minimum) + 0x9e3779b9;
 		seed ^= hasher(interval.maximum) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
 	}

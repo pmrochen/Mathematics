@@ -9,10 +9,11 @@
 #include <ostream>
 #include <type_traits>
 #include <concepts>
+#include <algorithm>
+#include <functional>
 #include <utility>
 #include <optional>
 #include <iterator>
-#include <algorithm>
 #include <cstddef>
 #include <cmath>
 #include "Constants.hpp"
@@ -266,10 +267,10 @@ struct hash;
 template<typename T>
 struct hash<::mathematics::templates::Line2<T>>
 {
-	std::size_t operator()(const ::mathematics::templates::Line2<T>& line) const noexcept
+	size_t operator()(const ::mathematics::templates::Line2<T>& line) const noexcept
 	{
-		std::hash<typename ::mathematics::templates::Vector2<T>> hasher;
-		std::size_t seed = hasher(line.origin) + 0x9e3779b9;
+		hash<typename ::mathematics::templates::Vector2<T>> hasher;
+		size_t seed = hasher(line.origin) + 0x9e3779b9;
 		seed ^= hasher(line.direction) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
 	}

@@ -9,10 +9,11 @@
 #include <ostream>
 #include <type_traits>
 #include <concepts>
+#include <algorithm>
+#include <functional>
 #include <utility>
 #include <array>
 #include <iterator>
-#include <algorithm>
 #include <cstddef>
 #include <cmath>
 #include "Vector3.hpp"
@@ -361,11 +362,11 @@ struct hash;
 template<typename T>
 struct hash<::mathematics::templates::OrientedBox<T>>
 {
-	std::size_t operator()(const ::mathematics::templates::OrientedBox<T>& box) const noexcept
+	size_t operator()(const ::mathematics::templates::OrientedBox<T>& box) const noexcept
 	{
-		std::hash<typename ::mathematics::templates::Vector3<T>> hasher;
-		std::size_t seed = hasher(box.center) + 0x9e3779b9;
-		seed ^= std::hash<typename ::mathematics::templates::Matrix3<T>>(box.basis) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		hash<typename ::mathematics::templates::Vector3<T>> hasher;
+		size_t seed = hasher(box.center) + 0x9e3779b9;
+		seed ^= hash<typename ::mathematics::templates::Matrix3<T>>()(box.basis) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(box.halfDims) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
 	}
