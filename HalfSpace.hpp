@@ -10,12 +10,14 @@
 #include <limits>
 #include <type_traits>
 #include <concepts>
+#include <algorithm>
+#include <functional>
 #include <utility>
 #include <tuple>
-#include <algorithm>
 #include <cstddef>
 #include <cmath>
-#include "Simd/Intrinsics.hpp"
+#include <Simd/Intrinsics.hpp>
+#include <Simd/Functional.hpp>
 #include "Constants.hpp"
 #include "Vector3.hpp"
 #include "Matrix3.hpp"
@@ -554,16 +556,29 @@ struct hash;
 template<typename T>
 struct hash<::mathematics::templates::HalfSpace<T>>
 {
-	std::size_t operator()(const ::mathematics::templates::HalfSpace<T>& h) const noexcept
+	size_t operator()(const ::mathematics::templates::HalfSpace<T>& h) const noexcept
 	{
-		std::hash<T> hasher;
-		std::size_t seed = hasher(h.a) + 0x9e3779b9;
+		hash<T> hasher;
+		size_t seed = hasher(h.a) + 0x9e3779b9;
 		seed ^= hasher(h.b) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(h.c) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(h.d) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
 	}
 };
+
+#if SIMD_HAS_FLOAT4
+
+template<>
+struct hash<::mathematics::templates::HalfSpace<float>>
+{
+	size_t operator()(const ::mathematics::templates::HalfSpace<float>& h) const noexcept
+	{
+		return hash<typename ::simd::float4>()(h.abcd);
+	}
+};
+
+#endif /* SIMD_HAS_FLOAT4 */
 
 } // namespace std
 

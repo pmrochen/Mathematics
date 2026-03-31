@@ -11,12 +11,14 @@
 #include <type_traits>
 #include <concepts>
 #include <algorithm>
+#include <functional>
 #include <utility>
 #include <tuple>
 #include <cstddef>
 #include <cmath>
 //#include <Tuples/Tuple3.hpp>
-#include "Simd/Intrinsics.hpp"
+#include <Simd/Intrinsics.hpp>
+#include <Simd/Functional.hpp>
 #include "Constants.hpp"
 #include "Scalar.hpp"
 #include "Axis.hpp"
@@ -1240,15 +1242,28 @@ struct hash;
 template<typename T>
 struct hash<::mathematics::templates::Vector3<T>>
 {
-	std::size_t operator()(const ::mathematics::templates::Vector3<T>& v) const noexcept
+	size_t operator()(const ::mathematics::templates::Vector3<T>& v) const noexcept
 	{
-		std::hash<T> hasher;
-		std::size_t seed = hasher(v.x) + 0x9e3779b9;
+		hash<T> hasher;
+		size_t seed = hasher(v.x) + 0x9e3779b9;
 		seed ^= hasher(v.y) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(v.z) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
 	}
 };
+
+#if SIMD_HAS_FLOAT4
+
+template<>
+struct hash<::mathematics::templates::Vector3<float>>
+{
+	size_t operator()(const ::mathematics::templates::Vector3<float>& v) const noexcept
+	{
+		return hash<typename ::simd::float4>()(v.xyz);
+	}
+};
+
+#endif /* SIMD_HAS_FLOAT4 */
 
 } // namespace std
 

@@ -10,12 +10,14 @@
 #include <limits>
 #include <type_traits>
 #include <concepts>
+#include <functional>
 #include <utility>
 #include <tuple>
 #include <cstddef>
 #include <cmath>
 //#include <Tuples/Tuple4.hpp>
-#include "Simd/Intrinsics.hpp"
+#include <Simd/Intrinsics.hpp>
+#include <Simd/Functional.hpp>
 #include "Constants.hpp"
 #include "Vector3.hpp"
 #include "Matrix2.hpp"
@@ -1243,16 +1245,29 @@ struct hash;
 template<typename T>
 struct hash<::mathematics::templates::Quaternion<T>>
 {
-	std::size_t operator()(const ::mathematics::templates::Quaternion<T>& q) const noexcept
+	size_t operator()(const ::mathematics::templates::Quaternion<T>& q) const noexcept
 	{
-		std::hash<T> hasher;
-		std::size_t seed = hasher(q.x) + 0x9e3779b9;
+		hash<T> hasher;
+		size_t seed = hasher(q.x) + 0x9e3779b9;
 		seed ^= hasher(q.y) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(q.z) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(q.w) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
 	}
 };
+
+#if SIMD_HAS_FLOAT4
+
+template<>
+struct hash<::mathematics::templates::Quaternion<float>>
+{
+	size_t operator()(const ::mathematics::templates::Quaternion<float>& q) const noexcept
+	{
+		return hash<typename ::simd::float4>()(q.xyzw);
+	}
+};
+
+#endif /* SIMD_HAS_FLOAT4 */
 
 } // namespace std
 

@@ -10,13 +10,15 @@
 #include <limits>
 #include <type_traits>
 #include <concepts>
+#include <algorithm>
+#include <functional>
 #include <utility>
 #include <tuple>
 #include <iterator>
-#include <algorithm>
 #include <cstddef>
 #include <cmath>
-#include "Simd/Intrinsics.hpp"
+#include <Simd/Intrinsics.hpp>
+#include <Simd/Functional.hpp>
 #include "Constants.hpp"
 #include "Vector3.hpp"
 #include "Matrix3.hpp"
@@ -589,16 +591,29 @@ struct hash;
 template<typename T>
 struct hash<::mathematics::templates::Plane<T>>
 {
-	std::size_t operator()(const ::mathematics::templates::Plane<T>& p) const noexcept
+	size_t operator()(const ::mathematics::templates::Plane<T>& p) const noexcept
 	{
-		std::hash<T> hasher;
-		std::size_t seed = hasher(p.a) + 0x9e3779b9;
+		hash<T> hasher;
+		size_t seed = hasher(p.a) + 0x9e3779b9;
 		seed ^= hasher(p.b) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(p.c) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(p.d) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
 	}
 };
+
+#if SIMD_HAS_FLOAT4
+
+template<>
+struct hash<::mathematics::templates::Plane<float>>
+{
+	size_t operator()(const ::mathematics::templates::Plane<float>& p) const noexcept
+	{
+		return hash<typename ::simd::float4>()(p.abcd);
+	}
+};
+
+#endif /* SIMD_HAS_FLOAT4 */
 
 } // namespace std
 
