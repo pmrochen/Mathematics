@@ -875,7 +875,7 @@ template<typename T>
 	requires (std::floating_point<T> || std::integral<T>)
 inline Vector3<T> abs(const Vector3<T>& v) noexcept
 {
-	if constexpr (std::is_float_v<T>)
+	if constexpr (std::is_floating_point_v<T>)
 		return Vector3<T>(std::fabs(v.x), std::fabs(v.y), std::fabs(v.z));
 	else // integral
 		return Vector3<T>(abs(v.x), abs(v.y), abs(v.z));
@@ -889,7 +889,7 @@ template<typename T>
 #endif
 inline Vector3<T> abs(Vector3<T>&& v) noexcept
 {
-	if constexpr (std::is_float_v<T>)
+	if constexpr (std::is_floating_point_v<T>)
 	{
 		v.x = std::fabs(v.x);
 		v.y = std::fabs(v.y);

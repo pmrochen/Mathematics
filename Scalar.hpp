@@ -19,7 +19,7 @@ template<typename T>
 	requires (std::floating_point<T> || std::integral<T>)
 inline T abs(T x) noexcept
 {
-	if constexpr (std::is_float_v<T>)
+	if constexpr (std::is_floating_point_v<T>)
 	{
 		return std::fabs(x);
 	}
@@ -90,7 +90,7 @@ template<typename T>
 	requires (std::floating_point<T> || std::integral<T>)
 inline T log2(T x) noexcept // base-2 logarithm
 { 
-	if constexpr (std::is_float_v<T>)
+	if constexpr (std::is_floating_point_v<T>)
 	{
 		return std::log(x)/Constants<T>::LN2;
 	}
