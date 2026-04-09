@@ -158,13 +158,13 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const S
 template<typename T>
 inline bool Segment3<T>::approxEquals(const Segment3<T>& segment) const
 {
-	return origin.approxEquals(segment.start) && direction.approxEquals(segment.end);
+	return start.approxEquals(segment.start) && end.approxEquals(segment.end);
 }
 
 template<typename T>
 inline bool Segment3<T>::approxEquals(const Segment3<T>& segment, T tolerance) const
 {
-	return origin.approxEquals(segment.start, tolerance) && direction.approxEquals(segment.end, tolerance);
+	return start.approxEquals(segment.start, tolerance) && end.approxEquals(segment.end, tolerance);
 }
 
 template<typename T>
