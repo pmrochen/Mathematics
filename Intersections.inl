@@ -63,30 +63,30 @@ struct FloatIntTypeConverter<double>
 //	using Type = double;
 //};
 
-template<typename T>
-	requires std::floating_point<T>
-struct IntersectionLookup
-{
-	static int get(int i) noexcept
-	{
-		static const int lut[] = { 0, 1, 2, -1, 0, 1, 5, -1, 0, 4, 2, -1, 0, 4, 5, -1, 3, 1, 2, -1, 3, 1, 5, -1, 3, 4, 2, -1, 3, 4, 5, -1 };
-		return lut[i];
-	};
-};
-
-#if SIMD_HAS_FLOAT4
-
-template<>
-struct IntersectionLookup<float>
-{
-	static int get(int i) noexcept
-	{
-		static const int lut[] = { 0, 1, 2, -1, 0, 1, 6, -1, 0, 5, 2, -1, 0, 5, 6, -1, 4, 1, 2, -1, 4, 1, 6, -1, 4, 5, 2, -1, 4, 5, 6, -1 };
-		return lut[i];
-	};
-};
-
-#endif /* SIMD_HAS_FLOAT4 */
+//template<typename T>
+//	requires std::floating_point<T>
+//struct IntersectionLookup
+//{
+//	static int get(int i) noexcept
+//	{
+//		static const int lut[] = { 0, 1, 2, -1, 0, 1, 5, -1, 0, 4, 2, -1, 0, 4, 5, -1, 3, 1, 2, -1, 3, 1, 5, -1, 3, 4, 2, -1, 3, 4, 5, -1 };
+//		return lut[i];
+//	};
+//};
+//
+//#if SIMD_HAS_FLOAT4
+//
+//template<>
+//struct IntersectionLookup<float>
+//{
+//	static int get(int i) noexcept
+//	{
+//		static const int lut[] = { 0, 1, 2, -1, 0, 1, 6, -1, 0, 5, 2, -1, 0, 5, 6, -1, 4, 1, 2, -1, 4, 1, 6, -1, 4, 5, 2, -1, 4, 5, 6, -1 };
+//		return lut[i];
+//	};
+//};
+//
+//#endif /* SIMD_HAS_FLOAT4 */
 
 template<typename O, typename T>
 	requires std::floating_point<T>
@@ -1194,138 +1194,139 @@ bool testOrientedBoxOrientedBox(const Vector3<T>& centerA, const Matrix3<T>& bas
 
 	constexpr T CUTOFF = T(1) - Constants<T>::TOLERANCE;
 	bool existsParallelPair = false;
-	Vector3<T> kD = centerB - centerA;
-	Vector3<T> aafC0, aafC1, aafC2;
-	Vector3<T> aafAbsC0, aafAbsC1, aafAbsC2;
-	Vector3<T> afAD;
+	Vector3<T> d = centerB - centerA;
+	T c[3][3];
+	T absC[3][3];
+	T aD[3];
+	T r0, r1, r, r01;
 
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 3; ++i)
 	{
-		aafC0[i] = dot(basisA[0], basisB[i]);
-		aafAbsC0[i] = std::fabs(aafC0[i]);
-		if (aafAbsC0[i] > CUTOFF)
+		c[0][i] = dot(basisA[0], basisB[i]);
+		absC[0][i] = std::fabs(c[0][i]);
+		if (absC[0][i] > CUTOFF)
 			existsParallelPair = true;
 	}
 
-	afAD.X = dot(basisA[0], kD);
-	T fR = std::fabs(afAD.x_);
-	T fR1 = dot(halfDimsB, aafAbsC0);
-	T fR01 = halfDimsA.x_ + fR1;
-	if (fR > fR01)
+	aD[0] = dot(basisA[0], d);
+	r = std::fabs(aD[0]);
+	r1 = dot(halfDimsB, Vector3<T>(absC[0][0], absC[0][1], absC[0][2]));
+	r01 = halfDimsA.x + r1;
+	if (r > r01)
 		return false;
 
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 3; ++i)
 	{
-		aafC1[i] = dot(basisA[1], basisB[i]);
-		aafAbsC1[i] = std::fabs(aafC1[i]);
-		if (aafAbsC1[i] > CUTOFF)
+		c[1][i] = dot(basisA[1], basisB[i]);
+		absC[1][i] = std::fabs(c[1][i]);
+		if (absC[1][i] > CUTOFF)
 			existsParallelPair = true;
 	}
 
-	afAD.Y = dot(basisA[1], kD);
-	fR = std::fabs(afAD.y_);
-	fR1 = dot(halfDimsB, aafAbsC1);
-	fR01 = halfDimsA.y_ + fR1;
-	if (fR > fR01)
+	aD[1] = dot(basisA[1], d);
+	r = std::fabs(aD[1]);
+	r1 = dot(halfDimsB, Vector3<T>(absC[1][0], absC[1][1], absC[1][2]));
+	r01 = halfDimsA.y + r1;
+	if (r > r01)
 		return false;
 
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 3; ++i)
 	{
-		aafC2[i] = dot(basisA[2], basisB[i]);
-		aafAbsC2[i] = std::fabs(aafC2[i]);
-		if (aafAbsC2[i] > CUTOFF)
+		c[2][i] = dot(basisA[2], basisB[i]);
+		absC[2][i] = std::fabs(c[2][i]);
+		if (absC[2][i] > CUTOFF)
 			existsParallelPair = true;
 	}
 
-	afAD.Z = dot(basisA[2], kD);
-	fR = std::fabs(afAD.z_);
-	fR1 = dot(halfDimsB, aafAbsC2);
-	fR01 = halfDimsA.z_ + fR1;
-	if (fR > fR01)
+	aD[2] = dot(basisA[2], d);
+	r = std::fabs(aD[2]);
+	r1 = dot(halfDimsB, Vector3<T>(absC[2][0], absC[2][1], absC[2][2]));
+	r01 = halfDimsA.z + r1;
+	if (r > r01)
 		return false;
 
-	fR = std::fabs(dot(basisB[0], kD));
-	T fR0 = halfDimsA.x_*aafAbsC0.x_ + halfDimsA.y_*aafAbsC1.x_ + halfDimsA.z_*aafAbsC2.x_;
-	fR01 = fR0 + halfDimsB.x_;
-	if (fR > fR01)
+	r = std::fabs(dot(basisB[0], d));
+	r0 = dot(halfDimsA, Vector3<T>(absC[0][0], absC[1][0], absC[2][0]));
+	r01 = r0 + halfDimsB.x;
+	if (r > r01)
 		return false;
 
-	fR = std::fabs(dot(basisB[1], kD));
-	fR0 = halfDimsA.x_*aafAbsC0.y_ + halfDimsA.y_*aafAbsC1.y_ + halfDimsA.z_*aafAbsC2.y_;
-	fR01 = fR0 + halfDimsB.y_;
-	if (fR > fR01)
+	r = std::fabs(dot(basisB[1], d));
+	r0 = dot(halfDimsA, Vector3<T>(absC[0][1], absC[1][1], absC[2][1]));
+	r01 = r0 + halfDimsB.y;
+	if (r > r01)
 		return false;
 
-	fR = std::fabs(dot(basisB[2], kD));
-	fR0 = halfDimsA.x_*aafAbsC0.z_ + halfDimsA.y_*aafAbsC1.z_ + halfDimsA.z_*aafAbsC2.z_;
-	fR01 = fR0 + halfDimsB.z_;
-	if (fR > fR01)
+	r = std::fabs(dot(basisB[2], d));
+	r0 = dot(halfDimsA, Vector3<T>(absC[0][2], absC[1][2], absC[2][2]));
+	r01 = r0 + halfDimsB.z;
+	if (r > r01)
 		return false;
 
 	if (existsParallelPair)
 		return true;
 
-	fR = std::fabs(afAD.z_*aafC1.x_ - afAD.y_*aafC2.x_);
-	fR0 = halfDimsA.y_*aafAbsC2.x_ + halfDimsA.z_*aafAbsC1.x_;
-	fR1 = halfDimsB.y_*aafAbsC0.z_ + halfDimsB.z_*aafAbsC0.y_;
-	fR01 = fR0 + fR1;
-	if (fR > fR01)
+	r = std::fabs(aD[2]*c[1][0] - aD[1]*c[2][0]);
+	r0 = halfDimsA.y*absC[2][0] + halfDimsA.z*absC[1][0];
+	r1 = halfDimsB.y*absC[0][2] + halfDimsB.z*absC[0][1];
+	r01 = r0 + r1;
+	if (r > r01)
 		return false;
 
-	fR = std::fabs(afAD.z_*aafC1.y_ - afAD.y_*aafC2.y_);
-	fR0 = halfDimsA.y_*aafAbsC2.y_ + halfDimsA.z_*aafAbsC1.y_;
-	fR1 = halfDimsB.x_*aafAbsC0.z_ + halfDimsB.z_*aafAbsC0.x_;
-	fR01 = fR0 + fR1;
-	if (fR > fR01)
+	r = std::fabs(aD[2]*c[1][1] - aD[1]*c[2][1]);
+	r0 = halfDimsA.y*absC[2][1] + halfDimsA.z*absC[1][1];
+	r1 = halfDimsB.x*absC[0][2] + halfDimsB.z*absC[0][0];
+	r01 = r0 + r1;
+	if (r > r01)
 		return false;
 
-	fR = std::fabs(afAD.z_*aafC1.z_ - afAD.y_*aafC2.z_);
-	fR0 = halfDimsA.y_*aafAbsC2.z_ + halfDimsA.z_*aafAbsC1.z_;
-	fR1 = halfDimsB.x_*aafAbsC0.y_ + halfDimsB.y_*aafAbsC0.x_;
-	fR01 = fR0 + fR1;
-	if (fR > fR01)
+	r = std::fabs(aD[2]*c[1][2] - aD[1]*c[2][2]);
+	r0 = halfDimsA.y*absC[2][2] + halfDimsA.z*absC[1][2];
+	r1 = halfDimsB.x*absC[0][1] + halfDimsB.y*absC[0][0];
+	r01 = r0 + r1;
+	if (r > r01)
 		return false;
 
-	fR = std::fabs(afAD.x_*aafC2.x_ - afAD.z_*aafC0.x_);
-	fR0 = halfDimsA.x_*aafAbsC2.x_ + halfDimsA.z_*aafAbsC0.x_;
-	fR1 = halfDimsB.y_*aafAbsC1.z_ + halfDimsB.z_*aafAbsC1.y_;
-	fR01 = fR0 + fR1;
-	if (fR > fR01)
+	r = std::fabs(aD[0]*c[2][0] - aD[2]*c[0][0]);
+	r0 = halfDimsA.x*absC[2][0] + halfDimsA.z*absC[0][0];
+	r1 = halfDimsB.y*absC[1][2] + halfDimsB.z*absC[1][1];
+	r01 = r0 + r1;
+	if (r > r01)
 		return false;
 
-	fR = std::fabs(afAD.x_*aafC2.y_ - afAD.z_*aafC0.y_);
-	fR0 = halfDimsA.x_*aafAbsC2.y_ + halfDimsA.z_*aafAbsC0.y_;
-	fR1 = halfDimsB.x_*aafAbsC1.z_ + halfDimsB.z_*aafAbsC1.x_;
-	fR01 = fR0 + fR1;
-	if (fR > fR01)
+	r = std::fabs(aD[0]*c[2][1] - aD[2]*c[0][1]);
+	r0 = halfDimsA.x*absC[2][1] + halfDimsA.z*absC[0][1];
+	r1 = halfDimsB.x*absC[1][2] + halfDimsB.z*absC[1][0];
+	r01 = r0 + r1;
+	if (r > r01)
 		return false;
 
-	fR = std::fabs(afAD.x_*aafC2.z_ - afAD.z_*aafC0.z_);
-	fR0 = halfDimsA.x_*aafAbsC2.z_ + halfDimsA.z_*aafAbsC0.z_;
-	fR1 = halfDimsB.x_*aafAbsC1.y_ + halfDimsB.y_*aafAbsC1.x_;
-	fR01 = fR0 + fR1;
-	if (fR > fR01)
+	r = std::fabs(aD[0]*c[2][2] - aD[2]*c[0][2]);
+	r0 = halfDimsA.x*absC[2][2] + halfDimsA.z*absC[0][2];
+	r1 = halfDimsB.x*absC[1][1] + halfDimsB.y*absC[1][0];
+	r01 = r0 + r1;
+	if (r > r01)
 		return false;
 
-	fR = std::fabs(afAD.y_*aafC0.x_ - afAD.x_*aafC1.x_);
-	fR0 = halfDimsA.x_*aafAbsC1.x_ + halfDimsA.y_*aafAbsC0.x_;
-	fR1 = halfDimsB.y_*aafAbsC2.z_ + halfDimsB.z_*aafAbsC2.y_;
-	fR01 = fR0 + fR1;
-	if (fR > fR01)
+	r = std::fabs(aD[1]*c[0][0] - aD[0]*c[1][0]);
+	r0 = halfDimsA.x*absC[1][0] + halfDimsA.y*absC[0][0];
+	r1 = halfDimsB.y*absC[2][2] + halfDimsB.z*absC[2][1];
+	r01 = r0 + r1;
+	if (r > r01)
 		return false;
 
-	fR = std::fabs(afAD.y_*aafC0.y_ - afAD.x_*aafC1.y_);
-	fR0 = halfDimsA.x_*aafAbsC1.y_ + halfDimsA.y_*aafAbsC0.y_;
-	fR1 = halfDimsB.x_*aafAbsC2.z_ + halfDimsB.z_*aafAbsC2.x_;
-	fR01 = fR0 + fR1;
-	if (fR > fR01)
+	r = std::fabs(aD[1]*c[0][1] - aD[0]*c[1][1]);
+	r0 = halfDimsA.x*absC[1][1] + halfDimsA.y*absC[0][1];
+	r1 = halfDimsB.x*absC[2][2] + halfDimsB.z*absC[2][0];
+	r01 = r0 + r1;
+	if (r > r01)
 		return false;
 
-	fR = std::fabs(afAD.y_*aafC0.z_ - afAD.x_*aafC1.z_);
-	fR0 = halfDimsA.x_*aafAbsC1.z_ + halfDimsA.y_*aafAbsC0.z_;
-	fR1 = halfDimsB.x_*aafAbsC2.y_ + halfDimsB.y_*aafAbsC2.x_;
-	fR01 = fR0 + fR1;
-	if (fR > fR01)
+	r = std::fabs(aD[1]*c[0][2] - aD[0]*c[1][2]);
+	r0 = halfDimsA.x*absC[1][2] + halfDimsA.y*absC[0][2];
+	r1 = halfDimsB.x*absC[2][1] + halfDimsB.y*absC[2][0];
+	r01 = r0 + r1;
+	if (r > r01)
 		return false;
 
 	return true;
@@ -1347,6 +1348,229 @@ inline bool testOrientedBoxSphere(const Vector3<T>& centerA, const Matrix3<T>& b
 	//Matrix3<T> boxBasisT(transpose(basisA));
 	return testAxisAlignedBoxSphere(-halfDimsA, halfDimsA,
 		basisA*(centerB - centerA)/*(centerB - centerA)*boxBasisT*/, radiusB);
+}
+
+template<typename T>
+	requires std::floating_point<T>
+bool testOrientedBoxSymmetricFrustum(const Vector3<T>& centerA, const Matrix3<T>& basisA, const Vector3<T>& halfDimsA,
+	const Vector3<T>& originB, const Matrix3<T>& basisB, const Vector2<T>& halfDimsB, T depthMin, T depthMax) noexcept
+{
+	// http://www.geometrictools.com/
+
+	Vector3<T> diff = centerA - originB;
+	T rBound = halfDimsB.x;
+	T uBound = halfDimsB.y;
+	T a[3];
+	T b[3];
+	T c[3];
+	T d[3];
+	T nA[3];
+	T nB[3];
+	T nC[3];
+	T nD[3];
+	T rC[3];
+	T rD[3];
+	T uC[3];
+	T uD[3];
+	T nApRC[3];
+	T nAmRC[3];
+	T nBpUC[3];
+	T nBmUC[3];
+	T rBpUA[3];
+	T rBmUA[3];
+	T ddD, radius, p, fMin, fMax, mTwoUF, mTwoRF, tmp;
+
+	d[2] = dot(diff, basisB[2]);
+	for (int i = 0; i < 3; ++i)
+		c[i] = dot(basisA[i], basisB[2]);
+	radius = halfDimsA[0]*std::fabs(c[0]) + halfDimsA[1]*std::fabs(c[1]) + halfDimsA[2]*std::fabs(c[2]);
+	if (d[2] + radius < depthMin || d[2] - radius > depthMax)
+		return false;
+
+	for (int i = 0; i < 3; ++i)
+	{
+		a[i] = dot(basisA[i], basisB[0]);
+		rC[i] = rBound*c[i];
+		nA[i] = depthMin*a[i];
+		nAmRC[i] = nA[i] - rC[i];
+	}
+
+	d[0] = dot(diff, basisB[0]);
+	radius = halfDimsA[0]*std::fabs(nAmRC[0]) + halfDimsA[1]*std::fabs(nAmRC[1]) + halfDimsA[2]*std::fabs(nAmRC[2]);
+	nD[0] = depthMin*d[0];
+	rD[2] = rBound*d[2];
+	ddD = nD[0] - rD[2];
+	mTwoRF = -2.0f*rBound*depthMax;
+	if (ddD + radius < mTwoRF || ddD > radius)
+		return false;
+
+	for (int i = 0; i < 3; ++i)
+		nApRC[i] = nA[i] + rC[i];
+	radius = halfDimsA[0]*std::fabs(nApRC[0]) + halfDimsA[1]*std::fabs(nApRC[1]) + halfDimsA[2]*std::fabs(nApRC[2]);
+	ddD = -(nD[0] + rD[2]);
+	if (ddD + radius < mTwoRF || ddD > radius)
+		return false;
+
+	for (int i = 0; i < 3; ++i)
+	{
+		b[i] = dot(basisA[i], basisB[1]);
+		uC[i] = uBound*c[i];
+		nB[i] = depthMin*b[i];
+		nBmUC[i] = nB[i] - uC[i];
+	}
+
+	d[1] = dot(diff, basisB[1]);
+	radius = halfDimsA[0]*std::fabs(nBmUC[0]) + halfDimsA[1]*std::fabs(nBmUC[1]) + halfDimsA[2]*std::fabs(nBmUC[2]);
+	nD[1] = depthMin*d[1];
+	uD[2] = uBound*d[2];
+	ddD = nD[1] - uD[2];
+	mTwoUF = -2.0f*uBound*depthMax;
+	if (ddD + radius < mTwoUF || ddD > radius)
+		return false;
+
+	for (int i = 0; i < 3; ++i)
+		nBpUC[i] = nB[i] + uC[i];
+	radius = halfDimsA[0]*std::fabs(nBpUC[0]) + halfDimsA[1]*std::fabs(nBpUC[1]) + halfDimsA[2]*std::fabs(nBpUC[2]);
+	ddD = -(nD[1] + uD[2]);
+	if (ddD + radius < mTwoUF || ddD > radius)
+		return false;
+
+	T dRatio = depthMax/depthMin;
+
+	for (int i = 0; i < 3; ++i)
+	{
+		p = rBound*std::fabs(a[i]) + uBound*std::fabs(b[i]);
+		nC[i] = depthMin*c[i];
+		fMin = nC[i] - p;
+		if (fMin < T(0))
+			fMin *= dRatio;
+		fMax = nC[i] + p;
+		if (fMax > T(0))
+			fMax *= dRatio;
+		ddD = a[i]*d[0] + b[i]*d[1] + c[i]*d[2];
+		if (ddD + halfDimsA[i] < fMin || ddD - halfDimsA[i] > fMax)
+			return false;
+	}
+
+	for (int i = 0; i < 3; ++i)
+	{
+		p = uBound*std::fabs(c[i]);
+		fMin = -nB[i] - p;
+		if (fMin < T(0))
+			fMin *= dRatio;
+		fMax = -nB[i] + p;
+		if (fMax > T(0))
+			fMax *= dRatio;
+		ddD = c[i]*d[1] - b[i]*d[2];
+		radius = halfDimsA[0]*std::fabs(b[i]*c[0] - b[0]*c[i]) + halfDimsA[1]*std::fabs(b[i]*c[1] - b[1]*c[i]) + halfDimsA[2]*std::fabs(b[i]*c[2] - b[2]*c[i]);
+		if (ddD + radius < fMin || ddD - radius > fMax)
+			return false;
+	}
+
+	for (int i = 0; i < 3; ++i)
+	{
+		p = rBound*std::fabs(c[i]);
+		fMin = nA[i] - p;
+		if (fMin < T(0))
+			fMin *= dRatio;
+		fMax = nA[i] + p;
+		if (fMax > T(0))
+			fMax *= dRatio;
+		ddD = -c[i]*d[0] + a[i]*d[2];
+		radius = halfDimsA[0]*std::fabs(a[i]*c[0] - a[0]*c[i]) + halfDimsA[1]*std::fabs(a[i]*c[1] - a[1]*c[i]) + halfDimsA[2]*std::fabs(a[i]*c[2] - a[2]*c[i]);
+		if (ddD + radius < fMin || ddD - radius > fMax)
+			return false;
+	}
+
+	for (int i = 0; i < 3; ++i)
+	{
+		T fRB = rBound*b[i];
+		T fUA = uBound*a[i];
+		rBpUA[i] = fRB + fUA;
+		rBmUA[i] = fRB - fUA;
+	}
+
+	for (int i = 0; i < 3; ++i)
+	{
+		p = rBound*std::fabs(nBmUC[i]) + uBound*std::fabs(nAmRC[i]);
+		tmp = -depthMin*rBmUA[i];
+		fMin = tmp - p;
+		if (fMin < T(0))
+			fMin *= dRatio;
+		fMax = tmp + p;
+		if (fMax > T(0))
+			fMax *= dRatio;
+		ddD = d[0]*nBmUC[i] - d[1]*nAmRC[i] - d[2]*rBmUA[i];
+		radius = T(0);
+		for (int j = 0; j < 3; j++)
+			radius += halfDimsA[j]*std::fabs(a[j]*nBmUC[i] - b[j]*nAmRC[i] - c[j]*rBmUA[i]);
+		if (ddD + radius < fMin || ddD - radius > fMax)
+			return false;
+	}
+
+	for (int i = 0; i < 3; ++i)
+	{
+		p = rBound*std::fabs(nBpUC[i]) + uBound*std::fabs(nAmRC[i]);
+		tmp = -depthMin*rBpUA[i];
+		fMin = tmp - p;
+		if (fMin < T(0))
+			fMin *= dRatio;
+		fMax = tmp + p;
+		if (fMax > T(0))
+			fMax *= dRatio;
+		ddD = d[0]*nBpUC[i] - d[1]*nAmRC[i] - d[2]*rBpUA[i];
+		radius = T(0);
+		for (int j = 0; j < 3; ++j)
+			radius += halfDimsA[j]*std::fabs(a[j]*nBpUC[i] - b[j]*nAmRC[i] - c[j]*rBpUA[i]);
+		if (ddD + radius < fMin || ddD - radius > fMax)
+			return false;
+	}
+
+	for (int i = 0; i < 3; ++i)
+	{
+		p = rBound*std::fabs(nBmUC[i]) + uBound*std::fabs(nApRC[i]);
+		tmp = depthMin*rBpUA[i];
+		fMin = tmp - p;
+		if (fMin < T(0))
+			fMin *= dRatio;
+		fMax = tmp + p;
+		if (fMax > T(0))
+			fMax *= dRatio;
+		ddD = d[0]*nBmUC[i] - d[1]*nApRC[i] + d[2]*rBpUA[i];
+		radius = T(0);
+		for (int j = 0; j < 3; ++j)
+			radius += halfDimsA[j]*std::fabs(a[j]*nBmUC[i] - b[j]*nApRC[i] + c[j]*rBpUA[i]);
+		if (ddD + radius < fMin || ddD - radius > fMax)
+			return false;
+	}
+
+	for (int i = 0; i < 3; ++i)
+	{
+		p = rBound*std::fabs(nBpUC[i]) + uBound*std::fabs(nApRC[i]);
+		tmp = depthMin*rBmUA[i];
+		fMin = tmp - p;
+		if (fMin < T(0))
+			fMin *= dRatio;
+		fMax = tmp + p;
+		if (fMax > T(0))
+			fMax *= dRatio;
+		ddD = d[0]*nBpUC[i] - d[1]*nApRC[i] + d[2]*rBmUA[i];
+		radius = T(0);
+		for (int j = 0; j < 3; ++j)
+			radius += halfDimsA[j]*std::fabs(a[j]*nBpUC[i] - b[j]*nApRC[i] + c[j]*rBmUA[i]);
+		if (ddD + radius < fMin || ddD - radius > fMax)
+			return false;
+	}
+
+	return true;
+}
+
+template<typename T>
+	requires std::floating_point<T>
+inline bool testAxisAlignedBoxSymmetricFrustum(const Vector3<T>& centerA, const Vector3<T>& halfDimsA,
+	const Vector3<T>& originB, const Matrix3<T>& basisB, const Vector2<T>& halfDimsB, T depthMin, T depthMax) noexcept
+{
+	return testOrientedBoxSymmetricFrustum(centerA, Matrix3<T>::IDENTITY, halfDimsA, originB, basisB, halfDimsB, depthMin, depthMax);
 }
 
 template<typename T>

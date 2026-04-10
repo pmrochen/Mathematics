@@ -311,4 +311,291 @@ inline T getPointTriangle(const Vector3<T>& point, const Vector3<T>& v0, const V
     return std::sqrt(getPointTriangleSquared(point, v0, v1, v2, closestPoint));
 }
 
+template<typename T>
+    requires std::floating_point<T>
+T getPointSymmetricFrustumSquared(const Vector3<T>& point, const Vector3<T>& origin, const Matrix3<T>& basis, const Vector2<T>& halfDims,
+    T depthMin, T depthMax, Vector3<T>* closestPoint = nullptr) noexcept
+{
+    // http://www.geometrictools.com/
+
+	Vector3<T> diff = point - origin;
+	Vector3<T> test = basis*diff;
+	//Vector3<T> test(dot(diff, basis[0]), dot(diff, basis[1]), dot(diff, basis[2]));
+
+	bool rSignChange;
+	if (test.x < T(0))
+	{
+		rSignChange = true;
+		test.x = -test.x;
+	}
+	else
+	{
+		rSignChange = false;
+	}
+
+	bool uSignChange;
+	if (test.y < T(0))
+	{
+		uSignChange = true;
+		test.y = -test.y;
+	}
+	else
+	{
+		uSignChange = false;
+	}
+
+	T dRatio = depthMax/depthMin;
+	T rMin = halfDims.x;
+	T rMax = dRatio*rMin;
+	T uMin = halfDims.y;
+	T uMax = dRatio*uMin;
+	T rMinSqr = rMin*rMin;
+	T uMinSqr = uMin*uMin;
+	T dminSqr = depthMin*depthMin;
+	T minRDDot = rMinSqr + dminSqr;
+	T minUDDot = uMinSqr + dminSqr;
+	T minRUDDot = rMinSqr + minUDDot;
+	T maxRDDot = dRatio*minRDDot;
+	T maxUDDot = dRatio*minUDDot;
+	T maxRUDDot = dRatio*minRUDDot;
+
+	Vector3<T> closest(Uninitialized());
+	T rDot, uDot, rdDot, udDot, rudDot, rEdgeDot, uEdgeDot, t;
+	if (test.z >= depthMax)
+	{
+		if (test.x <= rMax)
+		{
+			if (test.y <= uMax)
+				closest.set(test.x, test.y, depthMax);
+			else
+				closest.set(test.x, uMax, depthMax);
+		}
+		else
+		{
+			if (test.y <= uMax)
+				closest.set(rMax, test.y, depthMax);
+			else
+				closest.set(rMax, uMax, depthMax);
+		}
+	}
+	else if (test.z <= depthMin)
+	{
+		if (test.x <= rMin)
+		{
+			if (test.y <= uMin)
+			{
+				closest.set(test.x, test.y, depthMin);
+			}
+			else
+			{
+				udDot = uMin*test.y + depthMin*test.z;
+				if (udDot >= maxUDDot)
+				{
+					closest.set(test.x, uMax, depthMax);
+				}
+				else if (udDot >= minUDDot)
+				{
+					uDot = depthMin*test.y - uMin*test.z;
+					t = uDot/minUDDot;
+					closest.set(test.x, test.y - t*depthMin, test.z + t*uMin);
+				}
+				else
+				{
+					closest.set(test.x, uMin, depthMin);
+				}
+			}
+		}
+		else
+		{
+			if (test.y <= uMin)
+			{
+				rdDot = rMin*test.x + depthMin*test.z;
+				if (rdDot >= maxRDDot)
+				{
+					closest.set(rMax, test.y, depthMax);
+				}
+				else if (rdDot >= minRDDot)
+				{
+					rDot = depthMin*test.x - rMin*test.z;
+					t = rDot/minRDDot;
+					closest.set(test.x - t*depthMin, test.y, test.z + t*rMin);
+				}
+				else
+				{
+					closest.set(rMin, test.y, depthMin);
+				}
+			}
+			else
+			{
+				rudDot = rMin*test.x + uMin*test.y + depthMin*test.z;
+				rEdgeDot = uMin*rudDot - minRUDDot*test.y;
+				if (rEdgeDot >= T(0))
+				{
+					rdDot = rMin*test.x + depthMin*test.z;
+					if (rdDot >= maxRDDot)
+					{
+						closest.set(rMax, test.y, depthMax);
+					}
+					else if (rdDot >= minRDDot)
+					{
+						rDot = depthMin*test.x - rMin*test.z;
+						t = rDot/minRDDot;
+						closest.set(test.x - t*depthMin, test.y, test.z + t*rMin);
+					}
+					else
+					{
+						closest.set(rMin, test.y, depthMin);
+					}
+				}
+				else
+				{
+					uEdgeDot = rMin*rudDot - minRUDDot*test.x;
+					if (uEdgeDot >= T(0))
+					{
+						udDot = uMin*test.y + depthMin*test.z;
+						if (udDot >= maxUDDot)
+						{
+							closest.set(test.x, uMax, depthMax);
+						}
+						else if (udDot >= minUDDot)
+						{
+							uDot = depthMin*test.y - uMin*test.z;
+							t = uDot/minUDDot;
+							closest.set(test.x, test.y - t*depthMin, test.z + t*uMin);
+						}
+						else
+						{
+							closest.set(test.x, uMin, depthMin);
+						}
+					}
+					else
+					{
+						if (rudDot >= maxRUDDot)
+						{
+							closest.set(rMax, uMax, depthMax);
+						}
+						else if (rudDot >= minRUDDot)
+						{
+							t = rudDot/minRUDDot;
+							closest.set(t*rMin, t*uMin, t*depthMin);
+						}
+						else
+						{
+							closest.set(rMin, uMin, depthMin);
+						}
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		rDot = depthMin*test.x - rMin*test.z;
+		uDot = depthMin*test.y - uMin*test.z;
+		if (rDot <= T(0))
+		{
+			if (uDot <= T(0))
+			{
+				closest = test;
+			}
+			else
+			{
+				udDot = uMin*test.y + depthMin*test.z;
+				if (udDot >= maxUDDot)
+				{
+					closest.set(test.x, uMax, depthMax);
+				}
+				else
+				{
+					t = uDot/minUDDot;
+					closest.set(test.x, test.y - t*depthMin, test.z + t*uMin);
+				}
+			}
+		}
+		else
+		{
+			if (uDot <= T(0))
+			{
+				rdDot = rMin*test.x + depthMin*test.z;
+				if (rdDot >= maxRDDot)
+				{
+					closest.set(rMax, test.y, depthMax);
+				}
+				else
+				{
+					t = rDot/minRDDot;
+					closest.set(test.x - t*depthMin, test.y, test.z + t*rMin);
+				}
+			}
+			else
+			{
+				rudDot = rMin*test.x + uMin*test.y + depthMin*test.z;
+				rEdgeDot = uMin*rudDot - minRUDDot*test.y;
+				if (rEdgeDot >= T(0))
+				{
+					rdDot = rMin*test.x + depthMin*test.z;
+					if (rdDot >= maxRDDot)
+					{
+						closest.set(rMax, test.y, depthMax);
+					}
+					else
+					{
+						t = rDot/minRDDot;
+						closest.set(test.x - t*depthMin, test.y, test.z + t*rMin);
+					}
+				}
+				else
+				{
+					uEdgeDot = rMin*rudDot - minRUDDot*test.x;
+					if (uEdgeDot >= T(0))
+					{
+						udDot = uMin*test.y + depthMin*test.z;
+						if (udDot >= maxUDDot)
+						{
+							closest.set(test.x, uMax, depthMax);
+						}
+						else
+						{
+							t = uDot/minUDDot;
+							closest.set(test.x, test.y - t*depthMin, test.z + t*uMin);
+						}
+					}
+					else
+					{
+						if (rudDot >= maxRUDDot)
+						{
+							closest.set(rMax, uMax, depthMax);
+						}
+						else
+						{
+							t = rudDot/minRUDDot;
+							closest.set(t*rMin, t*uMin, t*depthMin);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	diff = test - closest;
+
+	if (rSignChange)
+		closest.x = -closest.x;
+	if (uSignChange)
+		closest.y = -closest.y;
+
+	if (closestPoint)
+		*closestPoint = origin + closest*basis;
+
+	return diff.getLengthSquared();
+}
+
+template<typename T>
+    requires std::floating_point<T>
+inline T getPointSymmetricFrustum(const Vector3<T>& point, const Vector3<T>& origin, const Matrix3<T>& basis, const Vector2<T>& halfDims,
+    T depthMin, T depthMax, Vector3<T>* closestPoint = nullptr) noexcept
+{
+    return std::sqrt(getPointSymmetricFrustumSquared(point, origin, basis, halfDims, depthMin, depthMax, closestPoint));
+}
+
 } // namespace mathematics::distances

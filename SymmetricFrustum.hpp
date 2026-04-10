@@ -21,9 +21,11 @@
 #include "Vector3.hpp"
 #include "Matrix3.hpp"
 #include "AffineTransform.hpp"
+#include "HalfSpace.hpp"
 #include "AxisAlignedBox.hpp"
 #include "OrientedBox.hpp"
 #include "Sphere.hpp"
+#include "Cone.hpp"
 
 namespace mathematics {
 namespace templates {
@@ -70,6 +72,7 @@ struct SymmetricFrustum
 	void setMinDepth(T depthMin) noexcept { depthRange.minimum = depthMin; }
 	T getMaxDepth() const noexcept { return depthRange.maximum; }
 	void setMaxDepth(T depthMax) noexcept { depthRange.maximum = depthMax; }
+	T getDepthRatio() const noexcept { return depthRange.maximum/depthRange.minimum; }
 
 	// Vertices
 	template<std::output_iterator<Vector3<T>> O> O copyVertices(O target) const;
@@ -81,7 +84,8 @@ struct SymmetricFrustum
 
 	// Half spaces
 	template<std::output_iterator<HalfSpace<T>> O> O copyHalfSpaces(O target) const;	// 0-left, 1-right, 2-bottom, 3-top, 4-near, 5-far
-	std::vector<HalfSpace<T>> getHalfSpaces() const noexcept;							// normals point outwards
+	std::vector<HalfSpace<T>> getHalfSpaces() const;									// normals point outwards
+	template<typename F> bool enumerateHalfSpaces(F&& f) const noexcept;
 
 	// Circumscribed box, sphere, cone
 	OrientedBox<T> getCircumscribedBox() const noexcept;
@@ -296,6 +300,33 @@ inline std::vector<HalfSpace<T>> SymmetricFrustum<T>::getHalfSpaces() const
 }
 
 template<typename T>
+template<typename F> 
+inline bool SymmetricFrustum<T>::enumerateHalfSpaces(F&& f) const
+{
+	AffineTransform<T> m(basis, origin);
+	Vector3<T> bottomLeft = transform(Vector3<T>(-halfDims, depthRange.minimum), m);
+	Vector3<T> bottomRight = transform(Vector3<T>(halfDims.x, -halfDims.y, depthRange.minimum), m);
+	Vector3<T> topLeft = transform(Vector3<T>(-halfDims.x, halfDims.y, depthRange.minimum), m);
+	Vector3<T> topRight = transform(Vector3<T>(halfDims, depthRange.minimum), m);
+
+	bool flip = (basis.getDeterminant() < T(0));
+	if (!f(flip ? HalfSpace<T>(origin, topLeft, bottomLeft) : HalfSpace<T>(origin, bottomLeft, topLeft)))
+		return false;
+	if (!f(flip ? HalfSpace<T>(origin, bottomRight, topRight) : HalfSpace<T>(origin, topRight, bottomRight)))
+		return false;
+	if (!f(flip ? HalfSpace<T>(origin, bottomLeft, bottomRight) : HalfSpace<T>(origin, bottomRight, bottomLeft)))
+		return false;
+	if (!f(flip ? HalfSpace<T>(origin, topRight, topLeft) : HalfSpace<T>(origin, topLeft, topRight)))
+		return false;
+	if (!f(HalfSpace<T>(-basis[2], depthRange.minimum*basis[2] + origin)))
+		return false;
+	if ((depthRange.maximum < std::numeric_limits<T>::max()) && !f(HalfSpace<T>(basis[2], depthRange.maximum*basis[2] + origin)))
+		return false;
+
+	return true;
+}
+
+template<typename T>
 inline OrientedBox<T> SymmetricFrustum<T>::getCircumscribedBox() const
 {
 	Vector2<T> baseHalfDims = halfDims*(depthRange.maximum/depthRange.minimum);
@@ -341,6 +372,12 @@ inline SymmetricFrustum<T> SymmetricFrustum<T>::orthonormalize()
 	return *this;
 }
 
+template<typename T>
+inline bool SymmetricFrustum<T>::contains(const Vector3<T>& point) const
+{
+	return enumerateHalfSpaces([&point](const HalfSpace<T>& h) { return h.contains(point); });
+}
+
 } // namespace templates
 
 #if MATHEMATICS_DOUBLE
@@ -383,40 +420,36 @@ namespace mathematics::templates {
 template<typename T>
 inline Vector3<T> SymmetricFrustum<T>::getClosestPoint(const Vector3<T>& point) const
 {
-	// #TODO
+	Vector3<T> closestPoint(Uninitialized());
+	distances::getPointSymmetricFrustumSquared(point, origin, basis, halfDims, depthRange.minimum, depthRange.maximum, &closestPoint);
+	return closestPoint;
 }
 
 template<typename T>
 inline T SymmetricFrustum<T>::getDistanceTo(const Vector3<T>& point) const
 {
-	// #TODO
-}}
-
-template<typename T>
-inline bool SymmetricFrustum<T>::contains(const Vector3<T>& point) const
-{
-	// #TODO
-}}
+	return distances::getPointSymmetricFrustum(point, origin, basis, halfDims, depthRange.minimum, depthRange.maximum);
+}
 
 template<typename T>
 inline bool SymmetricFrustum<T>::intersects(const AxisAlignedBox<T>& box) const
 {
-	// #TODO
-	return intersections::testSymmetricFrustumAxisAlignedBox(origin, basis, halfDims, depthRange, box.getCenter(), box.getHalfDimensions());
+	return intersections::testAxisAlignedBoxSymmetricFrustum(box.getCenter(), box.getHalfDimensions(), origin, basis, halfDims, 
+		depthRange.minimum, depthRange.maximum);
 }
 
 template<typename T>
 inline bool SymmetricFrustum<T>::intersects(const OrientedBox<T>& box) const
 {
-	// #TODO
-	return intersections::testSymmetricFrustumOrientedBox(origin, basis, halfDims, depthRange, box.origin, box.basis, box.halfDims);
+	return intersections::testOrientedBoxSymmetricFrustum(box.origin, box.basis, box.halfDims, origin, basis, halfDims, 
+		depthRange.minimum, depthRange.maximum);
 }
 
 template<typename T>
 inline bool SymmetricFrustum<T>::intersects(const Sphere<T>& sphere) const
 {
-	// #TODO
-	return intersections::testSymmetricFrustumSphere(origin, basis, halfDims, depthRange, sphere.origin, sphere.radius);
+	return (distances::getPointSymmetricFrustumSquared(sphere.center, origin, basis, halfDims, 
+		depthRange.minimum, depthRange.maximum) <= sphere.radius*sphere.radius);
 }
 
 } // namespace mathematics::templates
