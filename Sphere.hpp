@@ -187,7 +187,6 @@ struct hash<::mathematics::templates::Sphere<T>>
 #include "Ellipsoid.hpp"
 #include "Cone.hpp"
 #include "SymmetricFrustum.hpp"
-#include "Distances.inl"
 #include "Intersections.inl"
 
 namespace mathematics::templates {
@@ -220,7 +219,7 @@ inline Sphere<T>& Sphere<T>::transform(const AffineTransform<T>& transformation,
 template<typename T>
 inline bool Sphere<T>::intersects(const Triangle3<T>& triangle) const
 {
-	return (distances::getPointTriangleSquared(center, triangle.vertex0, triangle.vertex1, triangle.vertex2) <= radius*radius);
+	return triangle.intersects(*this);
 }
 
 template<typename T>

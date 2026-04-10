@@ -567,7 +567,7 @@ inline T Triangle3<T>::getDistanceTo(const Vector3<T>& point) const
 template<typename T>
 inline bool Triangle3<T>::intersects(const AxisAlignedBox<T>& box) const
 {
-	return intersections::testAxisAlignedBoxTriangle(box.getCenter(), box.getHalfDimensions(), vertices[0], ertices[1], vertices[2]);
+	return intersections::testAxisAlignedBoxTriangle(box.getCenter(), box.getHalfDimensions(), vertices[0], vertices[1], vertices[2]);
 }
 
 template<typename T>
@@ -579,7 +579,7 @@ inline bool Triangle3<T>::intersects(const OrientedBox<T>& box) const
 template<typename T>
 inline bool Triangle3<T>::intersects(const Sphere<T>& sphere) const
 {
-	return sphere.intersects(*this);
+	return (distances::getPointTriangleSquared(sphere.center, vertices[0], vertices[1], vertices[2]) <= sphere.radius*sphere.radius);
 }
 
 } // namespace mathematics::templates
