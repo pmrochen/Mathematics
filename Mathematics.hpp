@@ -37,7 +37,7 @@
 #include "OrientedBox.hpp"
 #include "Sphere.hpp"
 #include "Ellipsoid.hpp"
-//#include "Torus.hpp"
+#include "Torus.hpp"
 #include "Cylinder.hpp"
 #include "Capsule.hpp"
 #include "Cone.hpp"
