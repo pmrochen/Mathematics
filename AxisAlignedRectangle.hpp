@@ -244,7 +244,7 @@ using AxisAlignedRectangleResult = templates::AxisAlignedRectangle<double>::Cons
 using AxisAlignedRectangle = templates::AxisAlignedRectangle<float>;
 using AxisAlignedRectangleArg = templates::AxisAlignedRectangle<float>::ConstArg;
 using AxisAlignedRectangleResult = templates::AxisAlignedRectangle<float>::ConstResult;
-#maximumif
+#endif
 
 } // namespace mathematics
 

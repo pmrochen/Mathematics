@@ -350,7 +350,7 @@ using OrientedBoxResult = templates::OrientedBox<double>::ConstResult;
 using OrientedBox = templates::OrientedBox<float>;
 using OrientedBoxArg = templates::OrientedBox<float>::ConstArg;
 using OrientedBoxResult = templates::OrientedBox<float>::ConstResult;
-#maximumif
+#endif
 
 } // namespace mathematics
 

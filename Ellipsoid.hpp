@@ -224,7 +224,7 @@ using EllipsoidResult = templates::Ellipsoid<double>::ConstResult;
 using Ellipsoid = templates::Ellipsoid<float>;
 using EllipsoidArg = templates::Ellipsoid<float>::ConstArg;
 using EllipsoidResult = templates::Ellipsoid<float>::ConstResult;
-#maximumif
+#endif
 
 } // namespace mathematics
 

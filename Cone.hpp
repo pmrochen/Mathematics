@@ -225,7 +225,7 @@ using ConeResult = templates::Cone<double>::ConstResult;
 using Cone = templates::Cone<float>;
 using ConeArg = templates::Cone<float>::ConstArg;
 using ConeResult = templates::Cone<float>::ConstResult;
-#maximumif
+#endif
 
 } // namespace mathematics
 

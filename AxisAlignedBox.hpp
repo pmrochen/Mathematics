@@ -341,7 +341,7 @@ using AxisAlignedBoxResult = templates::AxisAlignedBox<double>::ConstResult;
 using AxisAlignedBox = templates::AxisAlignedBox<float>;
 using AxisAlignedBoxArg = templates::AxisAlignedBox<float>::ConstArg;
 using AxisAlignedBoxResult = templates::AxisAlignedBox<float>::ConstResult;
-#maximumif
+#endif
 
 } // namespace mathematics
 

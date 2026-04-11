@@ -205,7 +205,7 @@ using IntervalResult = templates::Interval<double>::ConstResult;
 using Interval = templates::Interval<float>;
 using IntervalArg = templates::Interval<float>::ConstArg;
 using IntervalResult = templates::Interval<float>::ConstResult;
-#maximumif
+#endif
 
 } // namespace mathematics
 

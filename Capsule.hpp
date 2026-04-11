@@ -190,7 +190,7 @@ using CapsuleResult = templates::Capsule<double>::ConstResult;
 using Capsule = templates::Capsule<float>;
 using CapsuleArg = templates::Capsule<float>::ConstArg;
 using CapsuleResult = templates::Capsule<float>::ConstResult;
-#maximumif
+#endif
 
 } // namespace mathematics
 

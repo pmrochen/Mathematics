@@ -191,7 +191,7 @@ using CylinderResult = templates::Cylinder<double>::ConstResult;
 using Cylinder = templates::Cylinder<float>;
 using CylinderArg = templates::Cylinder<float>::ConstArg;
 using CylinderResult = templates::Cylinder<float>::ConstResult;
-#maximumif
+#endif
 
 } // namespace mathematics
 
