@@ -106,9 +106,9 @@ struct Triangle3
 
 	// Triangulation (returns (vertices - 2)*3 indices)
 	template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::output_iterator<U> O>
-	static O triangulate(I firstVertex, I lastVertex, O outIndex);
+	static std::pair<O, bool> triangulate(I firstVertex, I lastVertex, O outIndex);
 	template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::random_access_iterator<U> J, std::output_iterator<U> O>
-	static O triangulate(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex);
+	static std::pair<O, bool> triangulate(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex);
 
 	// Evaluation (u + v + w = 1)
 	Vector3<T> evaluate(T v, T w) const noexcept { return vertices[0]*(T(1) - v - w) + vertices[1]*v + vertices[2]*w; }
@@ -422,20 +422,20 @@ inline Sphere<T> Triangle3<T>::getCircumscribedSphere() const
 
 template<typename T>
 template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::output_iterator<U> O>
-/*static*/ O Triangle3<T>::triangulate(I firstVertex, I lastVertex, O outIndex)
+/*static*/ std::pair<O, bool> Triangle3<T>::triangulate(I firstVertex, I lastVertex, O outIndex)
 {
 	//return triangulation::triangulate3<T, I, U, O>(firstVertex, lastVertex, outIndex);
 
-	std::size_t nVertices = (std::size_t)std::distance(firstVertex, lastVertex);
-	if (nVertices <= 3u)
+	std::ptrdiff_t nVertices = std::distance(firstVertex, lastVertex);
+	if (nVertices <= 3)
 	{
-		for (std::size_t i = 0; i < nVertices; i++)
+		for (std::ptrdiff_t i = 0; i < nVertices; i++)
 			*outIndex++ = U(i);
 		
-		return outIndex;
+		return { outIndex, false };
 	}
 
-	if (nVertices == 4u) // Split along the shortest diagonal
+	if (nVertices == 4) // Split along the shortest diagonal
 	{
 		if (distanceSquared(firstVertex[0], firstVertex[2]) <= distanceSquared(firstVertex[1], firstVertex[3]))
 		{
@@ -456,7 +456,7 @@ template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::output
 			*outIndex++ = U(3);
 		}
 
-		return outIndex;
+		return { outIndex, true };
 	}
 
 	Vector3<T> e1 = firstVertex[1] - firstVertex[0];
@@ -468,7 +468,7 @@ template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::output
 	basis.transpose();
 
 	Vector2<T>* vertices2 = (Vector2<T>*)alloca(nVertices*sizeof(Vector2<T>));
-	for (std::size_t i = 0; i != nVertices; i++)
+	for (std::ptrdiff_t i = 0; i < nVertices; i++)
 		vertices2[i] = (firstVertex[i]*basis).xy();
 
 	return triangulation::triangulate2(vertices2, vertices2 + nVertices, outIndex);
@@ -476,38 +476,38 @@ template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::output
 
 template<typename T>
 template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::random_access_iterator<U> J, std::output_iterator<U> O>
-/*static*/ O Triangle3<T>::triangulate(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex)
+/*static*/ std::pair<O, bool> Triangle3<T>::triangulate(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex)
 {
 	//return triangulation::triangulate3<T, I, U, J, O>(firstVertex, lastVertex, firstIndex, lastIndex, outIndex);
 
-	std::size_t nIndices = (std::size_t)std::distance(firstIndex, lastIndex);
-	if (nIndices <= 3u)
+	std::ptrdiff_t nIndices = std::distance(firstIndex, lastIndex);
+	if (nIndices <= 3)
 	{
-		for (std::size_t i = 0; i < nIndices; i++)
+		for (std::ptrdiff_t i = 0; i < nIndices; i++)
 			*outIndex++ = U(*firstIndex++);
 
-		return outIndex;
+		return { outIndex, false };
 	}
 
-	std::size_t nVertices = (std::size_t)std::distance(firstVertex, lastVertex);
-	for (std::size_t i = 0; i != nIndices; i++)
+	std::ptrdiff_t nVertices = std::distance(firstVertex, lastVertex);
+	for (std::ptrdiff_t i = 0; i < nIndices; i++)
 	{
-		if (firstIndex[i] >= nVertices) // Index out of range
+		if (std::ptrdiff_t(std::size_t(firstIndex[i])) >= nVertices) // Index out of range
 		{
 			//throw std::runtime_error("triangulate() : index out of range");
 
-			for (std::size_t j = 0, n = nIndices - 2; j != n; j++)
+			for (std::ptrdiff_t j = 0, n = nIndices - 2; j < n; j++)
 			{
 				*outIndex++ = U(firstIndex[j]);
 				*outIndex++ = U(firstIndex[j + 1]);
 				*outIndex++ = U(firstIndex[j + 2]);
 			}
 
-			return outIndex;
+			return { outIndex, false };
 		}
 	}
 
-	if (nVertices == 4u) // Split along the shortest diagonal
+	if (nVertices == 4) // Split along the shortest diagonal
 	{
 		if (distanceSquared(firstVertex[firstIndex[0]], firstVertex[firstIndex[2]]) <= distanceSquared(firstVertex[firstIndex[1]], firstVertex[firstIndex[3]]))
 		{
@@ -528,7 +528,7 @@ template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::random
 			*outIndex++ = firstIndex[3];
 		}
 
-		return outIndex;
+		return { outIndex, true };
 	}
 
 	Vector3<T> e1 = firstVertex[firstIndex[1]] - firstVertex[firstIndex[0]];
@@ -540,14 +540,14 @@ template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::random
 	basis.transpose();
 
 	Vector2<T>* vertices2 = (Vector2<T>*)alloca(nIndices*sizeof(Vector2<T>));
-	for (std::size_t i = 0; i != nIndices; i++)
+	for (std::ptrdiff_t i = 0; i < nIndices; i++)
 		vertices2[i] = (firstVertex[firstIndex[i]]*basis).xy();
 
-	O outEnd = triangulation::triangulate2(vertices2, vertices2 + nIndices, outIndex);
+	auto [outEnd, result] = triangulation::triangulate2(vertices2, vertices2 + nIndices, outIndex);
 	for (; outIndex != outEnd; ++outIndex)
 		*outIndex = firstIndex[*outIndex];
 
-	return outIndex;
+	return { outIndex, result };
 }
 
 template<typename T>

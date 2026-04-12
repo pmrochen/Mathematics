@@ -9,6 +9,7 @@
 #include <type_traits>
 #include <concepts>
 #include <iterator>
+#include <utility>
 #include <cstddef>
 #include <cmath>
 #include <malloc.h>
@@ -21,36 +22,38 @@ namespace detail {
 template<std::floating_point T, std::random_access_iterator<Vector2<T>> I>
 inline T computeSignedPolygonArea(I firstVertex, I lastVertex) noexcept
 {
-	std::size_t nVertices = (std::size_t)std::distance(firstVertex, lastVertex);
-	if (nVertices < 3u)
+	std::ptrdiff_t nVertices = std::distance(firstVertex, lastVertex);
+	if (nVertices < 3)
 		return T(0);
 
-	T area = firstVertex[nVertices - 1].x*firstVertex[0].y - firstVertex[0].x*firstVertex[nVertices - 1].y;
-	for (std::size_t i = 0; i != (nVertices - 1); i++)
-		area += firstVertex[i].x*firstVertex[i + 1].y - firstVertex[i + 1].x*firstVertex[i].y;
+	T area = cross(firstVertex[nVertices - 1], firstVertex[0]);
+	for (std::ptrdiff_t i = 0, n = nVertices - 1; i < n; i++)
+		area += cross(firstVertex[i], firstVertex[i + 1]);
+	
 	return area*T(0.5);
 }
 
 template<std::floating_point T, std::random_access_iterator<Vector2<T>> I, std::integral U, std::random_access_iterator<U> J>
-inline bool snip(I firstVertex, I lastVertex, J firstIndex, std::size_t u, std::size_t v, std::size_t w) noexcept
+inline bool snip(I firstVertex, I lastVertex, J firstIndex, std::ptrdiff_t u, std::ptrdiff_t v, std::ptrdiff_t w) noexcept
 {
     const Vector2<T>& a = firstVertex[firstIndex[u]];
     const Vector2<T>& b = firstVertex[firstIndex[v]];
     const Vector2<T>& c = firstVertex[firstIndex[w]];
-    if ((((b.x - a.x)*(c.y - a.y)) - ((b.y - a.y)*(c.x - a.x))) < std::numeric_limits<T>::epsilon())
+    if (cross(b - a, c - a) < std::numeric_limits<T>::epsilon())
         return false;
 
-	std::size_t nVertices = (std::size_t)std::distance(firstVertex, lastVertex);
-    for (std::size_t i = 0; i != nVertices; i++)
+	Vector2<T> bc = c - b;
+	Vector2<T> ab = b - a;
+	Vector2<T> ca = a - c;
+
+	std::ptrdiff_t nVertices = std::distance(firstVertex, lastVertex);
+    for (std::ptrdiff_t i = 0; i < nVertices; i++)
     {
         if ((i == u) || (i == v) || (i == w))
             continue;
 
         const Vector2<T>& p = firstVertex[firstIndex[i]];
-		T axbp = (c.x - b.x)*(p.y - b.y) - (c.y - b.y)*(p.x - b.x);
-		T cxap = (b.x - a.x)*(p.y - a.y) - (b.y - a.y)*(p.x - a.x);
-		T bxcp = (a.x - c.x)*(p.y - c.y) - (a.y - c.y)*(p.x - c.x);
-		if ((axbp >= T(0)) && (bxcp >= T(0)) && (cxap >= T(0)))
+		if ((cross(bc, p - b) >= T(0)) && (cross(ca, p - c) >= T(0)) && (cross(ab, p - a) >= T(0)))
             return false;
     }
 
@@ -60,17 +63,17 @@ inline bool snip(I firstVertex, I lastVertex, J firstIndex, std::size_t u, std::
 } // namespace detail
 
 template<std::floating_point T, std::random_access_iterator<Vector2<T>> I, std::integral U, std::output_iterator<U> O>
-O triangulate2(I firstVertex, I lastVertex, O outIndex)
+std::pair<O, bool> triangulate2(I firstVertex, I lastVertex, O outIndex)
 {
 	//using IndexType = typename std::iterator_traits<O>::value_type;
 
-	std::size_t nVertices = (std::size_t)std::distance(firstVertex, lastVertex);
-	if (nVertices <= 3u)
+	std::ptrdiff_t nVertices = std::distance(firstVertex, lastVertex);
+	if (nVertices <= 3)
 	{
-		for (std::size_t i = 0; i < nVertices; i++)
+		for (std::ptrdiff_t i = 0; i < nVertices; i++)
 			*outIndex++ = U(i);
 		
-		return outIndex;
+		return { outIndex, false };
 	}
 
 	//constexpr std::size_t BUFFER_SIZE = 64;
@@ -81,27 +84,27 @@ O triangulate2(I firstVertex, I lastVertex, O outIndex)
 	bool reverse = (computeSignedPolygonArea(firstVertex, lastVertex) < T(0));
 	if (reverse)
 	{
-		for (std::size_t i = 0; i != nVertices; i++)
+		for (std::ptrdiff_t i = 0; i < nVertices; i++)
 			vertexIndices[i] = U(nVertices - 1 - i);
 	}
 	else
 	{
-		for (std::size_t i = 0; i != nVertices; i++)
+		for (std::ptrdiff_t i = 0; i < nVertices; i++)
 			vertexIndices[i] = U(i);
 	}
 
-	std::size_t nVerticesRemaining = nVertices;
+	std::ptrdiff_t nVerticesRemaining = nVertices;
 	std::ptrdiff_t error = nVerticesRemaining*2;
 
 	// Remove nVertices-2 vertices, creating 1 triangle every time
-	for (std::size_t v = nVerticesRemaining - 1; nVerticesRemaining > 2; )
+	for (std::ptrdiff_t v = nVerticesRemaining - 1; nVerticesRemaining > 2; )
 	{
 		// If we loop, it is probably a non-simple polygon
-		if (0 >= (error--))
+		if (std::ptrdiff_t(0) >= (error--))
 		{
 			//throw std::runtime_error("triangulate2() : bad polygon");
 
-			for (std::size_t i = 0, n = nVertices - 2; i != n; i++)
+			for (std::ptrdiff_t i = 0, n = nVertices - 2; i < n; i++)
 			{
 				*outIndex++ = U(i);
 				*outIndex++ = U(i + 1);
@@ -111,17 +114,17 @@ O triangulate2(I firstVertex, I lastVertex, O outIndex)
 			//if (nVertices > BUFFER_SIZE)
 			//	delete[] vertexIndices;
 
-			return outIndex;
+			return { outIndex, false };
 		}
 
 		// Three consecutive vertices in current polygon, <u,v,w>
-		std::size_t u = v;
+		std::ptrdiff_t u = v;
 		if (u >= nVerticesRemaining)
 			u = 0;
 		v = u + 1;
 		if (v >= nVerticesRemaining)
 			v = 0;
-		std::size_t w = v + 1;
+		std::ptrdiff_t w = v + 1;
 		if (w >= nVerticesRemaining)
 			w = 0;
 
@@ -142,7 +145,7 @@ O triangulate2(I firstVertex, I lastVertex, O outIndex)
 			}
 
 			// Remove v from remaining polygon
-			for (std::size_t i = v; (i + 1) < nVerticesRemaining; i++)
+			for (std::ptrdiff_t i = v; (i + 1) < nVerticesRemaining; i++)
 				vertexIndices[i] = vertexIndices[i + 1];
 			nVerticesRemaining--;
 
@@ -154,23 +157,23 @@ O triangulate2(I firstVertex, I lastVertex, O outIndex)
 	//if (nVertices > BUFFER_SIZE)
 	//	delete[] vertexIndices;
 
-	return outIndex;
+	return { outIndex, true };
 }
 
 //template<std::floating_point T, std::random_access_iterator<Vector2<T>> I, std::integral U, std::random_access_iterator<U> J,
 //	std::output_iterator<U> O>
-//O triangulate2(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex)
+//std::pair<O, bool> triangulate2(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex)
 //{
 //}
 //
 //template<std::floating_point T, std::random_access_iterator<Vector3<T>> I, std::integral U, std::output_iterator<U> O>
-//O triangulate3(I firstVertex, I lastVertex, O outIndex)
+//std::pair<O, bool> triangulate3(I firstVertex, I lastVertex, O outIndex)
 //{
 //}
 //
 //template<std::floating_point T, std::random_access_iterator<Vector3<T>> I, std::integral U, std::random_access_iterator<U> J, 
 //	std::output_iterator<U> O>
-//O triangulate3(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex)
+//std::pair<O, bool> triangulate3(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex)
 //{
 //}
 
