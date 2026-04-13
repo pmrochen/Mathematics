@@ -57,7 +57,7 @@ inline T frac(T x) noexcept
 
 template<typename T>
 	requires (std::floating_point<T> || std::integral<T>)
-inline T sqr(T x) noexcept
+inline T square(T x) noexcept
 {
 	return x*x;
 }

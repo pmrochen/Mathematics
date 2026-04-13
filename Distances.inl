@@ -58,14 +58,14 @@ template<typename T>
     requires std::floating_point<T>
 inline T getPointPlaneSquared(const Vector3<T>& point, const Vector3<T>& normal, T constant) noexcept
 {
-    return sqr((dot(normal, point) + constant)/normal.getMagnitude());
+    return square((dot(normal, point) + constant)/normal.getMagnitude());
 }
 
 template<typename T>
     requires std::floating_point<T>
 inline T getPointNormalizedPlaneSquared(const Vector3<T>& point, const Vector3<T>& normal, T constant) noexcept
 {
-    return sqr(dot(normal, point) + constant);
+    return square(dot(normal, point) + constant);
 }
 
 template<typename T>

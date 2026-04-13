@@ -1155,13 +1155,13 @@ inline bool testAxisAlignedRectangleCircle(const Vector2<T>& minimum, const Vect
 {
 	T d = T(0);
 	if (center.x < minimum.x)
-		d += sqr(center.x - minimum.x);
+		d += square(center.x - minimum.x);
 	else if (center.x > maximum.x)
-		d += sqr(center.x - maximum.x);
+		d += square(center.x - maximum.x);
 	if (center.y < minimum.y)
-		d += sqr(center.y - minimum.y);
+		d += square(center.y - minimum.y);
 	else if (center.y > maximum.y)
-		d += sqr(center.y - maximum.y);
+		d += square(center.y - maximum.y);
 	return (d <= radius*radius);
 }
 
@@ -1171,17 +1171,17 @@ inline bool testAxisAlignedBoxSphere(const Vector3<T>& minimum, const Vector3<T>
 {
 	T d = T(0);
 	if (center.x < minimum.x)
-		d += sqr(center.x - minimum.x);
+		d += square(center.x - minimum.x);
 	else if (center.x > maximum.x)
-		d += sqr(center.x - maximum.x);
+		d += square(center.x - maximum.x);
 	if (center.y < minimum.y)
-		d += sqr(center.y - minimum.y);
+		d += square(center.y - minimum.y);
 	else if (center.y > maximum.y)
-		d += sqr(center.y - maximum.y);
+		d += square(center.y - maximum.y);
 	if (center.z < minimum.z)
-		d += sqr(center.z - minimum.z);
+		d += square(center.z - minimum.z);
 	else if (center.z > maximum.z)
-		d += sqr(center.z - maximum.z);
+		d += square(center.z - maximum.z);
 	return (d <= radius*radius);
 }
 
