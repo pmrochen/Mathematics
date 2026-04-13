@@ -81,6 +81,7 @@ struct LineSegment2
 
 	// Transformation
 	LineSegment2& translate(const Vector2<T>& offset) noexcept { start += offset; end += offset; return *this; }
+	LineSegment2& transform(const Matrix2<T>& matrix) noexcept;
 
 	// Evaluation
 	Vector2<T> evaluate(T t) const noexcept { return lerp(start, end, t); }
@@ -144,6 +145,14 @@ inline O LineSegment2<T>::copyEndpoints(O target) const
 	*target++ = start;
 	*target++ = end;
 	return target;
+}
+
+template<typename T>
+inline LineSegment2<T>& LineSegment2<T>::transform(const Matrix2<T>& matrix)
+{
+	start *= matrix;
+	end *= matrix;
+	return *this;
 }
 
 template<typename T>

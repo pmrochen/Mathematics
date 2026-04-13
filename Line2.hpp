@@ -87,6 +87,7 @@ struct Line2
 
 	// Transformation
 	Line2& translate(const Vector2<T>& offset) noexcept { origin += offset; return *this; }
+	Line2& transform(const Matrix2<T>& matrix) noexcept;
 	Line2& normalize() noexcept { direction.normalize(); return *this; }
 
 	// Evaluation
@@ -171,6 +172,14 @@ inline bool Line2<T>::isCoincident(const Line2<T>& line) const
 {
 	return (std::fabs(cross(direction, line.direction)) < Constants<T>::TOLERANCE) &&
 		(std::fabs(cross(normalize(line.origin - origin), direction)) < Constants<T>::TOLERANCE);
+}
+
+template<typename T>
+inline Line2<T>& Line2<T>::transform(const Matrix2<T>& matrix)
+{
+	origin *= matrix;
+	direction *= matrix;
+	return *this;
 }
 
 template<typename T>

@@ -67,6 +67,7 @@ struct Ray2
 
 	// Transformation
 	Ray2& translate(const Vector2<T>& offset) noexcept { origin += offset; return *this; }
+	Ray2& transform(const Matrix2<T>& matrix) noexcept;
 	Ray2& normalize() noexcept { direction.normalize(); return *this; }
 
 	// Evaluation
@@ -125,6 +126,14 @@ template<typename T>
 inline bool Ray2<T>::approxEquals(const Ray2<T>& ray, T tolerance) const
 {
 	return origin.approxEquals(ray.origin, tolerance) && direction.approxEquals(ray.direction, tolerance);
+}
+
+template<typename T>
+inline Ray2<T>& Ray2<T>::transform(const Matrix2<T>& matrix)
+{
+	origin *= matrix;
+	direction *= matrix;
+	return *this;
 }
 
 template<typename T>
