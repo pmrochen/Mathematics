@@ -12,7 +12,7 @@
 #include <functional>
 #include <utility>
 #include <tuple>
-#include <array>
+#include <vector>
 #include <iterator>
 #include <algorithm>
 #include <cstddef>
@@ -86,7 +86,7 @@ struct AxisAlignedBox
 
 	// Vertices
 	template<std::output_iterator<Vector3<T>> O> O copyVertices(O target) const;
-	std::array<Vector3<T>, 8> getVertices() const noexcept;
+	std::vector<Vector3<T>> getVertices() const;
 
 	// Primitives
 	template<std::integral U> std::pair<const U*, const U*> getPrimitives(int nVerticesPerPrimitive) const noexcept; // #TODO return range
@@ -94,7 +94,7 @@ struct AxisAlignedBox
 
 	// Half spaces
 	template<std::output_iterator<HalfSpace<T>> O> O copyHalfSpaces(O target) const;
-	std::array<HalfSpace<T>, 6> getHalfSpaces() const noexcept;
+	std::vector<HalfSpace<T>> getHalfSpaces() const;
 
 	// Circumscribed sphere
 	Sphere<T> getCircumscribedSphere() const noexcept;
@@ -221,7 +221,7 @@ inline O AxisAlignedBox<T>::copyVertices(O target) const
 }
 
 template<typename T>
-inline std::array<Vector3<T>, 8> AxisAlignedBox<T>::getVertices() const
+inline std::vector<Vector3<T>> AxisAlignedBox<T>::getVertices() const
 {
 	return { minimum, Vector3<T>(maximum.x, minimum.y, minimum.z), Vector3<T>(minimum.x, maximum.y, minimum.z),
 		Vector3<T>(maximum.x, maximum.y, minimum.z), Vector3<T>(minimum.x, minimum.y, maximum.z),
@@ -279,7 +279,7 @@ inline O AxisAlignedBox<T>::copyHalfSpaces(O target) const
 }
 
 template<typename T>
-inline std::array<HalfSpace<T>, 6> AxisAlignedBox<T>::getHalfSpaces() const
+inline std::vector<HalfSpace<T>> AxisAlignedBox<T>::getHalfSpaces() const
 {
 	return { HalfSpace<T>(Vector3<T>::MINUS_UNIT_X, Vector3<T>(minimum.x, T(0), T(0))),
 		HalfSpace<T>(Vector3<T>::UNIT_X, Vector3<T>(maximum.x, T(0), T(0))),

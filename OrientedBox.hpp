@@ -12,7 +12,7 @@
 #include <algorithm>
 #include <functional>
 #include <utility>
-#include <array>
+#include <vector>
 #include <iterator>
 #include <cstddef>
 #include <cmath>
@@ -74,7 +74,7 @@ struct OrientedBox
 
 	// Vertices
 	template<std::output_iterator<Vector3<T>> O> O copyVertices(O target) const;
-	std::array<Vector3<T>, 8> getVertices() const noexcept;
+	std::vector<Vector3<T>> getVertices() const;
 
 	// Primitives
 	template<std::integral U> std::pair<const U*, const U*> getPrimitives(int nVerticesPerPrimitive) const noexcept; // #TODO return range
@@ -82,7 +82,7 @@ struct OrientedBox
 
 	// Half spaces
 	template<std::output_iterator<HalfSpace<T>> O> O copyHalfSpaces(O target) const;
-	std::array<HalfSpace<T>, 6> getHalfSpaces() const noexcept;
+	std::vector<HalfSpace<T>> getHalfSpaces() const;
 
 	// Circumscribed box and sphere
 	AxisAlignedBox<T> getCircumscribedBox() const noexcept;
@@ -216,7 +216,7 @@ inline O OrientedBox<T>::copyVertices(O target) const
 }
 
 template<typename T>
-inline std::array<Vector3<T>, 8> OrientedBox<T>::getVertices() const
+inline std::vector<Vector3<T>> OrientedBox<T>::getVertices() const
 {
 	AffineTransform<T> m(basis, center);
 	return { transform(-halfDims, m), transform(Vector3<T>(halfDims.x, -halfDims.y, -halfDims.z), m),
@@ -276,7 +276,7 @@ inline O OrientedBox<T>::copyHalfSpaces(O target) const
 }
 
 template<typename T>
-inline std::array<HalfSpace<T>, 6> OrientedBox<T>::getHalfSpaces() const
+inline std::vector<HalfSpace<T>> OrientedBox<T>::getHalfSpaces() const
 {
 	return { HalfSpace<T>(-basis[0], -halfDims.x*basis[0] + center),
 		HalfSpace<T>(basis[0], halfDims.x*basis[0] + center),

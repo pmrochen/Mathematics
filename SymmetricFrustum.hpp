@@ -13,11 +13,11 @@
 #include <algorithm>
 #include <functional>
 #include <utility>
-#include <array>
 #include <vector>
 #include <iterator>
 #include <cstddef>
 #include <cmath>
+#include "Scalar.hpp"
 #include "Vector3.hpp"
 #include "Matrix3.hpp"
 #include "AffineTransform.hpp"
@@ -76,7 +76,7 @@ struct SymmetricFrustum
 
 	// Vertices
 	template<std::output_iterator<Vector3<T>> O> O copyVertices(O target) const;
-	std::array<Vector3<T>, 8> getVertices() const noexcept;
+	std::vector<Vector3<T>> getVertices() const;
 
 	// Primitives
 	template<std::integral U> std::pair<const U*, const U*> getPrimitives(int nVerticesPerPrimitive) const noexcept; // #TODO return range
@@ -197,7 +197,7 @@ inline O SymmetricFrustum<T>::copyVertices(O target) const
 }
 
 template<typename T>
-inline std::array<Vector3<T>, 8> SymmetricFrustum<T>::getVertices() const
+inline std::vector<Vector3<T>> SymmetricFrustum<T>::getVertices() const
 {
 	AffineTransform<T> m(basis, origin);
 	T depthRatio = depthRange.maximum/depthRange.minimum;
@@ -253,16 +253,16 @@ template<std::output_iterator<HalfSpace<T>> O>
 inline O SymmetricFrustum<T>::copyHalfSpaces(O target) const
 {
 	AffineTransform<T> m(basis, origin);
-	Vector3<T> bottomLeft = transform(Vector3<T>(-halfDims, depthRange.minimum), m);
-	Vector3<T> bottomRight = transform(Vector3<T>(halfDims.x, -halfDims.y, depthRange.minimum), m);
-	Vector3<T> topLeft = transform(Vector3<T>(-halfDims.x, halfDims.y, depthRange.minimum), m);
-	Vector3<T> topRight = transform(Vector3<T>(halfDims, depthRange.minimum), m);
+	Vector3<T> lb = transform(Vector3<T>(-halfDims, depthRange.minimum), m);
+	Vector3<T> rb = transform(Vector3<T>(halfDims.x, -halfDims.y, depthRange.minimum), m);
+	Vector3<T> lt = transform(Vector3<T>(-halfDims.x, halfDims.y, depthRange.minimum), m);
+	Vector3<T> rt = transform(Vector3<T>(halfDims, depthRange.minimum), m);
 
 	bool flip = (basis.getDeterminant() < T(0));
-	*target++ = flip ? HalfSpace<T>(origin, topLeft, bottomLeft) : HalfSpace<T>(origin, bottomLeft, topLeft);
-	*target++ = flip ? HalfSpace<T>(origin, bottomRight, topRight) : HalfSpace<T>(origin, topRight, bottomRight);
-	*target++ = flip ? HalfSpace<T>(origin, bottomLeft, bottomRight) : HalfSpace<T>(origin, bottomRight, bottomLeft);
-	*target++ = flip ? HalfSpace<T>(origin, topRight, topLeft) : HalfSpace<T>(origin, topLeft, topRight);
+	*target++ = flip ? HalfSpace<T>(origin, lt, lb) : HalfSpace<T>(origin, lb, lt);
+	*target++ = flip ? HalfSpace<T>(origin, rb, rt) : HalfSpace<T>(origin, rt, rb);
+	*target++ = flip ? HalfSpace<T>(origin, lb, rb) : HalfSpace<T>(origin, rb, lb);
+	*target++ = flip ? HalfSpace<T>(origin, rt, lt) : HalfSpace<T>(origin, lt, rt);
 	*target++ = HalfSpace<T>(-basis[2], depthRange.minimum*basis[2] + origin);
 	if (depthRange.maximum < std::numeric_limits<T>::max())
 		*target++ = HalfSpace<T>(basis[2], depthRange.maximum*basis[2] + origin);
@@ -274,27 +274,27 @@ template<typename T>
 inline std::vector<HalfSpace<T>> SymmetricFrustum<T>::getHalfSpaces() const
 {
 	AffineTransform<T> m(basis, origin);
-	Vector3<T> bottomLeft = transform(Vector3<T>(-halfDims, depthRange.minimum), m);
-	Vector3<T> bottomRight = transform(Vector3<T>(halfDims.x, -halfDims.y, depthRange.minimum), m);
-	Vector3<T> topLeft = transform(Vector3<T>(-halfDims.x, halfDims.y, depthRange.minimum), m);
-	Vector3<T> topRight = transform(Vector3<T>(halfDims, depthRange.minimum), m);
+	Vector3<T> lb = transform(Vector3<T>(-halfDims, depthRange.minimum), m);
+	Vector3<T> rb = transform(Vector3<T>(halfDims.x, -halfDims.y, depthRange.minimum), m);
+	Vector3<T> lt = transform(Vector3<T>(-halfDims.x, halfDims.y, depthRange.minimum), m);
+	Vector3<T> rt = transform(Vector3<T>(halfDims, depthRange.minimum), m);
 
 	bool flip = (basis.getDeterminant() < T(0));
 	if (depthRange.maximum < std::numeric_limits<T>::max())
 	{
-		return { flip ? HalfSpace<T>(origin, topLeft, bottomLeft) : HalfSpace<T>(origin, bottomLeft, topLeft),
-			flip ? HalfSpace<T>(origin, bottomRight, topRight) : HalfSpace<T>(origin, topRight, bottomRight),
-			flip ? HalfSpace<T>(origin, bottomLeft, bottomRight) : HalfSpace<T>(origin, bottomRight, bottomLeft),
-			flip ? HalfSpace<T>(origin, topRight, topLeft) : HalfSpace<T>(origin, topLeft, topRight),
+		return { flip ? HalfSpace<T>(origin, lt, lb) : HalfSpace<T>(origin, lb, lt),
+			flip ? HalfSpace<T>(origin, rb, rt) : HalfSpace<T>(origin, rt, rb),
+			flip ? HalfSpace<T>(origin, lb, rb) : HalfSpace<T>(origin, rb, lb),
+			flip ? HalfSpace<T>(origin, rt, lt) : HalfSpace<T>(origin, lt, rt),
 			HalfSpace<T>(-basis[2], depthRange.minimum*basis[2] + origin),
 			HalfSpace<T>(basis[2], depthRange.maximum*basis[2] + origin) };
 	}
 	else
 	{
-		return { flip ? HalfSpace<T>(origin, topLeft, bottomLeft) : HalfSpace<T>(origin, bottomLeft, topLeft),
-			flip ? HalfSpace<T>(origin, bottomRight, topRight) : HalfSpace<T>(origin, topRight, bottomRight),
-			flip ? HalfSpace<T>(origin, bottomLeft, bottomRight) : HalfSpace<T>(origin, bottomRight, bottomLeft),
-			flip ? HalfSpace<T>(origin, topRight, topLeft) : HalfSpace<T>(origin, topLeft, topRight),
+		return { flip ? HalfSpace<T>(origin, lt, lb) : HalfSpace<T>(origin, lb, lt),
+			flip ? HalfSpace<T>(origin, rb, rt) : HalfSpace<T>(origin, rt, rb),
+			flip ? HalfSpace<T>(origin, lb, rb) : HalfSpace<T>(origin, rb, lb),
+			flip ? HalfSpace<T>(origin, rt, lt) : HalfSpace<T>(origin, lt, rt),
 			HalfSpace<T>(-basis[2], depthRange.minimum*basis[2] + origin) };
 	}
 }
@@ -304,19 +304,19 @@ template<typename F>
 inline bool SymmetricFrustum<T>::enumerateHalfSpaces(F&& f) const
 {
 	AffineTransform<T> m(basis, origin);
-	Vector3<T> bottomLeft = transform(Vector3<T>(-halfDims, depthRange.minimum), m);
-	Vector3<T> bottomRight = transform(Vector3<T>(halfDims.x, -halfDims.y, depthRange.minimum), m);
-	Vector3<T> topLeft = transform(Vector3<T>(-halfDims.x, halfDims.y, depthRange.minimum), m);
-	Vector3<T> topRight = transform(Vector3<T>(halfDims, depthRange.minimum), m);
+	Vector3<T> lb = transform(Vector3<T>(-halfDims, depthRange.minimum), m);
+	Vector3<T> rb = transform(Vector3<T>(halfDims.x, -halfDims.y, depthRange.minimum), m);
+	Vector3<T> lt = transform(Vector3<T>(-halfDims.x, halfDims.y, depthRange.minimum), m);
+	Vector3<T> rt = transform(Vector3<T>(halfDims, depthRange.minimum), m);
 
 	bool flip = (basis.getDeterminant() < T(0));
-	if (!f(flip ? HalfSpace<T>(origin, topLeft, bottomLeft) : HalfSpace<T>(origin, bottomLeft, topLeft)))
+	if (!f(flip ? HalfSpace<T>(origin, lt, lb) : HalfSpace<T>(origin, lb, lt)))
 		return false;
-	if (!f(flip ? HalfSpace<T>(origin, bottomRight, topRight) : HalfSpace<T>(origin, topRight, bottomRight)))
+	if (!f(flip ? HalfSpace<T>(origin, rb, rt) : HalfSpace<T>(origin, rt, rb)))
 		return false;
-	if (!f(flip ? HalfSpace<T>(origin, bottomLeft, bottomRight) : HalfSpace<T>(origin, bottomRight, bottomLeft)))
+	if (!f(flip ? HalfSpace<T>(origin, lb, rb) : HalfSpace<T>(origin, rb, lb)))
 		return false;
-	if (!f(flip ? HalfSpace<T>(origin, topRight, topLeft) : HalfSpace<T>(origin, topLeft, topRight)))
+	if (!f(flip ? HalfSpace<T>(origin, rt, lt) : HalfSpace<T>(origin, lt, rt)))
 		return false;
 	if (!f(HalfSpace<T>(-basis[2], depthRange.minimum*basis[2] + origin)))
 		return false;
@@ -339,11 +339,10 @@ inline Sphere<T> SymmetricFrustum<T>::getCircumscribedSphere() const
 {
 	Vector2<T> baseHalfDims = halfDims*(depthRange.maximum/depthRange.minimum);
 	T coneRadiusSq = baseHalfDims.getMagnitudeSquared();
-	T depthMaxSq = depthRange.maximum*depthRange.maximum;
+	T depthMaxSq = square(depthRange.maximum);
 	if (depthMaxSq > coneRadiusSq)
 	{
-		T slantSquared = coneRadiusSq + depthMaxSq;
-		T sphereRadius = slantSquared/(T(2)*depthRange.maximum);
+		T sphereRadius = (coneRadiusSq + depthMaxSq)/(T(2)*depthRange.maximum);
 		return Sphere<T>(origin + sphereRadius*basis[2], sphereRadius);
 	}
 	else
@@ -365,9 +364,9 @@ inline SymmetricFrustum<T> SymmetricFrustum<T>::orthonormalize()
 	halfDims *= Vector2<T>(basis[0].getMagnitude(), basis[1].getMagnitude());
 	//halfDims.x *= basis[0].getMagnitude();
 	//halfDims.y *= basis[1].getMagnitude();
-	T zLength = basis[2].getMagnitude();
-	depthRange.minimum *= zLength;
-	depthRange.maximum *= zLength;
+	T depthFactor = basis[2].getMagnitude();
+	depthRange.minimum *= depthFactor;
+	depthRange.maximum *= depthFactor;
 	basis.orthonormalize();
 	return *this;
 }
@@ -388,7 +387,7 @@ using SymmetricFrustumResult = templates::SymmetricFrustum<double>::ConstResult;
 using SymmetricFrustum = templates::SymmetricFrustum<float>;
 using SymmetricFrustumArg = templates::SymmetricFrustum<float>::ConstArg;
 using SymmetricFrustumResult = templates::SymmetricFrustum<float>::ConstResult;
-#maximumif
+#endif
 
 } // namespace mathematics
 
