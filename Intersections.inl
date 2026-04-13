@@ -325,7 +325,7 @@ inline O findLineRay(const Vector2<T>& originA, const Vector2<T>& directionA, co
 
 template<typename O, typename T>
 	requires std::floating_point<T>
-inline O findLineSegment(const Vector2<T>& origin, const Vector2<T>& direction, const Vector2<T>& start, const Vector2<T>& end) noexcept
+inline O findLineLineSegment(const Vector2<T>& origin, const Vector2<T>& direction, const Vector2<T>& start, const Vector2<T>& end) noexcept
 {
 	// http://www.geometrictools.com/
 
@@ -347,7 +347,7 @@ inline O findLineSegment(const Vector2<T>& origin, const Vector2<T>& direction, 
 
 template<typename O, typename T>
 	requires std::floating_point<T>
-inline O findSegmentSegment(const Vector2<T>& startA, const Vector2<T>& endA, const Vector2<T>& startB, const Vector2<T>& endB) noexcept
+inline O findLineSegmentLineSegment(const Vector2<T>& startA, const Vector2<T>& endA, const Vector2<T>& startB, const Vector2<T>& endB) noexcept
 {
 	// http://www.geometrictools.com/
 
@@ -457,7 +457,7 @@ inline O findLineTriangle(const Vector3<T>& origin, const Vector3<T>& direction,
 //
 //template<typename O, typename T>
 //	requires std::floating_point<T>
-//inline O findSegmentTriangle(const Vector3<T>& start, const Vector3<T>& end, const Vector3<T>& vertex0, const Vector3<T>& vertex1,
+//inline O findLineSegmentTriangle(const Vector3<T>& start, const Vector3<T>& end, const Vector3<T>& vertex0, const Vector3<T>& vertex1,
 //	const Vector3<T>& vertex2) noexcept
 //{
 //	// http://fileadmin.cs.lth.se/cs/Personal/Tomas_Akenine-Moller/code/
@@ -828,7 +828,7 @@ inline O findRayEllipsoid(const Vector3<T>& origin, const Vector3<T>& direction,
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool testSegmentEllipsoid(const Vector3<T>& start, const Vector3<T>& end, const Vector3<T>& center, 
+inline bool testLineSegmentEllipsoid(const Vector3<T>& start, const Vector3<T>& end, const Vector3<T>& center, 
 	const Matrix3<T>& matrix) noexcept
 {
 	// http://www.geometrictools.com/
@@ -864,7 +864,7 @@ inline bool testSegmentEllipsoid(const Vector3<T>& start, const Vector3<T>& end,
 
 template<typename O, typename T>
 	requires std::floating_point<T>
-inline O findSegmentEllipsoid(const Vector3<T>& start, const Vector3<T>& end, const Vector3<T>& center, 
+inline O findLineSegmentEllipsoid(const Vector3<T>& start, const Vector3<T>& end, const Vector3<T>& center, 
 	const Matrix3<T>& matrix) noexcept
 {
 	// http://www.geometrictools.com/

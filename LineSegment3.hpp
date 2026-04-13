@@ -1,5 +1,5 @@
 /*
- *	Name: Segment3
+ *	Name: LineSegment3
  *	Author: Pawel Mrochen
  */
 
@@ -67,35 +67,35 @@ struct Plane<float>;
 
 template<typename T>
 	requires std::floating_point<T>
-struct Segment3
+struct LineSegment3
 {
 	using Real = T;
-	using ConstArg = const Segment3&;
-	using ConstResult = const Segment3&;
+	using ConstArg = const LineSegment3&;
+	using ConstResult = const LineSegment3&;
 
-	Segment3() = default;
-	explicit Segment3(Uninitialized) noexcept : start(Uninitialized()), end(Uninitialized()) {}
-	Segment3(const Vector3<T>& start, const Vector3<T>& end) noexcept : start(start), end(end) {}
-	explicit Segment3(const std::pair<Vector3<T>, Vector3<T>>& t) noexcept : start(t.first), end(t.second) {}
-	explicit Segment3(const std::tuple<Vector3<T>, Vector3<T>>& t) noexcept : start(std::get<0>(t)), end(std::get<1>(t)) {}
-	explicit Segment3(const Line3<T>& line) noexcept : start(line.origin), end(line.origin + line.direction) {}
-	Segment3(const Line3<T>& line, const Interval<T>& interval) noexcept : start(line.evaluate(interval.minimum)), end(line.evaluate(interval.maximum)) {}
-	explicit Segment3(const Ray3<T>& ray) noexcept : start(ray.origin), end(ray.origin + ray.direction) {}
-	Segment3(const Ray3<T>& ray, const Interval<T>& interval) noexcept : start(ray.evaluate(interval.minimum)), end(ray.evaluate(interval.maximum)) {}
+	LineSegment3() = default;
+	explicit LineSegment3(Uninitialized) noexcept : start(Uninitialized()), end(Uninitialized()) {}
+	LineSegment3(const Vector3<T>& start, const Vector3<T>& end) noexcept : start(start), end(end) {}
+	explicit LineSegment3(const std::pair<Vector3<T>, Vector3<T>>& t) noexcept : start(t.first), end(t.second) {}
+	explicit LineSegment3(const std::tuple<Vector3<T>, Vector3<T>>& t) noexcept : start(std::get<0>(t)), end(std::get<1>(t)) {}
+	explicit LineSegment3(const Line3<T>& line) noexcept : start(line.origin), end(line.origin + line.direction) {}
+	LineSegment3(const Line3<T>& line, const Interval<T>& interval) noexcept : start(line.evaluate(interval.minimum)), end(line.evaluate(interval.maximum)) {}
+	explicit LineSegment3(const Ray3<T>& ray) noexcept : start(ray.origin), end(ray.origin + ray.direction) {}
+	LineSegment3(const Ray3<T>& ray, const Interval<T>& interval) noexcept : start(ray.evaluate(interval.minimum)), end(ray.evaluate(interval.maximum)) {}
 
 	//explicit operator std::pair<Vector3<T>, Vector3<T>>() { return { start, end }; }
 	//explicit operator std::tuple<Vector3<T>, Vector3<T>>() { return { start, end }; }
 	//Vector3 operator()(T t) const noexcept { return lerp(start, end, t); }
-	bool operator==(const Segment3& segment) const noexcept { return (start == segment.start) && (end == segment.end); }
-	bool operator!=(const Segment3& segment) const noexcept { return !(*this == segment); }
+	bool operator==(const LineSegment3& segment) const noexcept { return (start == segment.start) && (end == segment.end); }
+	bool operator!=(const LineSegment3& segment) const noexcept { return !(*this == segment); }
 
 	template<typename A> void serialize(A& ar) { ar(start, end); }
 
 	// Properties
-	bool approxEquals(const Segment3& segment) const noexcept;
-	bool approxEquals(const Segment3& segment, T tolerance) const noexcept;
+	bool approxEquals(const LineSegment3& segment) const noexcept;
+	bool approxEquals(const LineSegment3& segment, T tolerance) const noexcept;
 	bool isFinite() const noexcept { return start.isFinite() && end.isFinite(); }
-	Segment3& set(const Vector3<T>& start, const Vector3<T>& end) noexcept { this->start = start; this->end = end; return *this; }
+	LineSegment3& set(const Vector3<T>& start, const Vector3<T>& end) noexcept { this->start = start; this->end = end; return *this; }
 	const Vector3<T>& getStart() const noexcept { return start; }
 	void setStart(const Vector3<T>& start) noexcept { this->start = start; }
 	const Vector3<T>& getEnd() const noexcept { return end; }
@@ -109,9 +109,9 @@ struct Segment3
 	std::pair<Vector3<T>, Vector3<T>> getEndpoints() const noexcept { return { start, end }; }
 
 	// Transformation
-	Segment3& translate(const Vector3<T>& offset) noexcept { start += offset; end += offset; return *this; }
-	Segment3& transform(const Matrix3<T>& matrix) noexcept;
-	Segment3& transform(const AffineTransform<T>& transformation) noexcept;
+	LineSegment3& translate(const Vector3<T>& offset) noexcept { start += offset; end += offset; return *this; }
+	LineSegment3& transform(const Matrix3<T>& matrix) noexcept;
+	LineSegment3& transform(const AffineTransform<T>& transformation) noexcept;
 
 	// Evaluation
 	Vector3<T> evaluate(T t) const noexcept { return lerp(start, end, t); }
@@ -142,34 +142,34 @@ struct Segment3
 
 template<typename C, typename T, typename U>
 	requires std::floating_point<U>
-inline std::basic_istream<C, T>& operator>>(std::basic_istream<C, T>& s, Segment3<U>& segment)
+inline std::basic_istream<C, T>& operator>>(std::basic_istream<C, T>& s, LineSegment3<U>& segment)
 { 
 	return s >> segment.start >> std::ws >> segment.end;
 }
 
 template<typename C, typename T, typename U>
 	requires std::floating_point<U>
-inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const Segment3<U>& segment)
+inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const LineSegment3<U>& segment)
 { 
 	constexpr C WS(0x20);
 	return s << segment.start << WS << segment.end;
 }
 
 template<typename T>
-inline bool Segment3<T>::approxEquals(const Segment3<T>& segment) const
+inline bool LineSegment3<T>::approxEquals(const LineSegment3<T>& segment) const
 {
 	return start.approxEquals(segment.start) && end.approxEquals(segment.end);
 }
 
 template<typename T>
-inline bool Segment3<T>::approxEquals(const Segment3<T>& segment, T tolerance) const
+inline bool LineSegment3<T>::approxEquals(const LineSegment3<T>& segment, T tolerance) const
 {
 	return start.approxEquals(segment.start, tolerance) && end.approxEquals(segment.end, tolerance);
 }
 
 template<typename T>
 template<std::output_iterator<Vector2<T>> O>
-inline O Segment3<T>::copyEndpoints(O target) const
+inline O LineSegment3<T>::copyEndpoints(O target) const
 {
 	*target++ = start;
 	*target++ = end;
@@ -177,7 +177,7 @@ inline O Segment3<T>::copyEndpoints(O target) const
 }
 
 template<typename T>
-inline Segment3<T>& Segment3<T>::transform(const Matrix3<T>& matrix)
+inline LineSegment3<T>& LineSegment3<T>::transform(const Matrix3<T>& matrix)
 {
 	start *= matrix;
 	end *= matrix;
@@ -185,7 +185,7 @@ inline Segment3<T>& Segment3<T>::transform(const Matrix3<T>& matrix)
 }
 
 template<typename T>
-inline Segment3<T>& Segment3<T>::transform(const AffineTransform<T>& transformation)
+inline LineSegment3<T>& LineSegment3<T>::transform(const AffineTransform<T>& transformation)
 {
 	start.transform(transformation);
 	end.transform(transformation);
@@ -193,7 +193,7 @@ inline Segment3<T>& Segment3<T>::transform(const AffineTransform<T>& transformat
 }
 
 template<typename T>
-inline Vector3<T> Segment3<T>::getClosestPoint(const Vector3<T>& point) const
+inline Vector3<T> LineSegment3<T>::getClosestPoint(const Vector3<T>& point) const
 {
 	Vector3<T> direction = end - start;
 	return std::clamp(dot(point - start, direction)/dot(direction, direction), T(0), T(1))*direction + start;
@@ -202,13 +202,13 @@ inline Vector3<T> Segment3<T>::getClosestPoint(const Vector3<T>& point) const
 } // namespace templates
 
 #if MATHEMATICS_DOUBLE
-using Segment3 = templates::Segment3<double>;
-using Segment3Arg = templates::Segment3<double>::ConstArg;
-using Segment3Result = templates::Segment3<double>::ConstResult;
+using LineSegment3 = templates::LineSegment3<double>;
+using LineSegment3Arg = templates::LineSegment3<double>::ConstArg;
+using LineSegment3Result = templates::LineSegment3<double>::ConstResult;
 #else
-using Segment3 = templates::Segment3<float>;
-using Segment3Arg = templates::Segment3<float>::ConstArg;
-using Segment3Result = templates::Segment3<float>::ConstResult;
+using LineSegment3 = templates::LineSegment3<float>;
+using LineSegment3Arg = templates::LineSegment3<float>::ConstArg;
+using LineSegment3Result = templates::LineSegment3<float>::ConstResult;
 #endif
 
 } // namespace mathematics
@@ -219,9 +219,9 @@ template<typename T>
 struct hash;
 
 template<typename T>
-struct hash<::mathematics::templates::Segment3<T>>
+struct hash<::mathematics::templates::LineSegment3<T>>
 {
-	size_t operator()(const ::mathematics::templates::Segment3<T>& segment) const noexcept
+	size_t operator()(const ::mathematics::templates::LineSegment3<T>& segment) const noexcept
 	{
 		hash<typename ::mathematics::templates::Vector3<T>> hasher;
 		size_t seed = hasher(segment.start) + 0x9e3779b9;
@@ -244,19 +244,19 @@ struct hash<::mathematics::templates::Segment3<T>>
 namespace mathematics::templates {
 
 template<typename T>
-inline bool Segment3<T>::intersects(const HalfSpace<T>& halfSpace) const
+inline bool LineSegment3<T>::intersects(const HalfSpace<T>& halfSpace) const
 {
 	return halfSpace.contains(start) || halfSpace.contains(end);
 }
 
 template<typename T>
-inline bool Segment3<T>::intersects(const Ellipsoid<T>& ellipsoid) const
+inline bool LineSegment3<T>::intersects(const Ellipsoid<T>& ellipsoid) const
 {
-	return intersections::testSegmentEllipsoid(start, end, ellipsoid.center, ellipsoid.getMatrix());
+	return intersections::testLineSegmentEllipsoid(start, end, ellipsoid.center, ellipsoid.getMatrix());
 }
 
 template<typename T>
-inline std::optional<T> Segment3<T>::findIntersection(const Plane<T>& plane) const
+inline std::optional<T> LineSegment3<T>::findIntersection(const Plane<T>& plane) const
 {
 	auto result = intersections::findLinePlane<std::optional<T>>(start, end - start, plane.getNormal(), plane.d);
 	return (result.has_value() && (result.value() >= T(0)) && (result.value() <= T(1))) ? result : {};
@@ -264,7 +264,7 @@ inline std::optional<T> Segment3<T>::findIntersection(const Plane<T>& plane) con
 
 //template<typename T>
 //template<ScalarOrVector3<T> U>
-//inline std::optional<U> Segment3<T>::findIntersection(const Plane<T>& plane) const
+//inline std::optional<U> LineSegment3<T>::findIntersection(const Plane<T>& plane) const
 //{
 //	std::optional<T> result = findIntersection(plane);
 //	if constexpr (std::is_same_v<U, T>)
@@ -274,9 +274,9 @@ inline std::optional<T> Segment3<T>::findIntersection(const Plane<T>& plane) con
 //}
 
 template<typename T>
-inline std::optional<T> Segment3<T>::findIntersection(const Triangle3<T>& triangle) const
+inline std::optional<T> LineSegment3<T>::findIntersection(const Triangle3<T>& triangle) const
 {
-	//return intersections::findSegmentTriangle<std::optional<T>>(start, end, triangle.vertices[0], triangle.vertices[1],
+	//return intersections::findLineSegmentTriangle<std::optional<T>>(start, end, triangle.vertices[0], triangle.vertices[1],
 	//	triangle.vertices[2]);
 	auto result = intersections::findLineTriangle<std::optional<T>>(start, end - start, triangle.vertices[0], triangle.vertices[1],
 		triangle.vertices[2]);
@@ -284,7 +284,7 @@ inline std::optional<T> Segment3<T>::findIntersection(const Triangle3<T>& triang
 }
 
 template<typename T>
-inline std::optional<Interval<T>> Segment3<T>::findIntersection(const AxisAlignedBox<T>& box) const
+inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const AxisAlignedBox<T>& box) const
 {
 	auto result = intersections::findLineAxisAlignedBox<std::optional<Interval<T>>>(start, end - start, box.minimum, box.maximum);
 	
@@ -303,7 +303,7 @@ inline std::optional<Interval<T>> Segment3<T>::findIntersection(const AxisAligne
 }
 
 template<typename T>
-inline std::optional<Interval<T>> Segment3<T>::findIntersection(const OrientedBox<T>& box) const
+inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const OrientedBox<T>& box) const
 {
 	auto result = intersections::findLineOrientedBox<std::optional<Interval<T>>>(start, end - start, box.center, box.basis, box.halfDims);
 	
@@ -322,7 +322,7 @@ inline std::optional<Interval<T>> Segment3<T>::findIntersection(const OrientedBo
 }
 
 template<typename T>
-inline std::optional<Interval<T>> Segment3<T>::findIntersection(const Sphere<T>& sphere) const
+inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const Sphere<T>& sphere) const
 {
 	auto result = intersections::findLineNSphere<std::optional<Interval<T>>>(start, end - start, sphere.center, sphere.radius);
 
@@ -341,9 +341,9 @@ inline std::optional<Interval<T>> Segment3<T>::findIntersection(const Sphere<T>&
 }
 
 template<typename T>
-inline std::optional<Interval<T>> Segment3<T>::findIntersection(const Ellipsoid<T>& ellipsoid) const
+inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const Ellipsoid<T>& ellipsoid) const
 {
-	return intersections::findSegmentEllipsoid<std::optional<Interval<T>>>(start, end, ellipsoid.center, ellipsoid.getMatrix());
+	return intersections::findLineSegmentEllipsoid<std::optional<Interval<T>>>(start, end, ellipsoid.center, ellipsoid.getMatrix());
 }
 
 } // namespace mathematics::templates

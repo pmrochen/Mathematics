@@ -27,7 +27,7 @@ namespace templates {
 //concept ScalarOrVector2 = (std::same_as<T, U> || std::same_as<T, Vector2<U>>);
 
 //template<typename T, typename U>
-//concept IntervalOrSegment2 = (std::same_as<T, Interval<U>> || std::same_as<T, Segment2<U>>);
+//concept IntervalOrLineSegment2 = (std::same_as<T, Interval<U>> || std::same_as<T, LineSegment2<U>>);
 	
 template<typename T>
 	requires std::floating_point<T>
@@ -43,6 +43,10 @@ struct Ray2;
 
 template<typename T>
 	requires std::floating_point<T>
+struct LineSegment2;
+
+template<typename T>
+	requires std::floating_point<T>
 struct Line2
 {
 	using Real = T;
@@ -54,7 +58,7 @@ struct Line2
 	Line2(const Vector2<T>& origin, const Vector2<T>& direction) noexcept : origin(origin), direction(direction) {}
 	Line2(const Vector2<T>& origin, T inclinationAngle) noexcept;
 	Line2(const Ray2<T>& ray) noexcept;
-	//explicit Line2(const Segment2<T>& segment) noexcept;
+	//explicit Line2(const LineSegment2<T>& segment) noexcept;
 
 	//Vector2<T> operator()(T t) const noexcept { return (origin + t*direction); }
 	bool operator==(const Line2& line) const noexcept { return (origin == line.origin) && (direction == line.direction); }
@@ -103,20 +107,20 @@ struct Line2
 	// Intersection
 	bool intersects(const Line2& line) const noexcept;
 	bool intersects(const Ray2<T>& ray) const noexcept { return findIntersection(ray).has_value(); }
-	bool intersects(const Segment2<T>& segment) const noexcept { return findIntersection(segment).has_value(); }
+	bool intersects(const LineSegment2<T>& segment) const noexcept { return findIntersection(segment).has_value(); }
 	bool intersects(const AxisAlignedRectangle<T>& rectangle) const noexcept { return findIntersection(rectangle).has_value(); }
 	bool intersects(const Circle2<T>& circle) const noexcept;
 	template<Normalization U> bool intersects(const Circle2<T>& circle) const noexcept;
 	std::optional<T> findIntersection(const Line2& line) const noexcept;
 	std::optional<T> findIntersection(const Ray2<T>& ray) const noexcept;
-	std::optional<T> findIntersection(const Segment2<T>& segment) const noexcept;
+	std::optional<T> findIntersection(const LineSegment2<T>& segment) const noexcept;
 	std::optional<Interval<T>> findIntersection(const AxisAlignedRectangle<T>& rectangle) const noexcept;
 	std::optional<Interval<T>> findIntersection(const Circle2<T>& circle) const noexcept;
 	template<Normalization U> std::optional<Interval<T>> findIntersection(const Circle2<T>& circle) const noexcept;
 	//template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Line2& line) const noexcept;
-	//template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const Segment2<T>& segment) const noexcept;
-	//template<IntervalOrSegment2<T> U> std::optional<U> findIntersection(const AxisAlignedRectangle<T>& rectangle) const noexcept;
-	//template<IntervalOrSegment2<T> U> std::optional<U> findIntersection(const Circle2<T>& circle) const noexcept;
+	//template<ScalarOrVector2<T> U> std::optional<U> findIntersection(const LineSegment2<T>& segment) const noexcept;
+	//template<IntervalOrLineSegment2<T> U> std::optional<U> findIntersection(const AxisAlignedRectangle<T>& rectangle) const noexcept;
+	//template<IntervalOrLineSegment2<T> U> std::optional<U> findIntersection(const Circle2<T>& circle) const noexcept;
 
 	Vector2<T> origin;
 	Vector2<T> direction;
@@ -219,7 +223,7 @@ inline bool Line2<T>::intersects(const Line2& line) const
 //
 //template<typename T>
 //template<ScalarOrVector2<T> U>
-//inline std::optional<U> Line2<T>::findIntersection(const Segment2<T>& segment) const
+//inline std::optional<U> Line2<T>::findIntersection(const LineSegment2<T>& segment) const
 //{
 //	std::optional<T> result = findIntersection(segment);
 //	if constexpr (std::is_same_v<U, T>)
@@ -279,6 +283,7 @@ struct hash<::mathematics::templates::Line2<T>>
 } // namespace std
 
 #include "Ray2.hpp"
+#include "LineSegment2.hpp"
 #include "AxisAlignedRectangle.hpp"
 #include "Circle2.hpp"
 #include "Intersections.inl"
@@ -325,9 +330,9 @@ inline std::optional<T> Line2<T>::findIntersection(const Ray2& ray) const
 }
 
 template<typename T>
-inline std::optional<T> Line2<T>::findIntersection(const Segment2<T>& segment) const
+inline std::optional<T> Line2<T>::findIntersection(const LineSegment2<T>& segment) const
 {
-	return intersections::findLineSegment<std::optional<T>>(origin, direction, segment.start, segment.end);
+	return intersections::findLineLineSegment<std::optional<T>>(origin, direction, segment.start, segment.end);
 }
 
 template<typename T>

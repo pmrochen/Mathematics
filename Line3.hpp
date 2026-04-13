@@ -28,7 +28,7 @@ namespace templates {
 //concept ScalarOrVector3 = (std::same_as<T, U> || std::same_as<T, Vector3<U>>); // #TODO Move to Concepts.hpp
 
 //template<typename T, typename U>
-//concept IntervalOrSegment3 = (std::same_as<T, Interval<U>> || std::same_as<T, Segment3<U>>); // #TODO Move to Concepts.hpp
+//concept IntervalOrLineSegment3 = (std::same_as<T, Interval<U>> || std::same_as<T, LineSegment3<U>>); // #TODO Move to Concepts.hpp
 
 template<typename T>
 	requires std::floating_point<T>
@@ -77,7 +77,7 @@ struct Line3
 	explicit Line3(Uninitialized) noexcept : origin(Uninitialized()), direction(Uninitialized()) {}
 	Line3(const Vector3<T>& origin, const Vector3<T>& direction) noexcept : origin(origin), direction(direction) {}
 	Line3(const Ray3<T>& ray) noexcept;
-	//explicit Line3(const Segment3<T>& segment) noexcept;
+	//explicit Line3(const LineSegment3<T>& segment) noexcept;
 
 	//Vector3<T> operator()(T t) const noexcept { return (origin + t*direction); }
 	bool operator==(const Line3& line) const noexcept { return (origin == line.origin) && (direction == line.direction); }

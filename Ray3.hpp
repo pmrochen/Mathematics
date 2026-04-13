@@ -67,7 +67,7 @@ struct Ray3
 	explicit Ray3(Uninitialized) noexcept : origin(Uninitialized()), direction(Uninitialized()) {}
 	Ray3(const Vector3<T>& origin, const Vector3<T>& direction) noexcept : origin(origin), direction(direction) {}
 	explicit Ray3(const Line3<T>& line) noexcept : origin(line.origin), direction(line.direction) {}
-	//explicit Ray3(const Segment3<T>& segment) noexcept;
+	//explicit Ray3(const LineSegment3<T>& segment) noexcept;
 
 	//Vector3<T> operator()(T t) const noexcept { return (origin + t*direction); }
 	bool operator==(const Ray3& ray) const noexcept { return (origin == ray.origin) && (direction == ray.direction); }
