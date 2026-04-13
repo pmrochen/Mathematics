@@ -14,7 +14,6 @@
 #include <functional>
 #include <utility>
 #include <tuple>
-#include <array>
 #include <iterator>
 #include <cstddef>
 #include <cmath>
@@ -61,7 +60,7 @@ struct Tetrahedron
 
 	// Vertices
 	template<std::output_iterator<Vector3<T>> O> O copyVertices(O target) const;
-	std::array<Vector3<T>, 4> getVertices() const noexcept;
+	std::tuple<Vector3<T>, Vector3<T>, Vector3<T>, Vector3<T>> getVertices() const noexcept;
 
 	// Circumscribed box
 	AxisAlignedBox<T> getCircumscribedBox() const noexcept;
@@ -181,7 +180,7 @@ inline O Tetrahedron<T>::copyVertices(O target) const
 }
 
 template<typename T>
-inline std::array<Vector3<T>, 4> Tetrahedron<T>::getVertices() const
+inline std::tuple<Vector3<T>, Vector3<T>, Vector3<T>, Vector3<T>> Tetrahedron<T>::getVertices() const
 {
 	return { vertices[0], vertices[1], vertices[2], vertices[3] };
 }

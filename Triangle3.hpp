@@ -15,7 +15,6 @@
 #include <functional>
 #include <utility>
 #include <tuple>
-#include <array>
 #include <vector>
 #include <iterator>
 #include <cstddef>
@@ -74,7 +73,7 @@ struct Triangle3
 
 	// Vertices
 	template<std::output_iterator<Vector3<T>> O> O copyVertices(O target) const;
-	std::array<Vector3<T>, 3> getVertices() const noexcept;
+	std::tuple<Vector3<T>, Vector3<T>, Vector3<T>> getVertices() const noexcept;
 
 	// Normal
 	static Vector3<T> computeNormal(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2) noexcept;
@@ -222,7 +221,7 @@ inline O Triangle3<T>::copyVertices(O target) const
 }
 
 template<typename T>
-inline std::array<Vector3<T>, 3> Triangle3<T>::getVertices() const
+inline std::tuple<Vector3<T>, Vector3<T>, Vector3<T>> Triangle3<T>::getVertices() const
 { 
 	return { vertices[0], vertices[1], vertices[2] }; 
 }
