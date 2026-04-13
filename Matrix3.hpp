@@ -46,6 +46,8 @@ struct Matrix3
 	using ConstArg = const Matrix3&;
 	using ConstResult = const Matrix3&;
 
+	static constexpr int DIMENSION = 3;
+
 	constexpr Matrix3() noexcept : m00(), m01(), m02(), m10(), m11(), m12(), m20(), m21(), m22() {}
 	explicit Matrix3(Uninitialized) noexcept {}
 	explicit Matrix3(Identity) noexcept : m00(1), m01(), m02(), m10(), m11(1), m12(), m20(), m21(), m22(1) {}
@@ -167,6 +169,8 @@ struct Matrix3<float>
 	using ComponentType = float;
 	using ConstArg = const Matrix3;
 	using ConstResult = const Matrix3;
+
+	static constexpr int DIMENSION = 3;
 
 	/*constexpr*/ Matrix3() noexcept;
 	explicit Matrix3(Uninitialized) noexcept {}

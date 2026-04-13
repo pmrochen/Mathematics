@@ -53,6 +53,8 @@ struct Matrix4
 	using ConstArg = const Matrix4&;
 	using ConstResult = const Matrix4&;
 
+	static constexpr int DIMENSION = 4;
+
 	constexpr Matrix4() noexcept : m00(), m01(), m02(), m03(), m10(), m11(), m12(), m13(), m20(), m21(), m22(), m23(), m30(), m31(), m32(), m33() {}
 	explicit Matrix4(Uninitialized) noexcept {}
 	explicit Matrix4(Identity) noexcept : m00(1), m01(), m02(), m03(), m10(), m11(1), m12(), m13(), m20(), m21(), m22(1), m23(), m30(), m31(), m32(), m33(1) {}
@@ -194,6 +196,8 @@ struct Matrix4<float>
 	using ComponentType = float;
 	using ConstArg = const Matrix4;
 	using ConstResult = const Matrix4;
+
+	static constexpr int DIMENSION = 4;
 
 	/*constexpr*/ Matrix4() noexcept;
 	explicit Matrix4(Uninitialized) noexcept {}

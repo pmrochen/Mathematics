@@ -39,6 +39,8 @@ struct Matrix2
 	using ConstArg = const Matrix2&;
 	using ConstResult = const Matrix2&;
 
+	static constexpr int DIMENSION = 2;
+
 	constexpr Matrix2() noexcept : m00(), m01(), m10(), m11() {}
 	explicit Matrix2(Uninitialized) noexcept {}
 	explicit Matrix2(Identity) noexcept : m00(1), m01(), m10(), m11(1) {}
@@ -129,6 +131,8 @@ struct Matrix2<float>
 	using ComponentType = float;
 	using ConstArg = const Matrix2;
 	using ConstResult = const Matrix2;
+
+	static constexpr int DIMENSION = 2;
 
 	/*constexpr*/ Matrix2() noexcept : row0(simd::zero<simd::float4>()), row1(simd::zero<simd::float4>()) {}
 	explicit Matrix2(Uninitialized) noexcept {}
