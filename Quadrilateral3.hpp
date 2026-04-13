@@ -35,13 +35,15 @@ struct Quadrilateral3
 	using Real = T;
 	using ConstArg = const Quadrilateral3&;
 	using ConstResult = const Quadrilateral3&;
+	using VertexType = Vector3<T>;
+	using TupleType = std::tuple<Vector3<T>, Vector3<T>, Vector3<T>, Vector3<T>>;
 
 	Quadrilateral3() = default;
-	//explicit Quadrilateral3(Uninitialized) noexcept;
+	explicit Quadrilateral3(Uninitialized) noexcept;
 	Quadrilateral3(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3) noexcept;
-	explicit Quadrilateral3(const std::tuple<Vector3<T>, Vector3<T>, Vector3<T>, Vector3<T>>& t) noexcept;
+	explicit Quadrilateral3(const TupleType& t) noexcept : vertices{ std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t) } {}
+	explicit Quadrilateral3(const Vector3<T>* v) noexcept : vertices{ v[0], v[1], v[2], v[3] } {}
 
-	//explicit operator std::tuple<Vector3<T>, Vector3<T>, Vector3<T>, Vector3<T>>() { return { vertices[0], vertices[1], vertices[2], vertices[3] }; }
 	bool operator==(const Quadrilateral3& quad) const noexcept;
 	bool operator!=(const Quadrilateral3& quad) const noexcept { return !(*this == quad); }
 
@@ -52,14 +54,14 @@ struct Quadrilateral3
 	bool approxEquals(const Quadrilateral3& quad, T tolerance) const noexcept;
 	bool isFinite() const noexcept;
 	Quadrilateral3& set(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3) noexcept;
-	const Vector3<T>& getVertex(int index) const noexcept { return ((unsigned int)index < 4u) ? vertices[index] : Vector3<T>::ZERO; }
-	void setVertex(int index, const Vector3<T>& vertex) noexcept; // throw (std::out_of_range)
 	T getPerimeter() const noexcept;
 	T getArea() const noexcept;
 
 	// Vertices
+	const Vector3<T>& getVertex(int index) const noexcept { return ((unsigned int)index < 4u) ? vertices[index] : Vector3<T>::ZERO; }
+	void setVertex(int index, const Vector3<T>& vertex); // throw (std::out_of_range)
 	template<std::output_iterator<Vector3<T>> O> O copyVertices(O target) const;
-	std::tuple<Vector3<T>, Vector3<T>, Vector3<T>, Vector3<T>> getVertices() const noexcept;
+	TupleType getVertices() const noexcept;
 
 	// Normal
 	static Vector3<T> computeNormal(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3) noexcept;
@@ -81,21 +83,15 @@ struct Quadrilateral3
 };
 
 template<typename T>
-inline Quadrilateral3<T>::Quadrilateral3(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3)
-{ 
-	vertices[0] = v0; 
-	vertices[1] = v1; 
-	vertices[2] = v2; 
-	vertices[3] = v3;
+inline Quadrilateral3<T>::Quadrilateral3(Uninitialized) : 
+	vertices{ { Uninitialized() }, { Uninitialized() }, { Uninitialized() }, { Uninitialized() } }
+{
 }
 
 template<typename T>
-inline Quadrilateral3<T>::Quadrilateral3(const std::tuple<Vector3<T>, Vector3<T>, Vector3<T>, Vector3<T>>& t)
+inline Quadrilateral3<T>::Quadrilateral3(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3) :
+	vertices{ v0, v1, v2, v3 }
 {
-	vertices[0] = std::get<0>(t);
-	vertices[1] = std::get<1>(t);
-	vertices[2] = std::get<2>(t);
-	vertices[3] = std::get<3>(t);
 }
 
 template<typename T>
@@ -155,14 +151,6 @@ inline Quadrilateral3<T>& Quadrilateral3<T>::set(const Vector3<T>& v0, const Vec
 }
 
 template<typename T>
-inline void Quadrilateral3<T>::setVertex(int index, const Vector3<T>& vertex)
-{
-	if ((unsigned int)index >= 4u)
-		throw std::out_of_range("Quadrilateral3::setVertex() : index");
-	vertices[index] = vertex;
-}
-
-template<typename T>
 inline T Quadrilateral3<T>::getPerimeter() const
 {
 	return distance(vertices[0], vertices[1]) + distance(vertices[1], vertices[2]) + distance(vertices[2], vertices[3]) +
@@ -173,6 +161,14 @@ template<typename T>
 inline T Quadrilateral3<T>::getArea() const
 {
 	return cross(vertices[2] - vertices[0], vertices[3] - vertices[1]).getMagnitude()*T(0.5);
+}
+
+template<typename T>
+inline void Quadrilateral3<T>::setVertex(int index, const Vector3<T>& vertex)
+{
+	if ((unsigned int)index >= 4u)
+		throw std::out_of_range("Quadrilateral3::setVertex() : index");
+	vertices[index] = vertex;
 }
 
 template<typename T>
@@ -187,7 +183,7 @@ inline O Quadrilateral3<T>::copyVertices(O target) const
 }
 
 template<typename T>
-inline std::tuple<Vector3<T>, Vector3<T>, Vector3<T>, Vector3<T>> Quadrilateral3<T>::getVertices() const
+inline typename Quadrilateral3<T>::TupleType Quadrilateral3<T>::getVertices() const
 { 
 	return { vertices[0], vertices[1], vertices[2], vertices[3] }; 
 }

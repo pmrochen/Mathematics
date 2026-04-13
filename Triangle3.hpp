@@ -48,13 +48,15 @@ struct Triangle3
 	using Real = T;
 	using ConstArg = const Triangle3&;
 	using ConstResult = const Triangle3&;
+	using VertexType = Vector3<T>;
+	using TupleType = std::tuple<Vector3<T>, Vector3<T>, Vector3<T>>;
 
 	Triangle3() = default;
-	//explicit Triangle3(Uninitialized) noexcept;
-	Triangle3(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2) noexcept;
-	explicit Triangle3(const std::tuple<Vector3<T>, Vector3<T>, Vector3<T>>& t) noexcept;
+	explicit Triangle3(Uninitialized) noexcept : vertices{ { Uninitialized() }, { Uninitialized() }, { Uninitialized() } } {}
+	Triangle3(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2) noexcept : vertices{ v0, v1, v2 } {}
+	explicit Triangle3(const TupleType& t) noexcept : vertices{ std::get<0>(t), std::get<1>(t), std::get<2>(t) } {}
+	explicit Triangle3(const Vector3<T>* v) noexcept : vertices{ v[0], v[1], v[2] } {}
 
-	//explicit operator std::tuple<Vector3<T>, Vector3<T>, Vector3<T>>() { return { vertices[0], vertices[1], vertices[2] }; }
 	//Vector3<T> operator()(T u, T v) const noexcept { return evaluate(u, v); }
 	bool operator==(const Triangle3& triangle) const noexcept;
 	bool operator!=(const Triangle3& triangle) const noexcept { return !(*this == triangle); }
@@ -66,14 +68,14 @@ struct Triangle3
 	bool approxEquals(const Triangle3& triangle, T tolerance) const noexcept;
 	bool isFinite() const noexcept { return vertices[0].isFinite() && vertices[1].isFinite() && vertices[2].isFinite(); }
 	Triangle3& set(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2) noexcept;
-	const Vector3<T>& getVertex(int index) const noexcept { return ((unsigned int)index < 3u) ? vertices[index] : Vector3<T>::ZERO; }
-	void setVertex(int index, const Vector3<T>& vertex) noexcept; // throw (std::out_of_range)
 	T getPerimeter() const noexcept;
 	T getArea() const noexcept;
 
 	// Vertices
+	const Vector3<T>& getVertex(int index) const noexcept { return ((unsigned int)index < 3u) ? vertices[index] : Vector3<T>::ZERO; }
+	void setVertex(int index, const Vector3<T>& vertex); // throw (std::out_of_range)
 	template<std::output_iterator<Vector3<T>> O> O copyVertices(O target) const;
-	std::tuple<Vector3<T>, Vector3<T>, Vector3<T>> getVertices() const noexcept;
+	TupleType getVertices() const noexcept;
 
 	// Normal
 	static Vector3<T> computeNormal(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2) noexcept;
@@ -129,22 +131,6 @@ struct Triangle3
 };
 
 template<typename T>
-inline Triangle3<T>::Triangle3(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2)
-{ 
-	vertices[0] = v0; 
-	vertices[1] = v1; 
-	vertices[2] = v2; 
-}
-
-template<typename T>
-inline Triangle3<T>::Triangle3(const std::tuple<Vector3<T>, Vector3<T>, Vector3<T>>& t)
-{
-	vertices[0] = std::get<0>(t);
-	vertices[1] = std::get<1>(t);
-	vertices[2] = std::get<2>(t);
-}
-
-template<typename T>
 inline bool Triangle3<T>::operator==(const Triangle3<T>& triangle) const
 { 
 	return (vertices[0] == triangle.vertices[0]) && (vertices[1] == triangle.vertices[1]) && (vertices[2] == triangle.vertices[2]);
@@ -191,14 +177,6 @@ inline Triangle3<T>& Triangle3<T>::set(const Vector3<T>& v0, const Vector3<T>& v
 }
 
 template<typename T>
-inline void Triangle3<T>::setVertex(int index, const Vector3<T>& vertex)
-{
-	if ((unsigned int)index >= 3u)
-		throw std::out_of_range("Triangle3::setVertex() : index");
-	vertices[index] = vertex;
-}
-
-template<typename T>
 inline T Triangle3<T>::getPerimeter() const
 {
 	return distance(vertices[0], vertices[1]) + distance(vertices[1], vertices[2]) + distance(vertices[2], vertices[0]);
@@ -208,6 +186,14 @@ template<typename T>
 inline T Triangle3<T>::getArea() const
 {
 	return (cross(vertices[0], vertices[1]) + cross(vertices[1], vertices[2]) + cross(vertices[2], vertices[0])).getMagnitude()*T(0.5);
+}
+
+template<typename T>
+inline void Triangle3<T>::setVertex(int index, const Vector3<T>& vertex)
+{
+	if ((unsigned int)index >= 3u)
+		throw std::out_of_range("Triangle3::setVertex() : index");
+	vertices[index] = vertex;
 }
 
 template<typename T>
@@ -221,7 +207,7 @@ inline O Triangle3<T>::copyVertices(O target) const
 }
 
 template<typename T>
-inline std::tuple<Vector3<T>, Vector3<T>, Vector3<T>> Triangle3<T>::getVertices() const
+inline typename Triangle3<T>::TupleType Triangle3<T>::getVertices() const
 { 
 	return { vertices[0], vertices[1], vertices[2] }; 
 }

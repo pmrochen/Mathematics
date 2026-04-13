@@ -35,13 +35,15 @@ struct Tetrahedron
 	using Real = T;
 	using ConstArg = const Tetrahedron&;
 	using ConstResult = const Tetrahedron&;
+	using VertexType = Vector3<T>;
+	using TupleType = std::tuple<Vector3<T>, Vector3<T>, Vector3<T>, Vector3<T>>;
 
 	Tetrahedron() = default;
-	//explicit Tetrahedron(Uninitialized) noexcept;
+	explicit Tetrahedron(Uninitialized) noexcept;
 	Tetrahedron(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3) noexcept;
-	explicit Tetrahedron(const std::tuple<Vector3<T>, Vector3<T>, Vector3<T>, Vector3<T>>& t) noexcept;
+	explicit Tetrahedron(const TupleType& t) noexcept : vertices{ std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t) } {}
+	explicit Tetrahedron(const Vector3<T>* v) noexcept : vertices{ v[0], v[1], v[2], v[3] } {}
 
-	//explicit operator std::tuple<Vector3<T>, Vector3<T>, Vector3<T>, Vector3<T>>() { return { vertices[0], vertices[1], vertices[2], vertices[3] }; }
 	bool operator==(const Tetrahedron& tetrahedron) const noexcept;
 	bool operator!=(const Tetrahedron& tetrahedron) const noexcept { return !(*this == tetrahedron); }
 
@@ -52,15 +54,15 @@ struct Tetrahedron
 	bool approxEquals(const Tetrahedron& tetrahedron, T tolerance) const noexcept;
 	bool isFinite() const noexcept;
 	Tetrahedron& set(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3) noexcept;
-	const Vector3<T>& getVertex(int index) const noexcept { return ((unsigned int)index < 4u) ? vertices[index] : Vector3<T>::ZERO; }
-	void setVertex(int index, const Vector3<T>& vertex) noexcept; // throw (std::out_of_range)
 	Vector3<T> getCentroid() const noexcept;
 	//T getSurfaceArea() const noexcept; // #TODO
 	T getVolume() const noexcept;
 
 	// Vertices
+	const Vector3<T>& getVertex(int index) const noexcept { return ((unsigned int)index < 4u) ? vertices[index] : Vector3<T>::ZERO; }
+	void setVertex(int index, const Vector3<T>& vertex); // throw (std::out_of_range)
 	template<std::output_iterator<Vector3<T>> O> O copyVertices(O target) const;
-	std::tuple<Vector3<T>, Vector3<T>, Vector3<T>, Vector3<T>> getVertices() const noexcept;
+	TupleType getVertices() const noexcept;
 
 	// Circumscribed box
 	AxisAlignedBox<T> getCircumscribedBox() const noexcept;
@@ -75,21 +77,15 @@ struct Tetrahedron
 };
 
 template<typename T>
-inline Tetrahedron<T>::Tetrahedron(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3)
-{ 
-	vertices[0] = v0; 
-	vertices[1] = v1; 
-	vertices[2] = v2; 
-	vertices[3] = v3;
+inline Tetrahedron<T>::Tetrahedron(Uninitialized) :
+	vertices{ { Uninitialized() }, { Uninitialized() }, { Uninitialized() }, { Uninitialized() } }
+{
 }
 
 template<typename T>
-inline Tetrahedron<T>::Tetrahedron(const std::tuple<Vector3<T>, Vector3<T>, Vector3<T>, Vector3<T>>& t)
+inline Tetrahedron<T>::Tetrahedron(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3) :
+	vertices{ v0, v1, v2, v3 }
 {
-	vertices[0] = std::get<0>(t);
-	vertices[1] = std::get<1>(t);
-	vertices[2] = std::get<2>(t);
-	vertices[3] = std::get<3>(t);
 }
 
 template<typename T>
@@ -149,14 +145,6 @@ inline Tetrahedron<T>& Tetrahedron<T>::set(const Vector3<T>& v0, const Vector3<T
 }
 
 template<typename T>
-inline void Tetrahedron<T>::setVertex(int index, const Vector3<T>& vertex)
-{
-	if ((unsigned int)index >= 3u)
-		throw std::out_of_range("Tetrahedron::setVertex() : index");
-	vertices[index] = vertex;
-}
-
-template<typename T>
 inline Vector3<T> Tetrahedron<T>::getCentroid() const
 {
 	return (vertices[0] + vertices[1] + vertices[2] + vertices[3])*T(0.25);
@@ -166,6 +154,14 @@ template<typename T>
 inline T Tetrahedron<T>::getVolume() const
 {
 	return std::fabs(dot(vertices[0] - vertices[3], cross(vertices[1] - vertices[3], vertices[2] - vertices[3])))/T(6);
+}
+
+template<typename T>
+inline void Tetrahedron<T>::setVertex(int index, const Vector3<T>& vertex)
+{
+	if ((unsigned int)index >= 3u)
+		throw std::out_of_range("Tetrahedron::setVertex() : index");
+	vertices[index] = vertex;
 }
 
 template<typename T>
@@ -180,7 +176,7 @@ inline O Tetrahedron<T>::copyVertices(O target) const
 }
 
 template<typename T>
-inline std::tuple<Vector3<T>, Vector3<T>, Vector3<T>, Vector3<T>> Tetrahedron<T>::getVertices() const
+inline typename Tetrahedron<T>::TupleType Tetrahedron<T>::getVertices() const
 {
 	return { vertices[0], vertices[1], vertices[2], vertices[3] };
 }
