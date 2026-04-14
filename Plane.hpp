@@ -88,7 +88,7 @@ struct Plane
 	//template<std::input_iterator I, std::sentinel_for<I> S> static Plane computeBestFit(I first, S last); // #TODO
 
 	// Properties
-	bool isEmpty() const noexcept { return (a == T()) && (b == T()) && (c == T()) && (d == T()); }
+	bool isZero() const noexcept { return (a == T()) && (b == T()) && (c == T()) && (d == T()); }
 	bool approxEquals(const Plane& p) const noexcept;
 	bool approxEquals(const Plane& p, T tolerance) const noexcept;
 	bool isFinite() const noexcept { return std::isfinite(a) && std::isfinite(b) && std::isfinite(c) && std::isfinite(d); }
@@ -96,7 +96,7 @@ struct Plane
 	void setNormal(const Vector3<T>& normal) noexcept { a = normal.x; b = normal.y; c = normal.z; }
 	T getConstant() const noexcept { return d; }
 	void setConstant(T constant) noexcept { d = constant; }
-	Plane& makeEmpty() noexcept { a = T(); b = T(); c = T(); d = T(); return *this; }
+	Plane& setZero() noexcept { a = T(); b = T(); c = T(); d = T(); return *this; }
 	Plane& set(const Vector3<T>& normal, T constant) noexcept { a = normal.x; b = normal.y; c = normal.z; d = constant; return *this; }
 	Plane& set(T a, T b, T c, T d) noexcept { this->a = a; this->b = b; this->c = c; this->d = d; return *this; }
 
@@ -140,6 +140,7 @@ struct Plane<float>
 	using ConstArg = const Plane;
 	using ConstResult = const Plane;
 	using TupleType = std::tuple<float, float, float, float>;
+	using SimdType = simd::float4;
 
 	/*constexpr*/ Plane() noexcept : abcd(simd::zero<simd::float4>()) {}
 	explicit Plane(Uninitialized) noexcept {}
@@ -180,7 +181,7 @@ struct Plane<float>
 	//template<std::input_iterator I, std::sentinel_for<I> S> static Plane computeBestFit(I first, S last); // #TODO
 
 	// Properties
-	bool isEmpty() const noexcept { return simd::all4(simd::equal(abcd, simd::zero<simd::float4>())); }
+	bool isZero() const noexcept { return simd::all4(simd::equal(abcd, simd::zero<simd::float4>())); }
 	bool approxEquals(const Plane& p) const noexcept { simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, p)), simd::set4(Constants<float>::TOLERANCE))); }
 	bool approxEquals(const Plane& p, float tolerance) const noexcept { simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, p)), simd::set4(tolerance))); }
 	bool isFinite() const noexcept { return simd::all4(simd::isFinite(abcd)); }
@@ -192,7 +193,7 @@ struct Plane<float>
 	void setNormal(const Vector3<float>& normal) noexcept { abcd = simd::insert3(normal, abcd); }
 	float getConstant() const noexcept { return simd::extract<simd::W>(abcd); }
 	void setConstant(float constant) noexcept { abcd = simd::insert<simd::W>(constant, abcd); }
-	Plane& makeEmpty() noexcept { abcd = simd::zero<simd::float4>(); return *this; }
+	Plane& setZero() noexcept { abcd = simd::zero<simd::float4>(); return *this; }
 	Plane& set(const Vector3<float>& normal, float constant) noexcept { abcd = simd::insert<simd::W>(constant, normal); return *this; }
 	Plane& set(float a, float b, float c, float d) noexcept { abcd = simd::set4(a, b, c, d); return *this; }
 

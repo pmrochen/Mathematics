@@ -83,7 +83,7 @@ struct HalfSpace
 	const Plane<T>& asPlane() const noexcept;
 
 	// Properties
-	bool isEmpty() const noexcept { return (a == T()) && (b == T()) && (c == T()) && (d == T()); }
+	bool isZero() const noexcept { return (a == T()) && (b == T()) && (c == T()) && (d == T()); }
 	bool approxEquals(const HalfSpace& h) const noexcept;
 	bool approxEquals(const HalfSpace& h, T tolerance) const noexcept;
 	bool isFinite() const noexcept { return std::isfinite(a) && std::isfinite(b) && std::isfinite(c) && std::isfinite(d); }
@@ -91,7 +91,7 @@ struct HalfSpace
 	void setNormal(const Vector3<T>& normal) noexcept { a = normal.x; b = normal.y; c = normal.z; }
 	T getConstant() const noexcept { return d; }
 	void setConstant(T constant) noexcept { d = constant; }
-	HalfSpace& makeEmpty() noexcept { a = T(); b = T(); c = T(); d = T(); return *this; }
+	HalfSpace& setZero() noexcept { a = T(); b = T(); c = T(); d = T(); return *this; }
 	HalfSpace& set(const Vector3<T>& normal, T constant) noexcept { a = normal.x; b = normal.y; c = normal.z; d = constant; return *this; }
 	HalfSpace& set(T a, T b, T c, T d) noexcept { this->a = a; this->b = b; this->c = c; this->d = d; return *this; }
 
@@ -134,6 +134,7 @@ struct HalfSpace<float>
 	using ConstArg = const HalfSpace;
 	using ConstResult = const HalfSpace;
 	using TupleType = std::tuple<float, float, float, float>;
+	using SimdType = simd::float4;
 
 	/*constexpr*/ HalfSpace() noexcept : abcd(simd::zero<simd::float4>()) {}
 	explicit HalfSpace(Uninitialized) noexcept {}
@@ -171,7 +172,7 @@ struct HalfSpace<float>
 	const Plane<float> asPlane() const noexcept;
 
 	// Properties
-	bool isEmpty() const noexcept { return simd::all4(simd::equal(abcd, simd::zero<simd::float4>())); }
+	bool isZero() const noexcept { return simd::all4(simd::equal(abcd, simd::zero<simd::float4>())); }
 	bool approxEquals(const HalfSpace& h) const noexcept { simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, h)), simd::set4(Constants<float>::TOLERANCE))); }
 	bool approxEquals(const HalfSpace& h, float tolerance) const noexcept { simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, h)), simd::set4(tolerance))); }
 	bool isFinite() const noexcept { return simd::all4(simd::isFinite(abcd)); }
@@ -183,7 +184,7 @@ struct HalfSpace<float>
 	void setNormal(const Vector3<float>& normal) noexcept { abcd = simd::insert3(normal, abcd); }
 	float getConstant() const noexcept { return simd::extract<simd::W>(abcd); }
 	void setConstant(float constant) noexcept { abcd = simd::insert<simd::W>(constant, abcd); }
-	HalfSpace& makeEmpty() noexcept { abcd = simd::zero<simd::float4>(); return *this; }
+	HalfSpace& setZero() noexcept { abcd = simd::zero<simd::float4>(); return *this; }
 	HalfSpace& set(const Vector3<float>& normal, float constant) noexcept { abcd = simd::insert<simd::W>(constant, normal); return *this; }
 	HalfSpace& set(float a, float b, float c, float d) noexcept { abcd = simd::set4(a, b, c, d); return *this; }
 
