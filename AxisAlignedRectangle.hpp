@@ -55,7 +55,7 @@ struct AxisAlignedRectangle
 	bool approxEquals(const AxisAlignedRectangle& rectangle) const noexcept;
 	bool approxEquals(const AxisAlignedRectangle& rectangle, T tolerance) const noexcept;
 	bool isFinite() const noexcept { return minimum.isFinite() && maximum.isFinite(); }
-	AxisAlignedRectangle& makeEmpty() noexcept { minimum = Vector2<T>::INF; maximum = Vector2<T>::MINUS_INF; return *this; }
+	AxisAlignedRectangle& clear() noexcept { minimum = Vector2<T>::INF; maximum = Vector2<T>::MINUS_INF; return *this; }
 	AxisAlignedRectangle& set(const Vector2<T>& minimum, const Vector2<T>& maximum) noexcept { this->minimum = minimum; this->maximum = maximum; return *this; }
 	const Vector2<T>& getMinimum() const noexcept { return minimum; }
 	void setMinimum(const Vector2<T>& minimum) noexcept { this->minimum = minimum; }

@@ -55,7 +55,7 @@ struct Interval
 	bool approxEquals(const Interval& interval) const noexcept;
 	bool approxEquals(const Interval& interval, T tolerance) const noexcept;
 	bool isFinite() const noexcept { return minimum.isFinite() && maximum.isFinite(); }
-	Interval& makeEmpty() noexcept { minimum = std::numeric_limits<T>::infinity(); maximum = -std::numeric_limits<T>::infinity(); return *this; }
+	Interval& clear() noexcept { minimum = std::numeric_limits<T>::infinity(); maximum = -std::numeric_limits<T>::infinity(); return *this; }
 	Interval& setZero() noexcept { minimum = T(); maximum = T(); return *this; }
 	Interval& set(T minimum, T maximum) noexcept { this->minimum = minimum; this->maximum = maximum; return *this; }
 	Interval& set(T value) noexcept { this->minimum = value; this->maximum = value; return *this; }

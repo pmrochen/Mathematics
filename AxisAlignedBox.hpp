@@ -69,7 +69,7 @@ struct AxisAlignedBox
 	bool approxEquals(const AxisAlignedBox& box) const noexcept;
 	bool approxEquals(const AxisAlignedBox& box, T tolerance) const noexcept;
 	bool isFinite() const noexcept { return minimum.isFinite() && maximum.isFinite(); }
-	AxisAlignedBox& makeEmpty() noexcept { minimum = Vector3<T>::INF; maximum = Vector3<T>::MINUS_INF; return *this; }
+	AxisAlignedBox& clear() noexcept { minimum = Vector3<T>::INF; maximum = Vector3<T>::MINUS_INF; return *this; }
 	AxisAlignedBox& set(const Vector3<T>& minimum, const Vector3<T>& maximum) noexcept { this->minimum = minimum; this->maximum = maximum; return *this; }
 	const Vector3<T>& getMinimum() const noexcept { return minimum; }
 	void setMinimum(const Vector3<T>& minimum) noexcept { this->minimum = minimum; }
