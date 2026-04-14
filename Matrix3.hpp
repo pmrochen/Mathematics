@@ -175,6 +175,7 @@ struct Matrix3<float>
 	using RowType = Vector3<float>;
 	using ColumnType = Vector3<float>;
 	using TupleType = std::tuple<Vector3<float>, Vector3<float>, Vector3<float>>;
+	using SimdType = simd::float4;
 	using SimdTupleType = std::tuple<simd::float4, simd::float4, simd::float4>;
 
 	static constexpr int DIMENSION = 3;

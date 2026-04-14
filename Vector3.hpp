@@ -257,6 +257,7 @@ struct Vector3<float>
 	using ConstResult = const Vector3;
 	using TupleType = std::tuple<float, float, float>;
 	template<Arithmetic U> OtherTupleType = std::tuple<U, U, U>;
+	using SimdType = simd::float4;
 
 	static constexpr int NUM_COMPONENTS = 3;
 

@@ -202,6 +202,7 @@ struct Matrix4<float>
 	using RowType = Vector4<float>;
 	using ColumnType = Vector4<float>;
 	using TupleType = std::tuple<Vector4<float>, Vector4<float>, Vector4<float>, Vector4<float>>;
+	using SimdType = simd::float4;
 	using SimdTupleType = std::tuple<simd::float4, simd::float4, simd::float4, simd::float4>;
 
 	static constexpr int DIMENSION = 4;

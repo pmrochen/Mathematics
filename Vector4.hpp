@@ -250,6 +250,7 @@ struct Vector4<float>
 	using ConstResult = const Vector4;
 	using TupleType = std::tuple<float, float, float, float>;
 	template<Arithmetic U> OtherTupleType = std::tuple<U, U, U, U>;
+	using SimdType = simd::float4;
 
 	static constexpr int NUM_COMPONENTS = 4;
 

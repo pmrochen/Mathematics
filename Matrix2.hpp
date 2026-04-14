@@ -139,6 +139,7 @@ struct Matrix2<float>
 	using ColumnType = Vector2<float>;
 	using PairType = std::pair<Vector2<float>, Vector2<float>>;
 	using TupleType = std::tuple<Vector2<float>, Vector2<float>>;
+	using SimdType = simd::float4;
 	using SimdPairType = std::pair<simd::float4, simd::float4>;
 	using SimdTupleType = std::tuple<simd::float4, simd::float4>;
 

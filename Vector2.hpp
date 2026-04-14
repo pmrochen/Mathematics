@@ -251,6 +251,7 @@ struct Vector2<float>
 	using TupleType = std::tuple<float, float>;
 	template<Arithmetic U> OtherPairType = std::pair<U, U>;
 	template<Arithmetic U> OtherTupleType = std::tuple<U, U>;
+	using SimdType = simd::float4;
 
 	static constexpr int NUM_COMPONENTS = 2;
 

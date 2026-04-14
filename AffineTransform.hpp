@@ -210,6 +210,7 @@ struct AffineTransform<float>
 	using RowType = Vector3<float>;
 	using ColumnType = Vector4<float>;
 	using TupleType = std::tuple<Vector3<float>, Vector3<float>, Vector3<float>, Vector3<float>>;
+	using SimdType = simd::float4;
 	using SimdTupleType = std::tuple<simd::float4, simd::float4, simd::float4, simd::float4>;
 
 	/*constexpr*/ AffineTransform() noexcept;
