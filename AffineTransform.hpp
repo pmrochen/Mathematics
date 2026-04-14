@@ -55,13 +55,16 @@ struct AffineTransform
 	using ComponentType = T;
 	using ConstArg = const AffineTransform&;
 	using ConstResult = const AffineTransform&;
+	using RowType = Vector3<T>;
+	using ColumnType = Vector4<T>;
+	using TupleType = std::tuple<Vector3<T>, Vector3<T>, Vector3<T>, Vector3<T>>;
 
 	constexpr AffineTransform() noexcept : m00(), m01(), m02(), m10(), m11(), m12(), m20(), m21(), m22(), m30(), m31(), m32() {}
 	explicit AffineTransform(Uninitialized) noexcept {}
 	explicit AffineTransform(Identity) noexcept : m00(1), m01(), m02(), m10(), m11(1), m12(), m20(), m21(), m22(1), m30(), m31(), m32() {}
 	constexpr AffineTransform(T m00, T m01, T m02, T m10, T m11, T m12, T m20, T m21, T m22, T m30, T m31, T m32) noexcept;
 	constexpr AffineTransform(const Vector3<T>& row0, const Vector3<T>& row1, const Vector3<T>& row2, const Vector3<T>& row3) noexcept;
-	constexpr explicit AffineTransform(const std::tuple<Vector3<T>, Vector3<T>, Vector3<T>>& t) noexcept;
+	constexpr explicit AffineTransform(const TupleType& t) noexcept;
 	constexpr AffineTransform(const Matrix2<T>& m) noexcept;
 	constexpr AffineTransform(const Matrix3<T>& m) noexcept;
 	constexpr AffineTransform(const Matrix3<T>& r, const Vector3<T>& t) noexcept;
@@ -204,13 +207,17 @@ struct AffineTransform<float>
 	using ComponentType = float;
 	using ConstArg = const AffineTransform;
 	using ConstResult = const AffineTransform;
+	using RowType = Vector3<float>;
+	using ColumnType = Vector4<float>;
+	using TupleType = std::tuple<Vector3<float>, Vector3<float>, Vector3<float>, Vector3<float>>;
+	using SimdTupleType = std::tuple<simd::float4, simd::float4, simd::float4, simd::float4>;
 
 	/*constexpr*/ AffineTransform() noexcept;
 	explicit AffineTransform(Uninitialized) noexcept {}
 	explicit AffineTransform(Identity) noexcept;
 	/*constexpr*/ AffineTransform(float m00, float m01, float m02, float m10, float m11, float m12, float m20, float m21, float m22, float m30, float m31, float m32) noexcept;
 	/*constexpr*/ AffineTransform(const Vector3<float>& row0, const Vector3<float>& row1, const Vector3<float>& row2, const Vector3<float>& row3) noexcept;
-	/*constexpr*/ explicit AffineTransform(const std::tuple<Vector3<float>, Vector3<float>, Vector3<float>>& t) noexcept;
+	/*constexpr*/ explicit AffineTransform(const TupleType& t) noexcept;
 	/*constexpr*/ AffineTransform(const Matrix2<float>& m) noexcept;
 	/*constexpr*/ AffineTransform(const Matrix3<float>& m) noexcept;
 	/*constexpr*/ AffineTransform(const Matrix3<float>& r, const Vector3<float>& t) noexcept;
@@ -219,7 +226,7 @@ struct AffineTransform<float>
 	explicit AffineTransform(const float* m) noexcept;
 	explicit AffineTransform(const simd::float4* m) noexcept : row0(m[0]), row1(m[1]), row2(m[2]), row3(m[3]) {}
 	AffineTransform(simd::float4 row0, simd::float4 row1, simd::float4 row2, simd::float4 row3) noexcept;
-	explicit AffineTransform(const std::tuple<simd::float4, simd::float4, simd::float4>& t) noexcept;
+	explicit AffineTransform(const SimdTupleType& t) noexcept;
 	AffineTransform(const AffineTransform& m) noexcept : row0(m.row0), row1(m.row1), row2(m.row2), row3(m.row3) {}
 	AffineTransform& operator=(const AffineTransform& m) noexcept { row0 = m.row0; row1 = m.row1; row2 = m.row2; row3 = m.row3; return *this; }
 
@@ -375,7 +382,7 @@ inline AffineTransform<T>::AffineTransform(const Vector3<T>& row0, const Vector3
 }
 
 template<typename T>
-inline AffineTransform<T>::AffineTransform(const std::tuple<Vector3<T>, Vector3<T>, Vector3<T>, Vector3<T>>& t) :
+inline AffineTransform<T>::AffineTransform(const typename AffineTransform<T>::TupleType& t) :
 	AffineTransform(std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t))
 {
 }
@@ -877,7 +884,7 @@ inline AffineTransform<float>::AffineTransform(const Vector3<float>& row0, const
 {
 }
 
-inline AffineTransform<float>::AffineTransform(const std::tuple<Vector3<float>, Vector3<float>, Vector3<float>, Vector3<float>>& t) :
+inline AffineTransform<float>::AffineTransform(const typename AffineTransform<float>::TupleType& t) :
 	AffineTransform(std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t))
 {
 }
@@ -972,7 +979,7 @@ inline AffineTransform<float>::AffineTransform(simd::float4 row0, simd::float4 r
 {
 }
 
-inline AffineTransform<float>::AffineTransform(const std::tuple<simd::float4, simd::float4, simd::float4>& t) :
+inline AffineTransform<float>::AffineTransform(const typename AffineTransform<float>::SimdTupleType& t) :
 	row0(std::get<0>(t)), 
 	row1(std::get<1>(t)), 
 	row2(std::get<2>(t)), 

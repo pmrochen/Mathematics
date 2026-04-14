@@ -45,6 +45,9 @@ struct Matrix3
 	using ComponentType = T;
 	using ConstArg = const Matrix3&;
 	using ConstResult = const Matrix3&;
+	using RowType = Vector3<T>;
+	using ColumnType = Vector3<T>;
+	using TupleType = std::tuple<Vector3<T>, Vector3<T>, Vector3<T>>;
 
 	static constexpr int DIMENSION = 3;
 
@@ -53,7 +56,7 @@ struct Matrix3
 	explicit Matrix3(Identity) noexcept : m00(1), m01(), m02(), m10(), m11(1), m12(), m20(), m21(), m22(1) {}
 	constexpr Matrix3(T m00, T m01, T m02, T m10, T m11, T m12, T m20, T m21, T m22) noexcept;
 	constexpr Matrix3(const Vector3<T>& row0, const Vector3<T>& row1, const Vector3<T>& row2) noexcept;
-	constexpr explicit Matrix3(const std::tuple<Vector3<T>, Vector3<T>, Vector3<T>>& t) noexcept;
+	constexpr explicit Matrix3(const TupleType& t) noexcept;
 	constexpr Matrix3(const Matrix2<T>& m) noexcept;
 	explicit Matrix3(const YawPitchRoll<T>& r) noexcept { setRotation(r); }
 	explicit Matrix3(const Euler<T>& e) noexcept { setRotation(e); }
@@ -169,6 +172,10 @@ struct Matrix3<float>
 	using ComponentType = float;
 	using ConstArg = const Matrix3;
 	using ConstResult = const Matrix3;
+	using RowType = Vector3<float>;
+	using ColumnType = Vector3<float>;
+	using TupleType = std::tuple<Vector3<float>, Vector3<float>, Vector3<float>>;
+	using SimdTupleType = std::tuple<simd::float4, simd::float4, simd::float4>;
 
 	static constexpr int DIMENSION = 3;
 
@@ -177,7 +184,7 @@ struct Matrix3<float>
 	explicit Matrix3(Identity) noexcept;
 	/*constexpr*/ Matrix3(float m00, float m01, float m02, float m10, float m11, float m12, float m20, float m21, float m22) noexcept;
 	/*constexpr*/ Matrix3(const Vector3<float>& row0, const Vector3<float>& row1, const Vector3<float>& row2) noexcept;
-	/*constexpr*/ explicit Matrix3(const std::tuple<Vector3<float>, Vector3<float>, Vector3<float>>& t) noexcept;
+	/*constexpr*/ explicit Matrix3(const TupleType& t) noexcept;
 	/*constexpr*/ Matrix3(const Matrix2<float>& m) noexcept;
 	explicit Matrix3(const YawPitchRoll<float>& r) noexcept { setRotation(r); }
 	explicit Matrix3(const Euler<float>& e) noexcept { setRotation(e); }
@@ -187,7 +194,7 @@ struct Matrix3<float>
 	explicit Matrix3(const float* m) noexcept;
 	explicit Matrix3(const simd::float4* m) noexcept : row0(m[0]), row1(m[1]), row2(m[2]) {}
 	Matrix3(simd::float4 row0, simd::float4 row1, simd::float4 row2) noexcept : row0(row0), row1(row1), row2(row2) {}
-	explicit Matrix3(const std::tuple<simd::float4, simd::float4, simd::float4>& t) noexcept;
+	explicit Matrix3(const SimdTupleType& t) noexcept;
 	Matrix3(const Matrix3& m) noexcept : row0(m.row0), row1(m.row1), row2(m.row2) {}
 	Matrix3& operator=(const Matrix3& m) noexcept { row0 = m.row0; row1 = m.row1; row2 = m.row2; return *this; }
 
@@ -312,7 +319,7 @@ inline Matrix3<T>::Matrix3(const Vector3<T>& row0, const Vector3<T>& row1, const
 }
 
 template<typename T>
-inline Matrix3<T>::Matrix3(const std::tuple<Vector3<T>, Vector3<T>, Vector3<T>>& t) :
+inline Matrix3<T>::Matrix3(const typename Matrix3<T>::TupleType& t) :
 	Matrix3(std::get<0>(t), std::get<1>(t), std::get<2>(t))
 {
 }
@@ -885,7 +892,7 @@ inline Matrix3<float>::Matrix3(const Vector3<float>& row0, const Vector3<T>& row
 {
 }
 
-inline Matrix3<float>::Matrix3(const std::tuple<Vector3<float>, Vector3<float>, Vector3<float>>& t) :
+inline Matrix3<float>::Matrix3(const typename Matrix3<float>::TupleType& t) :
 	Matrix3(std::get<0>(t), std::get<1>(t), std::get<2>(t))
 {
 }
@@ -953,7 +960,7 @@ inline Matrix3<float>::Matrix3(const float* m)
 }
 #endif
 
-inline Matrix3<float>::Matrix3(const std::tuple<simd::float4, simd::float4, simd::float4>& t) :
+inline Matrix3<float>::Matrix3(const typename Matrix3<float>::SimdTupleType& t) :
 	row0(std::get<0>(t)), 
 	row1(std::get<1>(t)), 
 	row2(std::get<2>(t))

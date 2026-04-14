@@ -41,19 +41,20 @@ struct LineSegment2
 	using Real = T;
 	using ConstArg = const LineSegment2&;
 	using ConstResult = const LineSegment2&;
+	using EndpointType = Vector2<T>;
+	using PairType = std::pair<Vector2<T>, Vector2<T>>;
+	using TupleType = std::tuple<Vector2<T>, Vector2<T>>;
 
 	LineSegment2() = default;
 	explicit LineSegment2(Uninitialized) noexcept : start(Uninitialized()), end(Uninitialized()) {}
 	LineSegment2(const Vector2<T>& start, const Vector2<T>& end) noexcept : start(start), end(end) {}
-	explicit LineSegment2(const std::pair<Vector3<T>, Vector3<T>>& t) noexcept : start(t.first), end(t.second) {}
-	explicit LineSegment2(const std::tuple<Vector3<T>, Vector3<T>>& t) noexcept : start(std::get<0>(t)), end(std::get<1>(t)) {}
+	explicit LineSegment2(const PairType& t) noexcept : start(t.first), end(t.second) {}
+	explicit LineSegment2(const TupleType& t) noexcept : start(std::get<0>(t)), end(std::get<1>(t)) {}
 	explicit LineSegment2(const Line2<T>& line) noexcept : start(line.origin), end(line.origin + line.direction) {}
 	LineSegment2(const Line2<T>& line, const Interval<T>& interval) noexcept : start(line.evaluate(interval.minimum)), end(line.evaluate(interval.maximum)) {}
 	explicit LineSegment2(const Ray2<T>& ray) noexcept : start(ray.origin), end(ray.origin + ray.direction) {}
 	LineSegment2(const Ray2<T>& ray, const Interval<T>& interval) noexcept : start(ray.evaluate(interval.minimum)), end(ray.evaluate(interval.maximum)) {}
 
-	//explicit operator std::pair<Vector3<T>, Vector3<T>>() { return { start, end }; }
-	//explicit operator std::tuple<Vector3<T>, Vector3<T>>() { return { start, end }; }
 	//Vector2 operator()(T t) const noexcept { return lerp(start, end, t); }
 	bool operator==(const LineSegment2& segment) const noexcept { return (start == segment.start) && (end == segment.end); }
 	bool operator!=(const LineSegment2& segment) const noexcept { return !(*this == segment); }

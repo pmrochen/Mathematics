@@ -55,6 +55,7 @@ struct Plane
 	using Real = T;
 	using ConstArg = const Plane&;
 	using ConstResult = const Plane&;
+	using TupleType = std::tuple<T, T, T, T>;
 
 	constexpr Plane() noexcept : a(), b(), c(), d() {}
 	explicit Plane(Uninitialized) noexcept {}
@@ -63,12 +64,10 @@ struct Plane
 	Plane(const Vector3<T>& normal, const Vector3<T>& point) noexcept : a(normal.x), b(normal.y), c(normal.z), d(-dot(normal, point)) {}
 	Plane(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2) noexcept;
 	explicit Plane(const HalfSpace<T>& h) noexcept : a(h.a), b(h.b), c(h.c), d(h.d) {}
-	explicit Plane(const std::tuple<T, T, T, T>& t) noexcept : a(std::get<0>(t)), b(std::get<1>(t)), c(std::get<2>(t)), d(std::get<3>(t)) {}
-	template<Arithmetic U> explicit Plane(const std::tuple<U, U, U, U>& t) noexcept : a(T(std::get<0>(t))), b(T(std::get<1>(t))), c(T(std::get<2>(t))), d(T(std::get<3>(t))) {}
+	explicit Plane(const TupleType& t) noexcept : a(std::get<0>(t)), b(std::get<1>(t)), c(std::get<2>(t)), d(std::get<3>(t)) {}
 	//explicit Plane(const T* p) noexcept : a(p[0]), b(p[1]), c(p[2]), d(p[3]) {}
 
-	//explicit operator std::tuple<T, T, T, T>() noexcept { return std::tuple<T, T, T, T>(a, b, c, d); }
-	//template<Arithmetic U> explicit operator std::tuple<U, U, U, U>() noexcept { return std::tuple<U, U, U, U>(U(a), U(b), U(c), U(d)); }
+	//explicit operator TupleType() noexcept { return TupleType(a, b, c, d); }
 	//explicit operator T*() noexcept { return &a; }
 	//explicit operator const T*() const noexcept { return &a; }
 	//T& operator[](int i) noexcept { return (&a)[i]; }
@@ -140,6 +139,7 @@ struct Plane<float>
 	using Real = float;
 	using ConstArg = const Plane;
 	using ConstResult = const Plane;
+	using TupleType = std::tuple<float, float, float, float>;
 
 	/*constexpr*/ Plane() noexcept : abcd(simd::zero<simd::float4>()) {}
 	explicit Plane(Uninitialized) noexcept {}
@@ -148,16 +148,14 @@ struct Plane<float>
 	Plane(const Vector3<float>& normal, const Vector3<float>& point) noexcept : abcd(simd::insert<simd::W>(-dot(normal, point), normal)) {}
 	Plane(const Vector3<float>& p0, const Vector3<float>& p1, const Vector3<float>& p2) noexcept;
 	explicit Plane(const HalfSpace<float>& h) noexcept : abcd(h.abcd) {}
-	explicit Plane(const std::tuple<float, float, float, float>& t) noexcept : abcd(simd::set4(std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t))) {}
-	template<Arithmetic U> explicit Plane(const std::tuple<U, U, U, U>& t) noexcept : abcd(simd::set4((float)std::get<0>(t), (float)std::get<1>(t), (float)std::get<2>(t), (float)std::get<3>(t))) {}
+	explicit Plane(const TupleType& t) noexcept : abcd(simd::set4(std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t))) {}
 	//explicit Plane(const float* p) noexcept : abcd(simd::load4(p)) {}
 	explicit Plane(simd::float4 p) noexcept : abcd(p) {}
 	Plane(const Plane& p) noexcept : abcd(p.abcd) {}
 	Plane& operator=(const Plane& p) noexcept { abcd = p.abcd; return *this; }
 
 	operator simd::float4() const noexcept { return abcd; }
-	//explicit operator std::tuple<float, float, float, float>() noexcept { return std::tuple<float, float, float, float>(a, b, c, d); }
-	//template<Arithmetic U> explicit operator std::tuple<U, U, U, U>() noexcept { return std::tuple<U, U, U, U>(U(a), U(b), U(c), U(d)); }
+	//explicit operator TupleType() noexcept { return TupleType(a, b, c, d); }
 	//explicit operator float* () noexcept { return &a; }
 	//explicit operator const float* () const noexcept { return &a; }
 	//float& operator[](int i) noexcept { return (&a)[i]; }

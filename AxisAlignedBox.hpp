@@ -47,17 +47,18 @@ struct AxisAlignedBox
 	using Real = T;
 	using ConstArg = const AxisAlignedBox&;
 	using ConstResult = const AxisAlignedBox&;
+	using VertexType = Vector3<T>;
+	using PairType = std::pair<Vector3<T>, Vector3<T>>;
+	using TupleType = std::tuple<Vector3<T>, Vector3<T>>;
 
 	AxisAlignedBox() noexcept : minimum(Vector3<T>::INF), maximum(Vector3<T>::MINUS_INF) {}
 	explicit AxisAlignedBox(Uninitialized) noexcept : minimum(Uninitialized()), maximum(Uninitialized()) {}
 	AxisAlignedBox(const Vector3<T>& minimum, const Vector3<T>& maximum) noexcept : minimum(minimum), maximum(maximum) {}
 	explicit AxisAlignedBox(const Vector3<T>& dimensions) noexcept : minimum(T(-0.5)* dimensions), maximum(T(0.5)* dimensions) {}
-	explicit AxisAlignedBox(const std::pair<Vector3<T>, Vector3<T>>& t) noexcept : minimum(t.first), maximum(t.second) {}
-	explicit AxisAlignedBox(const std::tuple<Vector3<T>, Vector3<T>>& t) noexcept : minimum(std::get<0>(t)), maximum(std::get<1>(t)) {}
+	explicit AxisAlignedBox(const PairType& t) noexcept : minimum(t.first), maximum(t.second) {}
+	explicit AxisAlignedBox(const TupleType& t) noexcept : minimum(std::get<0>(t)), maximum(std::get<1>(t)) {}
 	explicit AxisAlignedBox(const OrientedBox<T>& box) noexcept;
 
-	//explicit operator std::pair<Vector3<T>, Vector3<T>>() { return { minimum, maximum }; }
-	//explicit operator std::tuple<Vector3<T>, Vector3<T>>() { return { minimum, maximum }; }
 	bool operator==(const AxisAlignedBox& box) const noexcept { return (minimum == box.minimum) && (maximum == box.maximum); }
 	bool operator!=(const AxisAlignedBox& box) const noexcept { return !(*this == box); }
 

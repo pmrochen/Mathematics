@@ -32,10 +32,10 @@ struct Normalized {};
 struct Unnormalized {};
 
 template<typename T>
-concept Normalization = (std::same_as<T, Normalized> || std::same_as<T, Unnormalized>); // #TODO Move to Concepts.hpp
+concept Normalization = (std::same_as<T, Normalized> || std::same_as<T, Unnormalized>); // #TODO Move to Concepts.inl
 
 template<typename T>
-concept Arithmetic = (std::floating_point<T> || std::integral<T>); // #TODO Move to Concepts.hpp
+concept Arithmetic = (std::floating_point<T> || std::integral<T>); // #TODO Move to Concepts.inl
 
 namespace templates {
 
@@ -54,6 +54,10 @@ struct Vector2<T>
 	using ComponentType = T;
 	using ConstArg = const Vector2&;
 	using ConstResult = const Vector2&;
+	using PairType = std::pair<T, T>;
+	using TupleType = std::tuple<T, T>;
+	template<Arithmetic U> OtherPairType = std::pair<U, U>;
+	template<Arithmetic U> OtherTupleType = std::tuple<U, U>;
 
 	static constexpr int NUM_COMPONENTS = 2;
 
@@ -61,22 +65,22 @@ struct Vector2<T>
 	explicit Vector2(Uninitialized) noexcept {}
 	constexpr explicit Vector2(T scalar) noexcept : x(scalar), y(scalar) {}
 	constexpr Vector2(T x, T y) noexcept : x(x), y(y) {}
-	//explicit Vector2(const tuples::templates::Tuple2<T>& t) noexcept : x(t.x), y(t.y) {}
-	//template<Arithmetic U> explicit Vector2(const tuples::templates::Tuple2<U>& t) noexcept : x(T(t.x)), y(T(t.y)) {}
-	explicit Vector2(const std::pair<T, T>& t) noexcept : x(t.first), y(t.second) {}
-	template<Arithmetic U> explicit Vector2(const std::pair<U, U>& t) noexcept : x(T(t.first)), y(T(t.second)) {}
-	explicit Vector2(const std::tuple<T, T>& t) noexcept : x(std::get<0>(t)), y(std::get<1>(t)) {}
-	template<Arithmetic U> explicit Vector2(const std::tuple<U, U>& t) noexcept : x(T(std::get<0>(t))), y(T(std::get<1>(t))) {}
+	//explicit Vector2(const Tuple2<T>& t) noexcept : x(t.x), y(t.y) {}
+	//template<Arithmetic U> explicit Vector2(const Tuple2<U>& t) noexcept : x(T(t.x)), y(T(t.y)) {}
+	explicit Vector2(const PairType& t) noexcept : x(t.first), y(t.second) {}
+	template<Arithmetic U> explicit Vector2(const OtherPairType<U>& t) noexcept : x(T(t.first)), y(T(t.second)) {}
+	explicit Vector2(const TupleType& t) noexcept : x(std::get<0>(t)), y(std::get<1>(t)) {}
+	template<Arithmetic U> explicit Vector2(const OtherTupleType<U>& t) noexcept : x(T(std::get<0>(t))), y(T(std::get<1>(t))) {}
 	explicit Vector2(const T* v) noexcept : x(v[0]), y(v[1]) {}
 	explicit Vector2(Axis axis) noexcept : x((axis == Axis::X) ? T(1) : T(0)), y((axis == Axis::Y) ? T(1) : T(0)) {}
 	template<Arithmetic U> explicit Vector2(const Vector2<U>& v) noexcept : x(T(t.x)), y(T(t.y)) {}
 
-	//explicit operator tuples::templates::Tuple2<T>() noexcept { return tuples::templates::Tuple2<T>(x, y); }
-	//template<Arithmetic U> explicit operator tuples::templates::Tuple2<U>() noexcept { return tuples::templates::Tuple2<U>(U(x), U(y)); }
-	//explicit operator std::pair<T, T>() { return std::pair<T, T>(x, y); }
-	//template<Arithmetic U> explicit operator std::pair<U, U>() { return std::pair<U, U>(U(x), U(y)); }
-	//explicit operator std::tuple<T, T>() { return std::tuple<T, T>(x, y); }
-	//template<Arithmetic U> explicit operator std::tuple<U, U>() { return std::tuple<U, U>(U(x), U(y)); }
+	//explicit operator Tuple2<T>() noexcept { return Tuple2<T>(x, y); }
+	//template<Arithmetic U> explicit operator Tuple2<U>() noexcept { return Tuple2<U>(U(x), U(y)); }
+	//explicit operator PairType() { return PairType(x, y); }
+	//template<Arithmetic U> explicit operator OtherPairType<U>() { return OtherPairType<U>(U(x), U(y)); }
+	//explicit operator TupleType() { return TupleType(x, y); }
+	//template<Arithmetic U> explicit operator OtherTupleType<U>() { return OtherTupleType<U>(U(x), U(y)); }
 	explicit operator T*() noexcept { return &x; }
 	explicit operator const T*() const noexcept { return &x; }
 	T& operator[](int i) noexcept { return (&x)[i]; }
@@ -160,6 +164,10 @@ struct Vector2<T>
 	using ComponentType = T;
 	using ConstArg = const Vector2&;
 	using ConstResult = const Vector2&;
+	using PairType = std::pair<T, T>;
+	using TupleType = std::tuple<T, T>;
+	template<Arithmetic U> OtherPairType = std::pair<U, U>;
+	template<Arithmetic U> OtherTupleType = std::tuple<U, U>;
 
 	static constexpr int NUM_COMPONENTS = 2;
 
@@ -167,21 +175,21 @@ struct Vector2<T>
 	explicit Vector2(Uninitialized) noexcept {}
 	constexpr explicit Vector2(T scalar) noexcept : x(scalar), y(scalar) {}
 	constexpr Vector2(T x, T y) noexcept : x(x), y(y) {}
-	//explicit Vector2(const tuples::templates::Tuple2<T>& t) noexcept : x(t.x), y(t.y) {}
-	//template<Arithmetic U> explicit Vector2(const tuples::templates::Tuple2<U>& t) noexcept : x(T(t.x)), y(T(t.y)) {}
-	explicit Vector2(const std::pair<T, T>& t) noexcept : x(t.first), y(t.second) {}
-	template<Arithmetic U> explicit Vector2(const std::pair<U, U>& t) noexcept : x(T(t.first)), y(T(t.second)) {}
-	explicit Vector2(const std::tuple<T, T>& t) noexcept : x(std::get<0>(t)), y(std::get<1>(t)) {}
-	template<Arithmetic U> explicit Vector2(const std::tuple<U, U>& t) noexcept : x(T(std::get<0>(t))), y(T(std::get<1>(t))) {}
+	//explicit Vector2(const Tuple2<T>& t) noexcept : x(t.x), y(t.y) {}
+	//template<Arithmetic U> explicit Vector2(const Tuple2<U>& t) noexcept : x(T(t.x)), y(T(t.y)) {}
+	explicit Vector2(const PairType& t) noexcept : x(t.first), y(t.second) {}
+	template<Arithmetic U> explicit Vector2(const OtherPairType<U>& t) noexcept : x(T(t.first)), y(T(t.second)) {}
+	explicit Vector2(const TupleType& t) noexcept : x(std::get<0>(t)), y(std::get<1>(t)) {}
+	template<Arithmetic U> explicit Vector2(const OtherTupleType<U>& t) noexcept : x(T(std::get<0>(t))), y(T(std::get<1>(t))) {}
 	explicit Vector2(const T* v) noexcept : x(v[0]), y(v[1]) {}
 	template<Arithmetic U> explicit Vector2(const Vector2<U>& v) noexcept : x(T(v.x)), y(T(v.y)) {}
 
-	//explicit operator tuples::templates::Tuple2<T>() noexcept { return tuples::templates::Tuple2<T>(x, y); }
-	//template<Arithmetic U> explicit operator tuples::templates::Tuple2<U>() noexcept { return tuples::templates::Tuple2<U>(U(x), U(y)); }
-	//explicit operator std::pair<T, T>() { return std::pair<T, T>(x, y); }
-	//template<Arithmetic U> explicit operator std::pair<U, U>() { return std::pair<U, U>(U(x), U(y)); }
-	//explicit operator std::tuple<T, T>() { return std::tuple<T, T>(x, y); }
-	//template<Arithmetic U> explicit operator std::tuple<U, U>() { return std::tuple<U, U>(U(x), U(y)); }
+	//explicit operator Tuple2<T>() noexcept { return Tuple2<T>(x, y); }
+	//template<Arithmetic U> explicit operator Tuple2<U>() noexcept { return Tuple2<U>(U(x), U(y)); }
+	//explicit operator PairType() { return PairType(x, y); }
+	//template<Arithmetic U> explicit operator OtherPairType<U>() { return OtherPairType<U>(U(x), U(y)); }
+	//explicit operator TupleType() { return TupleType(x, y); }
+	//template<Arithmetic U> explicit operator OtherTupleType<U>() { return OtherTupleType<U>(U(x), U(y)); }
 	explicit operator T* () noexcept { return &x; }
 	explicit operator const T* () const noexcept { return &x; }
 	T& operator[](int i) noexcept { return (&x)[i]; }
@@ -239,6 +247,10 @@ struct Vector2<float>
 	using ComponentType = float;
 	using ConstArg = const Vector2;
 	using ConstResult = const Vector2;
+	using PairType = std::pair<float, float>;
+	using TupleType = std::tuple<float, float>;
+	template<Arithmetic U> OtherPairType = std::pair<U, U>;
+	template<Arithmetic U> OtherTupleType = std::tuple<U, U>;
 
 	static constexpr int NUM_COMPONENTS = 2;
 
@@ -247,22 +259,22 @@ struct Vector2<float>
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	/*constexpr*/ explicit Vector2(float scalar) noexcept : xy(simd::set4(scalar)) {}
 	/*constexpr*/ Vector2(float x, float y) noexcept : xy(simd::set4(x, y, y, y)) {}
-	//explicit Vector2(const tuples::templates::Tuple2<float>& t) noexcept : xy(simd::set4(t.x, t.y, t.y, t.y)) {}
-	//template<Arithmetic U> explicit Vector2(const tuples::templates::Tuple2<U>& t) : Vector2((float)t.x, (float)t.y) {}
-	explicit Vector2(const std::pair<float, float>& t) noexcept : xy(simd::set4(t.first, t.second, t.second, t.second)) {}
-	template<Arithmetic U> explicit Vector2(const std::pair<U, U>& t) noexcept : Vector2((float)t.first, (float)t.second) {}
-	explicit Vector2(const std::tuple<float, float>& t) noexcept : Vector2(std::get<0>(t), std::get<1>(t)) {}
-	template<Arithmetic U> explicit Vector2(const std::tuple<U, U>& t) noexcept : Vector2((float)std::get<0>(t), (float)std::get<1>(t)) {}
+	//explicit Vector2(const Tuple2<float>& t) noexcept : xy(simd::set4(t.x, t.y, t.y, t.y)) {}
+	//template<Arithmetic U> explicit Vector2(const Tuple2<U>& t) : Vector2((float)t.x, (float)t.y) {}
+	explicit Vector2(const PairType& t) noexcept : xy(simd::set4(t.first, t.second, t.second, t.second)) {}
+	template<Arithmetic U> explicit Vector2(const OtherPairType<U>& t) noexcept : Vector2((float)t.first, (float)t.second) {}
+	explicit Vector2(const TupleType& t) noexcept : Vector2(std::get<0>(t), std::get<1>(t)) {}
+	template<Arithmetic U> explicit Vector2(const OtherTupleType<U>& t) noexcept : Vector2((float)std::get<0>(t), (float)std::get<1>(t)) {}
 	explicit Vector2(const float* v) noexcept : Vector2(v[0], v[1]) {}
 #else
 	/*constexpr*/ explicit Vector2(float scalar) noexcept : xy(simd::set2(scalar)) {}
 	/*constexpr*/ Vector2(float x, float y) noexcept : xy(simd::set2(x, y)) {}
-	//explicit Vector2(const tuples::templates::Tuple2<float>& t) noexcept : xy(simd::set2(t.x, t.y)) {}
-	//template<Arithmetic U> explicit Vector2(const tuples::templates::Tuple2<U>& t) noexcept : xy(simd::set2((float)t.x, (float)t.y)) {}
-	explicit Vector2(const std::pair<float, float>& t) noexcept : xy(simd::set2(t.first, t.second)) {}
-	template<Arithmetic U> explicit Vector2(const std::pair<U, U>& t) noexcept : xy(simd::set2((float)t.first, (float)t.second)) {}
-	explicit Vector2(const std::tuple<float, float>& t) noexcept : xy(simd::set2(std::get<0>(t), std::get<1>(t))) {}
-	template<Arithmetic U> explicit Vector2(const std::tuple<U, U>& t) noexcept : xy(simd::set2((float)std::get<0>(t), (float)std::get<1>(t))) {}
+	//explicit Vector2(const Tuple2<float>& t) noexcept : xy(simd::set2(t.x, t.y)) {}
+	//template<Arithmetic U> explicit Vector2(const Tuple2<U>& t) noexcept : xy(simd::set2((float)t.x, (float)t.y)) {}
+	explicit Vector2(const PairType& t) noexcept : xy(simd::set2(t.first, t.second)) {}
+	template<Arithmetic U> explicit Vector2(const OtherPairType<U>& t) noexcept : xy(simd::set2((float)t.first, (float)t.second)) {}
+	explicit Vector2(const TupleType& t) noexcept : xy(simd::set2(std::get<0>(t), std::get<1>(t))) {}
+	template<Arithmetic U> explicit Vector2(const OtherTupleType<U>& t) noexcept : xy(simd::set2((float)std::get<0>(t), (float)std::get<1>(t))) {}
 	explicit Vector2(const float* v) noexcept : xy(simd::load2(v)) {}
 #endif
 	explicit Vector2(Axis axis) noexcept : Vector2((axis == Axis::X) ? 1.f : 0.f, (axis == Axis::Y) ? 1.f : 0.f) {}
@@ -272,12 +284,12 @@ struct Vector2<float>
 	Vector2& operator=(const Vector2& v) noexcept { xy = v.xy; return *this; }
 
 	operator simd::float4() const noexcept { return xy; }
-	//explicit operator tuples::templates::Tuple2<float>() noexcept { return tuples::templates::Tuple2<float>(x, y); }
-	//template<Arithmetic U> explicit operator tuples::templates::Tuple2<U>() noexcept { return tuples::templates::Tuple2<U>(U(x), U(y)); }
-	//explicit operator std::pair<float, float>() { return std::pair<float, float>(x, y); }
-	//template<Arithmetic U> explicit operator std::pair<U, U>() { return std::pair<U, U>(U(x), U(y)); }
-	//explicit operator std::tuple<float, float>() { return std::tuple<float, float>(x, y); }
-	//template<Arithmetic U> explicit operator std::tuple<U, U>() { return std::tuple<U, U>(U(x), U(y)); }
+	//explicit operator Tuple2<float>() noexcept { return Tuple2<float>(x, y); }
+	//template<Arithmetic U> explicit operator Tuple2<U>() noexcept { return Tuple2<U>(U(x), U(y)); }
+	//explicit operator PairType() { return PairType(x, y); }
+	//template<Arithmetic U> explicit operator OtherPairType<U>() { return OtherPairType<U>(U(x), U(y)); }
+	//explicit operator TupleType() { return TupleType(x, y); }
+	//template<Arithmetic U> explicit operator OtherTupleType<U>() { return OtherTupleType<U>(U(x), U(y)); }
 	explicit operator float* () noexcept { return &x; }
 	explicit operator const float* () const noexcept { return &x; }
 	float& operator[](int i) noexcept { return (&x)[i]; }

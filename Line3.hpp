@@ -25,10 +25,10 @@ namespace mathematics {
 namespace templates {
 
 //template<typename T, typename U>
-//concept ScalarOrVector3 = (std::same_as<T, U> || std::same_as<T, Vector3<U>>); // #TODO Move to Concepts.hpp
+//concept ScalarOrVector3 = (std::same_as<T, U> || std::same_as<T, Vector3<U>>); // #TODO Move to Concepts.inl
 
 //template<typename T, typename U>
-//concept IntervalOrLineSegment3 = (std::same_as<T, Interval<U>> || std::same_as<T, LineSegment3<U>>); // #TODO Move to Concepts.hpp
+//concept IntervalOrLineSegment3 = (std::same_as<T, Interval<U>> || std::same_as<T, LineSegment3<U>>); // #TODO Move to Concepts.inl
 
 template<typename T>
 	requires std::floating_point<T>

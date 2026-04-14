@@ -50,6 +50,8 @@ struct Vector3<T>
 	using ComponentType = T;
 	using ConstArg = const Vector3&;
 	using ConstResult = const Vector3&;
+	using TupleType = std::tuple<T, T, T>;
+	template<Arithmetic U> OtherTupleType = std::tuple<U, U, U>;
 
 	static constexpr int NUM_COMPONENTS = 3;
 
@@ -59,18 +61,18 @@ struct Vector3<T>
 	constexpr Vector3(T x, T y, T z) noexcept : x(x), y(y), z(z) {}
 	constexpr Vector3(const Vector2<T>& v) noexcept : x(v.x), y(v.y), z() {}
 	constexpr Vector3(const Vector2<T>& v, T z) noexcept : x(v.x), y(v.y), z(z) {}
-	//explicit Vector3(const tuples::templates::Tuple3<T>& t) noexcept : x(t.x), y(t.y), z(t.z) {}
-	//template<Arithmetic U> explicit Vector3(const tuples::templates::Tuple3<U>& t) noexcept : x(T(t.x)), y(T(t.y)), z(T(t.z)) {}
-	explicit Vector3(const std::tuple<T, T, T>& t) noexcept : x(std::get<0>(t)), y(std::get<1>(t)), z(std::get<2>(t)) {}
-	template<Arithmetic U> explicit Vector3(const std::tuple<U, U, U>& t) noexcept : x(T(std::get<0>(t))), y(T(std::get<1>(t))), z(T(std::get<2>(t))) {}
+	//explicit Vector3(const Tuple3<T>& t) noexcept : x(t.x), y(t.y), z(t.z) {}
+	//template<Arithmetic U> explicit Vector3(const Tuple3<U>& t) noexcept : x(T(t.x)), y(T(t.y)), z(T(t.z)) {}
+	explicit Vector3(const TupleType& t) noexcept : x(std::get<0>(t)), y(std::get<1>(t)), z(std::get<2>(t)) {}
+	template<Arithmetic U> explicit Vector3(const OtherTupleType<U>& t) noexcept : x(T(std::get<0>(t))), y(T(std::get<1>(t))), z(T(std::get<2>(t))) {}
 	explicit Vector3(const T* v) noexcept : x(v[0]), y(v[1]), z(v[2]) {}
 	explicit Vector3(Axis axis) noexcept : x((axis == Axis::X) ? T(1) : T(0)), y((axis == Axis::Y) ? T(1) : T(0)), z((axis == Axis::Z) ? T(1) : T(0)) {}
 	template<Arithmetic U> explicit Vector3(const Vector3<U>& v) noexcept : x(T(t.x)), y(T(t.y)), z(T(t.z)) {}
 
-	//explicit operator tuples::templates::Tuple3<T>() noexcept { return tuples::templates::Tuple3<T>(x, y, z); }
-	//template<Arithmetic U> explicit operator tuples::templates::Tuple3<U>() noexcept { return tuples::templates::Tuple3<U>(U(x), U(y), U(z)); }
-	//explicit operator std::tuple<T, T, T>() { return std::tuple<T, T, T>(x, y, z); }
-	//template<Arithmetic U> explicit operator std::tuple<U, U, U>() { return std::tuple<U, U, U>(U(x), U(y), U(z)); }
+	//explicit operator Tuple3<T>() noexcept { return Tuple3<T>(x, y, z); }
+	//template<Arithmetic U> explicit operator Tuple3<U>() noexcept { return Tuple3<U>(U(x), U(y), U(z)); }
+	//explicit operator TupleType() { return TupleType(x, y, z); }
+	//template<Arithmetic U> explicit operator OtherTupleType<U>() { return OtherTupleType<U>(U(x), U(y), U(z)); }
 	explicit operator T*() noexcept { return &x; }
 	explicit operator const T*() const noexcept { return &x; }
 	T& operator[](int i) noexcept { return (&x)[i]; }
@@ -164,6 +166,8 @@ struct Vector3<T>
 	using ComponentType = T;
 	using ConstArg = const Vector3&;
 	using ConstResult = const Vector3&;
+	using TupleType = std::tuple<T, T, T>;
+	template<Arithmetic U> OtherTupleType = std::tuple<U, U, U>;
 
 	static constexpr int NUM_COMPONENTS = 3;
 
@@ -173,17 +177,17 @@ struct Vector3<T>
 	constexpr Vector3(T x, T y, T z) noexcept : x(x), y(y), z(z) {}
 	constexpr Vector3(const Vector2<T>& v) noexcept : x(v.x), y(v.y), z() {}
 	constexpr Vector3(const Vector2<T>& v, T z) noexcept : x(v.x), y(v.y), z(z) {}
-	//explicit Vector3(const tuples::templates::Tuple3<T>& t) noexcept : x(t.x), y(t.y), z(t.z) {}
-	//template<Arithmetic U> explicit Vector3(const tuples::templates::Tuple3<U>& t) noexcept : x(T(t.x)), y(T(t.y)), z(T(t.z)) {}
-	explicit Vector3(const std::tuple<T, T, T>& t) noexcept : x(std::get<0>(t)), y(std::get<1>(t)), z(std::get<2>(t)) {}
-	template<Arithmetic U> explicit Vector3(const std::tuple<U, U, U>& t) noexcept : x(T(std::get<0>(t))), y(T(std::get<1>(t))), z(T(std::get<2>(t))) {}
+	//explicit Vector3(const Tuple3<T>& t) noexcept : x(t.x), y(t.y), z(t.z) {}
+	//template<Arithmetic U> explicit Vector3(const Tuple3<U>& t) noexcept : x(T(t.x)), y(T(t.y)), z(T(t.z)) {}
+	explicit Vector3(const TupleType& t) noexcept : x(std::get<0>(t)), y(std::get<1>(t)), z(std::get<2>(t)) {}
+	template<Arithmetic U> explicit Vector3(const OtherTupleType<U>& t) noexcept : x(T(std::get<0>(t))), y(T(std::get<1>(t))), z(T(std::get<2>(t))) {}
 	explicit Vector3(const T* v) noexcept : x(v[0]), y(v[1]), z(v[2]) {}
 	template<Arithmetic U> explicit Vector3(const Vector3<U>& v) noexcept : x(T(v.x)), y(T(v.y)), z(T(v.z)) {}
 
-	//explicit operator tuples::templates::Tuple3<T>() noexcept { return tuples::templates::Tuple3<T>(x, y, z); }
-	//template<Arithmetic U> explicit operator tuples::templates::Tuple3<U>() noexcept { return tuples::templates::Tuple3<U>(U(x), U(y), U(z)); }
-	//explicit operator std::tuple<T, T, T>() { return std::tuple<T, T, T>(x, y, z); }
-	//template<Arithmetic U> explicit operator std::tuple<U, U, U>() { return std::tuple<U, U, U>(U(x), U(y), U(z)); }
+	//explicit operator Tuple3<T>() noexcept { return Tuple3<T>(x, y, z); }
+	//template<Arithmetic U> explicit operator Tuple3<U>() noexcept { return Tuple3<U>(U(x), U(y), U(z)); }
+	//explicit operator TupleType() { return TupleType(x, y, z); }
+	//template<Arithmetic U> explicit operator OtherTupleType<U>() { return OtherTupleType<U>(U(x), U(y), U(z)); }
 	explicit operator T* () noexcept { return &x; }
 	explicit operator const T* () const noexcept { return &x; }
 	T& operator[](int i) noexcept { return (&x)[i]; }
@@ -251,6 +255,8 @@ struct Vector3<float>
 	using ComponentType = float;
 	using ConstArg = const Vector3;
 	using ConstResult = const Vector3;
+	using TupleType = std::tuple<float, float, float>;
+	template<Arithmetic U> OtherTupleType = std::tuple<U, U, U>;
 
 	static constexpr int NUM_COMPONENTS = 3;
 
@@ -261,20 +267,20 @@ struct Vector3<float>
 	/*constexpr*/ Vector3(float x, float y, float z) noexcept : xyz(simd::set4(x, y, z, z)) {}
 	/*constexpr*/ Vector3(const Vector2<float>& v) noexcept : xyz(simd::cutoff2(v)) {}
 	/*constexpr*/ Vector3(const Vector2<float>& v, float z) noexcept : xyz(simd::pack2x2(v, simd::set2(z))) {}
-	//explicit Vector3(const tuples::templates::Tuple3<float>& t) noexcept : xyz(simd::set4(t.x, t.y, t.z, t.z)) {}
-	//template<Arithmetic U> explicit Vector3(const tuples::templates::Tuple3<U>& t) noexcept : Vector3((float)t.x, (float)t.y, (float)t.z) {}
-	explicit Vector3(const std::tuple<float, float, float>& t) noexcept : Vector3(std::get<0>(t), std::get<1>(t), std::get<2>(t)) {}
-	template<Arithmetic U> explicit Vector3(const std::tuple<U, U, U>& t) noexcept : Vector3((float)std::get<0>(t), (float)std::get<1>(t), (float)std::get<2>(t)) {}
+	//explicit Vector3(const Tuple3<float>& t) noexcept : xyz(simd::set4(t.x, t.y, t.z, t.z)) {}
+	//template<Arithmetic U> explicit Vector3(const Tuple3<U>& t) noexcept : Vector3((float)t.x, (float)t.y, (float)t.z) {}
+	explicit Vector3(const TupleType& t) noexcept : Vector3(std::get<0>(t), std::get<1>(t), std::get<2>(t)) {}
+	template<Arithmetic U> explicit Vector3(const OtherTupleType<U>& t) noexcept : Vector3((float)std::get<0>(t), (float)std::get<1>(t), (float)std::get<2>(t)) {}
 	explicit Vector3(const float* v) noexcept : Vector3(v[0], v[1], v[2]) {}
 #else
 	/*constexpr*/ explicit Vector3(float scalar) noexcept : xyz(simd::set3(scalar)) {}
 	/*constexpr*/ Vector3(float x, float y, float z) noexcept : xyz(simd::set3(x, y, z)) {}
 	/*constexpr*/ Vector3(const Vector2<float>& v) noexcept : xyz(simd::cutoff2(v)) {}
 	/*constexpr*/ Vector3(const Vector2<float>& v, float z) noexcept : xyz(simd::pack2x2(v, simd::set1(z))) {}
-	//explicit Vector3(const tuples::templates::Tuple3<float>& t) noexcept : xyz(simd::set3(t.x, t.y, t.z)) {}
-	//template<Arithmetic U> explicit Vector3(const tuples::templates::Tuple3<U>& t) noexcept : xyz(simd::set3((float)t.x, (float)t.y, (float)t.z)) {}
-	explicit Vector3(const std::tuple<float, float, float>& t) noexcept : xyz(simd::set3(std::get<0>(t), std::get<1>(t), std::get<2>(t))) {}
-	template<Arithmetic U> explicit Vector3(const std::tuple<U, U, U>& t) noexcept : xyz(simd::set3((float)std::get<0>(t), (float)std::get<1>(t), (float)std::get<2>(t))) {}
+	//explicit Vector3(const Tuple3<float>& t) noexcept : xyz(simd::set3(t.x, t.y, t.z)) {}
+	//template<Arithmetic U> explicit Vector3(const Tuple3<U>& t) noexcept : xyz(simd::set3((float)t.x, (float)t.y, (float)t.z)) {}
+	explicit Vector3(const TupleType& t) noexcept : xyz(simd::set3(std::get<0>(t), std::get<1>(t), std::get<2>(t))) {}
+	template<Arithmetic U> explicit Vector3(const OtherTupleType<U>& t) noexcept : xyz(simd::set3((float)std::get<0>(t), (float)std::get<1>(t), (float)std::get<2>(t))) {}
 	explicit Vector3(const float* v) noexcept : xyz(simd::load3(v)) {}
 #endif
 	explicit Vector3(Axis axis) noexcept : Vector3((axis == Axis::X) ? 1.f : 0.f, (axis == Axis::Y) ? 1.f : 0.f, (axis == Axis::Z) ? 1.f : 0.f) {}
@@ -284,10 +290,10 @@ struct Vector3<float>
 	Vector3& operator=(const Vector3& v) noexcept { xyz = v.xyz; return *this; }
 
 	operator simd::float4() const noexcept { return xyz; }
-	//explicit operator tuples::templates::Tuple3<float>() noexcept { return tuples::templates::Tuple3<float>(x, y, z); }
-	//template<Arithmetic U> explicit operator tuples::templates::Tuple3<U>() noexcept { return tuples::templates::Tuple3<U>(U(x), U(y), U(z)); }
-	//explicit operator std::tuple<float, float, float>() { return std::tuple<float, float, float>(x, y, z); }
-	//template<Arithmetic U> explicit operator std::tuple<U, U, U>() { return std::tuple<U, U, U>(U(x), U(y), U(z)); }
+	//explicit operator Tuple3<float>() noexcept { return Tuple3<float>(x, y, z); }
+	//template<Arithmetic U> explicit operator Tuple3<U>() noexcept { return Tuple3<U>(U(x), U(y), U(z)); }
+	//explicit operator TupleType() { return TupleType(x, y, z); }
+	//template<Arithmetic U> explicit operator OtherTupleType<U>() { return OtherTupleType<U>(U(x), U(y), U(z)); }
 	explicit operator float* () noexcept { return &x; }
 	explicit operator const float* () const noexcept { return &x; }
 	float& operator[](int i) noexcept { return (&x)[i]; }

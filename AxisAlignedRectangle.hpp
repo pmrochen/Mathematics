@@ -34,16 +34,17 @@ struct AxisAlignedRectangle
 	using Real = T;
 	using ConstArg = const AxisAlignedRectangle&;
 	using ConstResult = const AxisAlignedRectangle&;
+	using VertexType = Vector2<T>;
+	using PairType = std::pair<Vector2<T>, Vector2<T>>;
+	using TupleType = std::tuple<Vector2<T>, Vector2<T>>;
 
 	AxisAlignedRectangle() noexcept : minimum(Vector2<T>::INF), maximum(Vector2<T>::MINUS_INF) {}
 	explicit AxisAlignedRectangle(Uninitialized) noexcept : minimum(Uninitialized()), maximum(Uninitialized()) {}
 	AxisAlignedRectangle(const Vector2<T>& minimum, const Vector2<T>& maximum) noexcept : minimum(minimum), maximum(maximum) {}
 	explicit AxisAlignedRectangle(const Vector2<T>& dimensions) noexcept : minimum(T(-0.5)*dimensions), maximum(T(0.5)*dimensions) {}
-	explicit AxisAlignedRectangle(const std::pair<Vector2<T>, Vector2<T>>& t) noexcept : minimum(t.first), maximum(t.second) {}
-	explicit AxisAlignedRectangle(const std::tuple<Vector2<T>, Vector2<T>>& t) noexcept : minimum(std::get<0>(t)), maximum(std::get<1>(t)) {}
+	explicit AxisAlignedRectangle(const PairType& t) noexcept : minimum(t.first), maximum(t.second) {}
+	explicit AxisAlignedRectangle(const TupleType& t) noexcept : minimum(std::get<0>(t)), maximum(std::get<1>(t)) {}
 
-	//explicit operator std::pair<Vector2<T>, Vector2<T>>() { return { minimum, maximum }; }
-	//explicit operator std::tuple<Vector2<T>, Vector2<T>>() { return { minimum, maximum }; }
 	bool operator==(const AxisAlignedRectangle& rectangle) const noexcept { return (minimum == rectangle.minimum) && (maximum == rectangle.maximum); }
 	bool operator!=(const AxisAlignedRectangle& rectangle) const noexcept { return !(*this == rectangle); }
 

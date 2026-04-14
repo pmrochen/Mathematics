@@ -29,16 +29,18 @@ struct Interval
 	using Real = T;
 	using ConstArg = const Interval&;
 	using ConstResult = const Interval&;
+	using PairType = std::pair<T, T>;
+	using TupleType = std::tuple<T, T>;
 
 	Interval() noexcept : minimum(std::numeric_limits<T>::infinity()), maximum(-std::numeric_limits<T>::infinity()) {}
 	explicit Interval(Uninitialized) noexcept {}
 	Interval(T minimum, T maximum) noexcept : minimum(minimum), maximum(maximum) {}
 	Interval(T value) noexcept : minimum(value), maximum(value) {}
-	explicit Interval(const std::pair<T, T>& t) noexcept : minimum(t.first), maximum(t.second) {}
-	explicit Interval(const std::tuple<T, T>& t) noexcept : minimum(std::get<0>(t)), maximum(std::get<1>(t)) {}
+	explicit Interval(const PairType& t) noexcept : minimum(t.first), maximum(t.second) {}
+	explicit Interval(const TupleType& t) noexcept : minimum(std::get<0>(t)), maximum(std::get<1>(t)) {}
 
-	//explicit operator std::pair<T, T>() { return { minimum, maximum }; }
-	//explicit operator std::tuple<T, T>() { return { minimum, maximum }; }
+	//explicit operator PairType() { return { minimum, maximum }; }
+	//explicit operator TupleType() { return { minimum, maximum }; }
 	//T operator()(T t) const noexcept { return lerp(minimum, maximum, t); }
 	bool operator==(const Interval& interval) const noexcept { return (minimum == interval.minimum) && (maximum == interval.maximum); }
 	bool operator!=(const Interval& interval) const noexcept { return !(*this == interval); }

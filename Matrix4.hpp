@@ -52,6 +52,9 @@ struct Matrix4
 	using ComponentType = T;
 	using ConstArg = const Matrix4&;
 	using ConstResult = const Matrix4&;
+	using RowType = Vector4<T>;
+	using ColumnType = Vector4<T>;
+	using TupleType = std::tuple<Vector4<T>, Vector4<T>, Vector4<T>, Vector4<T>>;
 
 	static constexpr int DIMENSION = 4;
 
@@ -60,7 +63,7 @@ struct Matrix4
 	explicit Matrix4(Identity) noexcept : m00(1), m01(), m02(), m03(), m10(), m11(1), m12(), m13(), m20(), m21(), m22(1), m23(), m30(), m31(), m32(), m33(1) {}
 	constexpr Matrix4(T m00, T m01, T m02, T m03, T m10, T m11, T m12, T m13, T m20, T m21, T m22, T m23, T m30, T m31, T m32, T m33) noexcept;
 	constexpr Matrix4(const Vector4<T>& row0, const Vector4<T>& row1, const Vector4<T>& row2, const Vector4<T>& row3) noexcept;
-	constexpr explicit Matrix4(const std::tuple<Vector4<T>, Vector4<T>, Vector4<T>, Vector4<T>>& t) noexcept;
+	constexpr explicit Matrix4(const TupleType& t) noexcept;
 	constexpr Matrix4(const Matrix2<T>& m) noexcept;
 	constexpr Matrix4(const Matrix3<T>& m) noexcept;
 	constexpr Matrix4(const AffineTransform<T>& m) noexcept;
@@ -196,6 +199,10 @@ struct Matrix4<float>
 	using ComponentType = float;
 	using ConstArg = const Matrix4;
 	using ConstResult = const Matrix4;
+	using RowType = Vector4<float>;
+	using ColumnType = Vector4<float>;
+	using TupleType = std::tuple<Vector4<float>, Vector4<float>, Vector4<float>, Vector4<float>>;
+	using SimdTupleType = std::tuple<simd::float4, simd::float4, simd::float4, simd::float4>;
 
 	static constexpr int DIMENSION = 4;
 
@@ -204,14 +211,14 @@ struct Matrix4<float>
 	explicit Matrix4(Identity) noexcept;
 	/*constexpr*/ Matrix4(float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13, float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33) noexcept;
 	/*constexpr*/ Matrix4(const Vector4<float>& row0, const Vector4<float>& row1, const Vector4<float>& row2, const Vector4<float>& row3) noexcept;
-	/*constexpr*/ explicit Matrix4(const std::tuple<Vector4<float>, Vector4<float>, Vector4<float>, Vector4<float>>& t) noexcept;
+	/*constexpr*/ explicit Matrix4(const TupleType& t) noexcept;
 	/*constexpr*/ Matrix4(const Matrix2<float>& m) noexcept;
 	/*constexpr*/ Matrix4(const Matrix3<float>& m) noexcept;
 	/*constexpr*/ Matrix4(const AffineTransform<float>& m) noexcept;
 	explicit Matrix4(const float* m) noexcept;
 	explicit Matrix4(const simd::float4* m) noexcept : row0(m[0]), row1(m[1]), row2(m[2]), row3(m[3]) {}
 	Matrix4(simd::float4 row0, simd::float4 row1, simd::float4 row2, simd::float4 row3) noexcept;
-	explicit Matrix4(const std::tuple<simd::float4, simd::float4, simd::float4, simd::float4>& t) noexcept;
+	explicit Matrix4(const SimdTupleType& t) noexcept;
 	Matrix4(const Matrix4& m) noexcept : row0(m.row0), row1(m.row1), row2(m.row2), row3(m.row3) {}
 	Matrix4& operator=(const Matrix4& m) noexcept { row0 = m.row0; row1 = m.row1; row2 = m.row2; row3 = m.row3; return *this; }
 
@@ -363,7 +370,7 @@ inline Matrix4<T>::Matrix4(const Vector4<T>& row0, const Vector4<T>& row1, const
 }
 
 template<typename T>
-inline Matrix4<T>::Matrix4(const std::tuple<Vector3<T>, Vector3<T>, Vector3<T>, Vector3<T>>& t) :
+inline Matrix4<T>::Matrix4(const typename Matrix4<T>::TupleType& t) :
 	Matrix4(std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t))
 {
 }
@@ -1062,7 +1069,7 @@ inline Matrix4<float>::Matrix4(const Vector4<float>& row0, const Vector4<float>&
 {
 }
 
-inline Matrix4<float>::Matrix4(const std::tuple<Vector3<float>, Vector3<float>, Vector3<float>, Vector3<float>>& t) :
+inline Matrix4<float>::Matrix4(const typename Matrix4<float>::TupleType& t) :
 	Matrix4(std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t))
 {
 }
@@ -1107,7 +1114,7 @@ inline Matrix4<float>::Matrix4(simd::float4 row0, simd::float4 row1, simd::float
 {
 }
 
-inline Matrix4<float>::Matrix4(const std::tuple<simd::float4, simd::float4, simd::float4, simd::float4>& t) :
+inline Matrix4<float>::Matrix4(const typename Matrix4<float>::SimdTupleType& t) :
 	row0(std::get<0>(t)), 
 	row1(std::get<1>(t)), 
 	row2(std::get<2>(t)), 
