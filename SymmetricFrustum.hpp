@@ -364,9 +364,7 @@ inline SymmetricFrustum<T> SymmetricFrustum<T>::orthonormalize()
 	halfDims *= Vector2<T>(basis[0].getMagnitude(), basis[1].getMagnitude());
 	//halfDims.x *= basis[0].getMagnitude();
 	//halfDims.y *= basis[1].getMagnitude();
-	T depthFactor = basis[2].getMagnitude();
-	depthRange.minimum *= depthFactor;
-	depthRange.maximum *= depthFactor;
+	depthRange.scale(basis[2].getMagnitude());
 	basis.orthonormalize();
 	return *this;
 }

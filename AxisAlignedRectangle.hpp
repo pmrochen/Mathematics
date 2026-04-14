@@ -80,6 +80,7 @@ struct AxisAlignedRectangle
 	// Transformation
 	AxisAlignedRectangle& inflate(const Vector2<T>& halfDims) noexcept { minimum -= halfDims; maximum += halfDims; return *this; }
 	AxisAlignedRectangle& translate(const Vector2<T>& offset) noexcept { minimum += offset; maximum += offset; return *this; }
+	AxisAlignedRectangle& scaleAroundCenter(T factor) noexcept;
 
 	// Union and intersection
 	AxisAlignedRectangle& setUnion(const AxisAlignedRectangle& a, const AxisAlignedRectangle& b) noexcept;
@@ -190,6 +191,15 @@ template<typename T>
 inline std::array<Vector2<T>, 4> AxisAlignedRectangle<T>::getVertices() const
 {
 	return { minimum, Vector2<T>(maximum.x, minimum.y), Vector2<T>(minimum.x, maximum.y), maximum };
+}
+
+template<typename T>
+inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::scaleAroundCenter(T factor)
+{
+	Vector2<T> center = (minimum + maximum)*T(0.5);
+	minimum = (minimum - center)*factor + center;
+	maximum = (maximum - center)*factor + center;
+	return *this;
 }
 
 template<typename T>

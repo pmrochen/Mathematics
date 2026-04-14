@@ -69,6 +69,11 @@ struct Interval
 	// Interpolation
 	T interpolate(T t) const noexcept { return lerp(minimum, maximum, t); }
 
+	// Transformation
+	Interval& translate(T offset) noexcept;
+	Interval& scale(T factor) noexcept;
+	Interval& scaleAroundCenter(T factor) noexcept;
+
 	// Union and intersection
 	Interval& setUnion(const Interval& a, const Interval& b) noexcept;
 	Interval& setIntersection(const Interval& a, const Interval& b) noexcept;
@@ -144,6 +149,31 @@ inline void Interval<T>::setCenter(T center)
 	T diff = center - (minimum + maximum)*T(0.5);
 	minimum += diff;
 	maximum += diff;
+}
+
+template<typename T>
+inline Interval<T>& Interval<T>::translate(T offset)
+{
+	minimum += offset;
+	maximum += offset;
+	return *this;
+}
+
+template<typename T>
+inline Interval<T>& Interval<T>::scale(T factor)
+{
+	minimum *= factor;
+	maximum *= factor;
+	return *this;
+}
+
+template<typename T>
+inline Interval<T>& Interval<T>::scaleAroundCenter(T factor)
+{
+	T center = (minimum + maximum)*T(0.5);
+	minimum = (minimum - center)*factor + center;
+	maximum = (maximum - center)*factor + center;
+	return *this;
 }
 
 template<typename T>

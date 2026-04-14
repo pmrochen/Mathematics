@@ -104,6 +104,7 @@ struct AxisAlignedBox
 	AxisAlignedBox& translate(const Vector3<T>& offset) noexcept { minimum += offset; maximum += offset; return *this; }
 	AxisAlignedBox& transform(const Matrix3<T>& matrix, bool orthogonal = false) noexcept;
 	AxisAlignedBox& transform(const AffineTransform<T>& transformation, bool orthogonal = false) noexcept;
+	AxisAlignedBox& scaleAroundCenter(T factor) noexcept;
 
 	// Union and intersection
 	AxisAlignedBox& setUnion(const AxisAlignedBox& a, const AxisAlignedBox& b) noexcept;
@@ -287,6 +288,15 @@ inline std::vector<HalfSpace<T>> AxisAlignedBox<T>::getHalfSpaces() const
 		HalfSpace<T>(Vector3<T>::UNIT_Y, Vector3<T>(T(0), maximum.y, T(0))),
 		HalfSpace<T>(Vector3<T>::MINUS_UNIT_Z, Vector3<T>(T(0), T(0), minimum.z)),
 		HalfSpace<T>(Vector3<T>::UNIT_Z, Vector3<T>(T(0), T(0), maximum.z)) };
+}
+
+template<typename T>
+inline AxisAlignedBox<T>& AxisAlignedBox<T>::scaleAroundCenter(T factor)
+{
+	Vector3<T> center = (minimum + maximum)*T(0.5);
+	minimum = (minimum - center)*factor + center;
+	maximum = (maximum - center)*factor + center;
+	return *this;
 }
 
 template<typename T>
