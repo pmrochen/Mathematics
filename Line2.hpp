@@ -72,9 +72,12 @@ struct Line2
 	//template<std::input_iterator I, std::sentinel_for<I> S> static Line2 computeBestFit(I first, S last); // #TODO
 
 	// Properties
+	bool isZero() const noexcept { return origin.isZero() && direction.isZero(); }
+	bool isApproxZero() const noexcept { return origin.isApproxZero() && direction.isApproxZero(); }
 	bool approxEquals(const Line2& line) const noexcept;
 	bool approxEquals(const Line2& line, T tolerance) const noexcept;
-	//bool isFinite() const noexcept { return origin.isFinite() && direction.isFinite(); }
+	//bool isFinite() const noexcept { return origin.isFinite() && direction.isFinite(); } // ambiguous
+	Line2& setZero() noexcept { origin.setZero(); direction.setZero(); return *this; }
 	Line2& set(const Vector2<T>& origin, const Vector2<T>& direction) noexcept { this->origin = origin; this->direction = direction; return *this; }
 	const Vector2<T>& getOrigin() const noexcept { return origin; }
 	void setOrigin(const Vector2<T>& origin) noexcept { this->origin = origin; }

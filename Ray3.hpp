@@ -78,9 +78,12 @@ struct Ray3
 	const Line3<T>& asLine() const noexcept { return reinterpret_cast<const Line3<T>&>(*this); }
 
 	// Properties
+	bool isZero() const noexcept { return origin.isZero() && direction.isZero(); }
+	bool isApproxZero() const noexcept { return origin.isApproxZero() && direction.isApproxZero(); }
 	bool approxEquals(const Ray3& ray) const noexcept;
 	bool approxEquals(const Ray3& ray, T tolerance) const noexcept;
-	//bool isFinite() const noexcept { return origin.isFinite() && direction.isFinite(); }
+	//bool isFinite() const noexcept { return origin.isFinite() && direction.isFinite(); } // ambiguous
+	Ray3& setZero() noexcept { origin.setZero(); direction.setZero(); return *this; }
 	Ray3& set(const Vector3<T>& origin, const Vector3<T>& direction) noexcept { this->origin = origin; this->direction = direction; return *this; }
 	const Vector3<T>& getOrigin() const noexcept { return origin; }
 	void setOrigin(const Vector3<T>& origin) noexcept { this->origin = origin; }

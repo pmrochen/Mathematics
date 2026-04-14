@@ -64,9 +64,12 @@ struct Triangle3
 	template<typename A> void serialize(A& ar) { ar(vertices[0], vertices[1], vertices[2]); }
 
 	// Properties
+	bool isZero() const noexcept { return vertices[0].isZero() && vertices[1].isZero() && vertices[2].isZero(); }
+	bool isApproxZero() const noexcept;
 	bool approxEquals(const Triangle3& triangle) const noexcept;
 	bool approxEquals(const Triangle3& triangle, T tolerance) const noexcept;
 	bool isFinite() const noexcept { return vertices[0].isFinite() && vertices[1].isFinite() && vertices[2].isFinite(); }
+	Triangle3& setZero() noexcept;
 	Triangle3& set(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2) noexcept;
 	T getPerimeter() const noexcept;
 	T getArea() const noexcept;
@@ -152,6 +155,12 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const T
 }
 
 template<typename T>
+inline bool Triangle3<T>::isApproxZero() const
+{
+	return vertices[0].isApproxZero() && vertices[1].isApproxZero() && vertices[2].isApproxZero();
+}
+
+template<typename T>
 inline bool Triangle3<T>::approxEquals(const Triangle3<T>& triangle) const
 {
 	return vertices[0].approxEquals(triangle.vertices[0]) &&
@@ -165,6 +174,15 @@ inline bool Triangle3<T>::approxEquals(const Triangle3<T>& triangle, T tolerance
 	return vertices[0].approxEquals(triangle.vertices[0], tolerance) &&
 		vertices[1].approxEquals(triangle.vertices[1], tolerance) &&
 		vertices[2].approxEquals(triangle.vertices[2], tolerance);
+}
+
+template<typename T>
+inline Triangle3<T>& Triangle3<T>::setZero()
+{
+	vertices[0].setZero();
+	vertices[1].setZero();
+	vertices[2].setZero();
+	return *this;
 }
 
 template<typename T>

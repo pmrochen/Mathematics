@@ -62,9 +62,12 @@ struct LineSegment2
 	template<typename A> void serialize(A& ar) { ar(start, end); }
 
 	// Properties
+	bool isZero() const noexcept { return start.isZero() && end.isZero(); }
+	bool isApproxZero() const noexcept { return start.isApproxZero() && end.isApproxZero(); }
 	bool approxEquals(const LineSegment2& segment) const noexcept;
 	bool approxEquals(const LineSegment2& segment, T tolerance) const noexcept;
 	bool isFinite() const noexcept { return start.isFinite() && end.isFinite(); }
+	LineSegment2& setZero() noexcept { start.setZero(); end.setZero(); return *this; }
 	LineSegment2& set(const Vector2<T>& start, const Vector2<T>& end) noexcept { this->start = start; this->end = end; return *this; }
 	const Vector2<T>& getStart() const noexcept { return start; }
 	void setStart(const Vector2<T>& start) noexcept { this->start = start; }

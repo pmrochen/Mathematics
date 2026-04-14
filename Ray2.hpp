@@ -54,9 +54,12 @@ struct Ray2
 	const Line2<T>& asLine() const noexcept { return reinterpret_cast<const Line2<T>&>(*this); }
 
 	// Properties
+	bool isZero() const noexcept { return origin.isZero() && direction.isZero(); }
+	bool isApproxZero() const noexcept { return origin.isApproxZero() && direction.isApproxZero(); }
 	bool approxEquals(const Ray2& ray) const noexcept;
 	bool approxEquals(const Ray2& ray, T tolerance) const noexcept;
-	//bool isFinite() const noexcept { return origin.isFinite() && direction.isFinite(); }
+	//bool isFinite() const noexcept { return origin.isFinite() && direction.isFinite(); } // ambiguous
+	Ray2& setZero() noexcept { origin.setZero(); direction.setZero(); return *this; }
 	Ray2& set(const Vector2<T>& origin, const Vector2<T>& direction) noexcept { this->origin = origin; this->direction = direction; return *this; }
 	const Vector2<T>& getOrigin() const noexcept { return origin; }
 	void setOrigin(const Vector2<T>& origin) noexcept { this->origin = origin; }

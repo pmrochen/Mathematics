@@ -50,9 +50,12 @@ struct Tetrahedron
 	template<typename A> void serialize(A& ar) { ar(vertices[0], vertices[1], vertices[2], vertices[3]); }
 
 	// Properties
+	bool isZero() const noexcept { return vertices[0].isZero() && vertices[1].isZero() && vertices[2].isZero() && vertices[3].isZero(); }
+	bool isApproxZero() const noexcept;
 	bool approxEquals(const Tetrahedron& tetrahedron) const noexcept;
 	bool approxEquals(const Tetrahedron& tetrahedron, T tolerance) const noexcept;
 	bool isFinite() const noexcept;
+	Tetrahedron& setZero() noexcept;
 	Tetrahedron& set(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3) noexcept;
 	Vector3<T> getCentroid() const noexcept;
 	//T getSurfaceArea() const noexcept; // #TODO
@@ -111,6 +114,12 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const T
 }
 
 template<typename T>
+inline bool Tetrahedron<T>::isApproxZero() const
+{
+	return vertices[0].isApproxZero() && vertices[1].isApproxZero() && vertices[2].isApproxZero() && vertices[3].isApproxZero();
+}
+
+template<typename T>
 inline bool Tetrahedron<T>::approxEquals(const Tetrahedron<T>& tetrahedron) const
 {
 	return vertices[0].approxEquals(tetrahedron.vertices[0]) &&
@@ -132,6 +141,16 @@ template<typename T>
 inline bool Tetrahedron<T>::isFinite() const
 { 
 	return vertices[0].isFinite() && vertices[1].isFinite() && vertices[2].isFinite() && vertices[3].isFinite();
+}
+
+template<typename T>
+inline Tetrahedron<T>& Tetrahedron<T>::setZero()
+{
+	vertices[0].setZero();
+	vertices[1].setZero();
+	vertices[2].setZero();
+	vertices[3].setZero();
+	return *this;
 }
 
 template<typename T>

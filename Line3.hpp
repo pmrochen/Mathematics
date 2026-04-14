@@ -91,9 +91,12 @@ struct Line3
 	//template<std::input_iterator I, std::sentinel_for<I> S> static Line3 computeBestFit(I first, S last); // #TODO
 
 	// Properties
+	bool isZero() const noexcept { return origin.isZero() && direction.isZero(); }
+	bool isApproxZero() const noexcept { return origin.isApproxZero() && direction.isApproxZero(); }
 	bool approxEquals(const Line3& line) const noexcept;
 	bool approxEquals(const Line3& line, T tolerance) const noexcept;
-	//bool isFinite() const noexcept { return origin.isFinite() && direction.isFinite(); }
+	//bool isFinite() const noexcept { return origin.isFinite() && direction.isFinite(); } // ambiguous
+	Line3& setZero() noexcept { origin.setZero(); direction.setZero(); return *this; }
 	Line3& set(const Vector3<T>& origin, const Vector3<T>& direction) noexcept { this->origin = origin; this->direction = direction; return *this; }
 	const Vector3<T>& getOrigin() const noexcept { return origin; }
 	void setOrigin(const Vector3<T>& origin) noexcept { this->origin = origin; }
