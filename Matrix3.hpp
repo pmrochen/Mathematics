@@ -65,6 +65,7 @@ struct Matrix3
 	Matrix3(const Vector3<T>& up, const Vector3<T>& forward) noexcept;
 	explicit Matrix3(const T* m) noexcept;
 
+	operator TupleType() const noexcept { return TupleType(getRow(0), getRow(1), getRow(2)); }
 	//explicit operator T*() noexcept { return &m00; }
 	//explicit operator const T*() const noexcept { return &m00; }
 	Vector3<T>& operator[](int i) noexcept { return reinterpret_cast<Vector3<T>*>(&m00)[i]; }
@@ -166,7 +167,7 @@ template<>
 struct Euler<float>;
 
 template<>
-struct Matrix3<float>
+struct alignas(16) Matrix3<float>
 {
 	using Real = float;
 	using ComponentType = float;
@@ -199,6 +200,8 @@ struct Matrix3<float>
 	Matrix3(const Matrix3& m) noexcept : row0(m.row0), row1(m.row1), row2(m.row2) {}
 	Matrix3& operator=(const Matrix3& m) noexcept { row0 = m.row0; row1 = m.row1; row2 = m.row2; return *this; }
 
+	operator TupleType() const noexcept { return TupleType(getRow(0), getRow(1), getRow(2)); }
+	operator SimdTupleType() const noexcept { return SimdTupleType(row0, row1, row2); }
 	//explicit operator float*() noexcept { return &m00; }
 	//explicit operator const float*() const noexcept { return &m00; }
 	explicit operator simd::float4*() noexcept { return &row0; }

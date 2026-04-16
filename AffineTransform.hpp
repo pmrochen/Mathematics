@@ -72,6 +72,7 @@ struct AffineTransform
 	AffineTransform(const Vector3<T>& up, const Vector3<T>& forward, const Vector3<T>& origin) noexcept;
 	explicit AffineTransform(const T* m) noexcept;
 
+	operator TupleType() const noexcept { return TupleType(getRow(0), getRow(1), getRow(2), getRow(3)); }
 	//explicit operator T*() noexcept { return &m00; }
 	//explicit operator const T*() const noexcept { return &m00; }
 	Vector3<T>& operator[](int i) noexcept { return reinterpret_cast<Vector3<T>*>(&m00)[i]; }
@@ -201,7 +202,7 @@ template<>
 struct Plane<float>;
 
 template<>
-struct AffineTransform<float>
+struct alignas(16) AffineTransform<float>
 {
 	using Real = float;
 	using ComponentType = float;
@@ -231,6 +232,8 @@ struct AffineTransform<float>
 	AffineTransform(const AffineTransform& m) noexcept : row0(m.row0), row1(m.row1), row2(m.row2), row3(m.row3) {}
 	AffineTransform& operator=(const AffineTransform& m) noexcept { row0 = m.row0; row1 = m.row1; row2 = m.row2; row3 = m.row3; return *this; }
 
+	operator TupleType() const noexcept { return TupleType(getRow(0), getRow(1), getRow(2), getRow(3)); }
+	operator SimdTupleType() const noexcept { return SimdTupleType(row0, row1, row2, row3); }
 	//explicit operator float*() noexcept { return &m00; }
 	//explicit operator const float*() const noexcept { return &m00; }
 	explicit operator simd::float4*() noexcept { return &row0; }

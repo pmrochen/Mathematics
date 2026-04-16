@@ -54,6 +54,7 @@ struct Matrix2
 	constexpr explicit Matrix2(const TupleType& t) noexcept : Matrix2(std::get<0>(t), std::get<1>(t)) {}
 	explicit Matrix2(const T* m) noexcept : m00(m[0]), m01(m[1]), m10(m[2]), m11(m[3]) {}
 
+	operator TupleType() const noexcept { return TupleType(getRow(0), getRow(1)); }
 	//explicit operator T*() noexcept { return &m00; }
 	//explicit operator const T*() const noexcept { return &m00; }
 	Vector2<T>& operator[](int i) noexcept { return reinterpret_cast<Vector2<T>*>(&m00)[i]; }
@@ -129,7 +130,7 @@ template<typename T> const Matrix2<T> Matrix2<T>::IDENTITY{ T(1), T(0), T(0), T(
 #if SIMD_HAS_FLOAT4
 
 template<>
-struct Matrix2<float>
+struct alignas(16) Matrix2<float>
 {
 	using Real = float;
 	using ComponentType = float;
@@ -161,6 +162,8 @@ struct Matrix2<float>
 	Matrix2(const Matrix2& m) noexcept : row0(m.row0), row1(m.row1) {}
 	Matrix2& operator=(const Matrix2& m) noexcept { row0 = m.row0; row1 = m.row1; return *this; }
 
+	operator TupleType() const noexcept { return TupleType(getRow(0), getRow(1)); }
+	operator SimdTupleType() const noexcept { return SimdTupleType(row0, row1); }
 	//explicit operator float*() noexcept { return &m00; }
 	//explicit operator const float*() const noexcept { return &m00; }
 	explicit operator simd::float4*() noexcept { return &row0; }

@@ -63,10 +63,10 @@ struct Quaternion
 	template<Arithmetic U> explicit Quaternion(const OtherTupleType<U>& t) noexcept : x(T(std::get<0>(t))), y(T(std::get<1>(t))), z(T(std::get<2>(t))), w(T(std::get<3>(t))) {}
 	explicit Quaternion(const T* q) noexcept : x(q[0]), y(q[1]), z(q[2]), w(q[3]) {}
 
-	//explicit operator Tuple4<T>() noexcept { return Tuple4<T>(x, y, z, w); }
-	//template<Arithmetic U> explicit operator Tuple4<U>() noexcept { return Tuple4<U>(U(x), U(y), U(z), U(w)); }
-	//explicit operator TupleType() { return TupleType(x, y, z, w); }
-	//template<Arithmetic U> explicit operator OtherTupleType<U>() { return OtherTupleType<U>(U(x), U(y), U(z), U(w)); }
+	//operator Tuple4<T>() const noexcept { return Tuple4<T>(x, y, z, w); }
+	//template<Arithmetic U> explicit operator Tuple4<U>() const noexcept { return Tuple4<U>(U(x), U(y), U(z), U(w)); }
+	operator TupleType() const noexcept { return TupleType(x, y, z, w); }
+	template<Arithmetic U> explicit operator OtherTupleType<U>() const noexcept { return OtherTupleType<U>(U(x), U(y), U(z), U(w)); }
 	explicit operator T*() noexcept { return &x; }
 	explicit operator const T*() const noexcept { return &x; }
 	T& operator[](int i) noexcept { return (&x)[i]; }
@@ -143,7 +143,7 @@ template<>
 struct Euler<float>;
 
 template<>
-struct Quaternion<float>
+struct alignas(16) Quaternion<float>
 {
 	using Real = float;
 	using ComponentType = float;
@@ -175,10 +175,10 @@ struct Quaternion<float>
 	Quaternion& operator=(const Quaternion& q) noexcept { xyzw = q.xyzw; return *this; }
 
 	operator simd::float4() const noexcept { return xyzw; }
-	//explicit operator Tuple4<float>() noexcept { return Tuple4<float>(x, y, z, w); }
-	//template<Arithmetic U> explicit operator Tuple4<U>() noexcept { return Tuple4<U>(U(x), U(y), U(z), U(w)); }
-	//explicit operator TupleType() { return TupleType(x, y, z, w); }
-	//template<Arithmetic U> explicit operator OtherTupleType<U>() { return OtherTupleType<U>(U(x), U(y), U(z), U(w)); }
+	//operator Tuple4<float>() const noexcept { return Tuple4<float>(x, y, z, w); }
+	//template<Arithmetic U> explicit operator Tuple4<U>() const noexcept { return Tuple4<U>(U(x), U(y), U(z), U(w)); }
+	operator TupleType() const noexcept { return TupleType(x, y, z, w); }
+	template<Arithmetic U> explicit operator OtherTupleType<U>() const noexcept { return OtherTupleType<U>(U(x), U(y), U(z), U(w)); }
 	explicit operator float* () noexcept { return &x; }
 	explicit operator const float* () const noexcept { return &x; }
 	float& operator[](int i) noexcept { return (&x)[i]; }

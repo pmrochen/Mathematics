@@ -69,6 +69,7 @@ struct Matrix4
 	constexpr Matrix4(const AffineTransform<T>& m) noexcept;
 	explicit Matrix4(const T* m) noexcept;
 
+	operator TupleType() const noexcept { return TupleType(getRow(0), getRow(1), getRow(2), getRow(3)); }
 	explicit operator T*() noexcept { return &m00; }
 	explicit operator const T*() const noexcept { return &m00; }
 	Vector4<T>& operator[](int i) noexcept { return reinterpret_cast<Vector4<T>*>(&m00)[i]; }
@@ -193,7 +194,7 @@ template<>
 struct Plane<float>;
 
 template<>
-struct Matrix4<float>
+struct alignas(16) Matrix4<float>
 {
 	using Real = float;
 	using ComponentType = float;
@@ -223,6 +224,8 @@ struct Matrix4<float>
 	Matrix4(const Matrix4& m) noexcept : row0(m.row0), row1(m.row1), row2(m.row2), row3(m.row3) {}
 	Matrix4& operator=(const Matrix4& m) noexcept { row0 = m.row0; row1 = m.row1; row2 = m.row2; row3 = m.row3; return *this; }
 
+	operator TupleType() const noexcept { return TupleType(getRow(0), getRow(1), getRow(2), getRow(3)); }
+	operator SimdTupleType() const noexcept { return SimdTupleType(row0, row1, row2, row3); }
 	explicit operator float*() noexcept { return &m00; }
 	explicit operator const float*() const noexcept { return &m00; }
 	explicit operator simd::float4*() noexcept { return &row0; }

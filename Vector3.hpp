@@ -69,10 +69,10 @@ struct Vector3<T>
 	explicit Vector3(Axis axis) noexcept : x((axis == Axis::X) ? T(1) : T(0)), y((axis == Axis::Y) ? T(1) : T(0)), z((axis == Axis::Z) ? T(1) : T(0)) {}
 	template<Arithmetic U> explicit Vector3(const Vector3<U>& v) noexcept : x(T(t.x)), y(T(t.y)), z(T(t.z)) {}
 
-	//explicit operator Tuple3<T>() noexcept { return Tuple3<T>(x, y, z); }
-	//template<Arithmetic U> explicit operator Tuple3<U>() noexcept { return Tuple3<U>(U(x), U(y), U(z)); }
-	//explicit operator TupleType() { return TupleType(x, y, z); }
-	//template<Arithmetic U> explicit operator OtherTupleType<U>() { return OtherTupleType<U>(U(x), U(y), U(z)); }
+	//operator Tuple3<T>() const noexcept { return Tuple3<T>(x, y, z); }
+	//template<Arithmetic U> explicit operator Tuple3<U>() const noexcept { return Tuple3<U>(U(x), U(y), U(z)); }
+	operator TupleType() const noexcept { return TupleType(x, y, z); }
+	template<Arithmetic U> explicit operator OtherTupleType<U>() const noexcept { return OtherTupleType<U>(U(x), U(y), U(z)); }
 	explicit operator T*() noexcept { return &x; }
 	explicit operator const T*() const noexcept { return &x; }
 	T& operator[](int i) noexcept { return (&x)[i]; }
@@ -184,10 +184,10 @@ struct Vector3<T>
 	explicit Vector3(const T* v) noexcept : x(v[0]), y(v[1]), z(v[2]) {}
 	template<Arithmetic U> explicit Vector3(const Vector3<U>& v) noexcept : x(T(v.x)), y(T(v.y)), z(T(v.z)) {}
 
-	//explicit operator Tuple3<T>() noexcept { return Tuple3<T>(x, y, z); }
-	//template<Arithmetic U> explicit operator Tuple3<U>() noexcept { return Tuple3<U>(U(x), U(y), U(z)); }
-	//explicit operator TupleType() { return TupleType(x, y, z); }
-	//template<Arithmetic U> explicit operator OtherTupleType<U>() { return OtherTupleType<U>(U(x), U(y), U(z)); }
+	//operator Tuple3<T>() const noexcept { return Tuple3<T>(x, y, z); }
+	//template<Arithmetic U> explicit operator Tuple3<U>() const noexcept { return Tuple3<U>(U(x), U(y), U(z)); }
+	operator TupleType() const noexcept { return TupleType(x, y, z); }
+	template<Arithmetic U> explicit operator OtherTupleType<U>() const noexcept { return OtherTupleType<U>(U(x), U(y), U(z)); }
 	explicit operator T* () noexcept { return &x; }
 	explicit operator const T* () const noexcept { return &x; }
 	T& operator[](int i) noexcept { return (&x)[i]; }
@@ -249,7 +249,7 @@ template<>
 struct Quaternion<float>;
 
 template<>
-struct Vector3<float>
+struct alignas(16) Vector3<float>
 {
 	using Real = float;
 	using ComponentType = float;
@@ -291,10 +291,10 @@ struct Vector3<float>
 	Vector3& operator=(const Vector3& v) noexcept { xyz = v.xyz; return *this; }
 
 	operator simd::float4() const noexcept { return xyz; }
-	//explicit operator Tuple3<float>() noexcept { return Tuple3<float>(x, y, z); }
-	//template<Arithmetic U> explicit operator Tuple3<U>() noexcept { return Tuple3<U>(U(x), U(y), U(z)); }
-	//explicit operator TupleType() { return TupleType(x, y, z); }
-	//template<Arithmetic U> explicit operator OtherTupleType<U>() { return OtherTupleType<U>(U(x), U(y), U(z)); }
+	//operator Tuple3<float>() const noexcept { return Tuple3<float>(x, y, z); }
+	//template<Arithmetic U> explicit operator Tuple3<U>() const noexcept { return Tuple3<U>(U(x), U(y), U(z)); }
+	operator TupleType() const noexcept { return TupleType(x, y, z); }
+	template<Arithmetic U> explicit operator OtherTupleType<U>() const noexcept { return OtherTupleType<U>(U(x), U(y), U(z)); }
 	explicit operator float* () noexcept { return &x; }
 	explicit operator const float* () const noexcept { return &x; }
 	float& operator[](int i) noexcept { return (&x)[i]; }

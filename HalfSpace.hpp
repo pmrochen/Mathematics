@@ -65,7 +65,7 @@ struct HalfSpace
 	explicit HalfSpace(const TupleType& t) noexcept : a(std::get<0>(t)), b(std::get<1>(t)), c(std::get<2>(t)), d(std::get<3>(t)) {}
 	//explicit HalfSpace(const T* h) noexcept : a(h[0]), b(h[1]), c(h[2]), d(h[3]) {}
 
-	//explicit operator TupleType() noexcept { return TupleType(a, b, c, d); }
+	operator TupleType() const noexcept { return TupleType(a, b, c, d); }
 	//explicit operator T*() noexcept { return &a; }
 	//explicit operator const T*() const noexcept { return &a; }
 	//T& operator[](int i) noexcept { return (&a)[i]; }
@@ -128,7 +128,7 @@ template<>
 struct Plane<float>;
 
 template<>
-struct HalfSpace<float>
+struct alignas(16) HalfSpace<float>
 {
 	using Real = float;
 	using ConstArg = const HalfSpace;
@@ -150,7 +150,7 @@ struct HalfSpace<float>
 	HalfSpace& operator=(const HalfSpace& h) noexcept { abcd = h.abcd; return *this; }
 
 	operator simd::float4() const noexcept { return abcd; }
-	//explicit operator TupleType() noexcept { return TupleType(a, b, c, d); }
+	operator TupleType() const noexcept { return TupleType(a, b, c, d); }
 	//explicit operator float* () noexcept { return &a; }
 	//explicit operator const float* () const noexcept { return &a; }
 	//float& operator[](int i) noexcept { return (&a)[i]; }

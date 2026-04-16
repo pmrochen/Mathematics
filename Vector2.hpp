@@ -75,12 +75,12 @@ struct Vector2<T>
 	explicit Vector2(Axis axis) noexcept : x((axis == Axis::X) ? T(1) : T(0)), y((axis == Axis::Y) ? T(1) : T(0)) {}
 	template<Arithmetic U> explicit Vector2(const Vector2<U>& v) noexcept : x(T(t.x)), y(T(t.y)) {}
 
-	//explicit operator Tuple2<T>() noexcept { return Tuple2<T>(x, y); }
-	//template<Arithmetic U> explicit operator Tuple2<U>() noexcept { return Tuple2<U>(U(x), U(y)); }
-	//explicit operator PairType() { return PairType(x, y); }
-	//template<Arithmetic U> explicit operator OtherPairType<U>() { return OtherPairType<U>(U(x), U(y)); }
-	//explicit operator TupleType() { return TupleType(x, y); }
-	//template<Arithmetic U> explicit operator OtherTupleType<U>() { return OtherTupleType<U>(U(x), U(y)); }
+	//operator Tuple2<T>() const noexcept { return Tuple2<T>(x, y); }
+	//template<Arithmetic U> explicit operator Tuple2<U>() const noexcept { return Tuple2<U>(U(x), U(y)); }
+	operator PairType() const noexcept { return PairType(x, y); }
+	template<Arithmetic U> explicit operator OtherPairType<U>() const noexcept { return OtherPairType<U>(U(x), U(y)); }
+	operator TupleType() const noexcept { return TupleType(x, y); }
+	template<Arithmetic U> explicit operator OtherTupleType<U>() const noexcept { return OtherTupleType<U>(U(x), U(y)); }
 	explicit operator T*() noexcept { return &x; }
 	explicit operator const T*() const noexcept { return &x; }
 	T& operator[](int i) noexcept { return (&x)[i]; }
@@ -184,12 +184,12 @@ struct Vector2<T>
 	explicit Vector2(const T* v) noexcept : x(v[0]), y(v[1]) {}
 	template<Arithmetic U> explicit Vector2(const Vector2<U>& v) noexcept : x(T(v.x)), y(T(v.y)) {}
 
-	//explicit operator Tuple2<T>() noexcept { return Tuple2<T>(x, y); }
-	//template<Arithmetic U> explicit operator Tuple2<U>() noexcept { return Tuple2<U>(U(x), U(y)); }
-	//explicit operator PairType() { return PairType(x, y); }
-	//template<Arithmetic U> explicit operator OtherPairType<U>() { return OtherPairType<U>(U(x), U(y)); }
-	//explicit operator TupleType() { return TupleType(x, y); }
-	//template<Arithmetic U> explicit operator OtherTupleType<U>() { return OtherTupleType<U>(U(x), U(y)); }
+	//operator Tuple2<T>() const noexcept { return Tuple2<T>(x, y); }
+	//template<Arithmetic U> explicit operator Tuple2<U>() const noexcept { return Tuple2<U>(U(x), U(y)); }
+	operator PairType() const noexcept { return PairType(x, y); }
+	template<Arithmetic U> explicit operator OtherPairType<U>() const noexcept { return OtherPairType<U>(U(x), U(y)); }
+	operator TupleType() const noexcept { return TupleType(x, y); }
+	template<Arithmetic U> explicit operator OtherTupleType<U>() const noexcept { return OtherTupleType<U>(U(x), U(y)); }
 	explicit operator T* () noexcept { return &x; }
 	explicit operator const T* () const noexcept { return &x; }
 	T& operator[](int i) noexcept { return (&x)[i]; }
@@ -241,7 +241,7 @@ template<>
 struct Matrix2<float>;
 
 template<>
-struct Vector2<float>
+struct alignas(16) Vector2<float>
 {
 	using Real = float;
 	using ComponentType = float;
@@ -285,12 +285,12 @@ struct Vector2<float>
 	Vector2& operator=(const Vector2& v) noexcept { xy = v.xy; return *this; }
 
 	operator simd::float4() const noexcept { return xy; }
-	//explicit operator Tuple2<float>() noexcept { return Tuple2<float>(x, y); }
-	//template<Arithmetic U> explicit operator Tuple2<U>() noexcept { return Tuple2<U>(U(x), U(y)); }
-	//explicit operator PairType() { return PairType(x, y); }
-	//template<Arithmetic U> explicit operator OtherPairType<U>() { return OtherPairType<U>(U(x), U(y)); }
-	//explicit operator TupleType() { return TupleType(x, y); }
-	//template<Arithmetic U> explicit operator OtherTupleType<U>() { return OtherTupleType<U>(U(x), U(y)); }
+	//operator Tuple2<float>() const noexcept { return Tuple2<float>(x, y); }
+	//template<Arithmetic U> explicit operator Tuple2<U>() const noexcept { return Tuple2<U>(U(x), U(y)); }
+	operator PairType() const noexcept { return PairType(x, y); }
+	template<Arithmetic U> explicit operator OtherPairType<U>() const noexcept { return OtherPairType<U>(U(x), U(y)); }
+	operator TupleType() const noexcept { return TupleType(x, y); }
+	template<Arithmetic U> explicit operator OtherTupleType<U>() const noexcept { return OtherTupleType<U>(U(x), U(y)); }
 	explicit operator float* () noexcept { return &x; }
 	explicit operator const float* () const noexcept { return &x; }
 	float& operator[](int i) noexcept { return (&x)[i]; }
