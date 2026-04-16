@@ -2,19 +2,12 @@ cmake_minimum_required(VERSION 3.25)
 
 project(Mathematics LANGUAGES CXX)
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/Simd/Simd.hpp)
+if(NOT TARGET "Simd")
     add_subdirectory(Simd)
 endif()
 
 set(MATHEMATICS_LIB_NAME "Mathematics")
 add_library(${MATHEMATICS_LIB_NAME} INTERFACE)
-
-#if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/Simd/Simd.hpp)
-#    target_include_directories(${MATHEMATICS_LIB_NAME}
-#	    PRIVATE
-#            ${CMAKE_CURRENT_SOURCE_DIR}/../Imaging/Simd
-#    )
-#endif()
 
 target_include_directories(${MATHEMATICS_LIB_NAME}
 	INTERFACE
