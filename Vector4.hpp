@@ -1084,6 +1084,9 @@ inline Vector4<T> normalize(Vector4<T>&& v) noexcept
 //#endif
 //}
 
+template<typename T, typename U>
+concept AnyVector = (std::same_as<T, Vector2<U>> || std::same_as<T, Vector3<U>> || std::same_as<T, Vector4<U>>);
+
 } // namespace templates
 
 using Vector4f = templates::Vector4<float>;

@@ -1763,6 +1763,9 @@ inline Matrix4<float> transpose(Matrix4<float>&& m) noexcept
 
 #endif /* SIMD_HAS_FLOAT4 */
 
+template<typename T, typename U>
+concept AnyMatrix = (std::same_as<T, Matrix2<U>> || std::same_as<T, Matrix3<U>> || std::same_as<T, Matrix4<U>>);
+
 } // namespace templates
 
 using Matrix4f = templates::Matrix4<float>;
