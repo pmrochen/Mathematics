@@ -30,15 +30,14 @@
 namespace mathematics {
 namespace templates {
 
-template<typename T, typename U = unsigned long long>
-	requires (std::floating_point<T> && std::integral<U>)
+template<typename T>
+	requires std::floating_point<T>
 class ConvexPolyhedron
 {
 public:
 	using Real = T;
 	using HalfSpaceType = HalfSpace<T>;
 	using HalfSpaceVector = std::vector<HalfSpaceType>;
-	using MaskType = U;
 
 	ConvexPolyhedron() noexcept : refCount_(), halfSpaces() {}
 	template<std::input_iterator<HalfSpace<T>> I, std::sentinel_for<I> S> ConvexPolyhedron(I first, S last);
@@ -86,7 +85,8 @@ public:
 	HalfSpaceVector& getHalfSpaces() noexcept { return halfSpaces; }
 	const HalfSpaceVector& getHalfSpaces() const noexcept { return halfSpaces; }
 	std::size_t getHalfSpaceCount() const noexcept { return halfSpaces.size(); }
-	MaskType getHalfSpaceMask() const noexcept { return (MaskType(1) << halfSpaces.size()) - MaskType(1); }
+	unsigned long long getHalfSpaceMask() const noexcept { return getHalfSpaceMask<unsigned long long>(); }
+	template<std::integral U> U getHalfSpaceMask() const noexcept;
 	void setHalfSpaceCount(std::size_t count) { halfSpaces.resize(count); }
 	const HalfSpace<T>& getHalfSpace(std::size_t index) const noexcept;
 	void setHalfSpace(std::size_t index, const HalfSpace<T>& value); // throw (std::out_of_range)
@@ -119,9 +119,9 @@ public:
 	//bool contains(const AxisAlignedBox<T>& box) const noexcept;
 	//bool contains(const Sphere<T>& sphere) const noexcept;
 	bool intersects(const AxisAlignedBox<T>& box) const noexcept;
-	bool intersects(const AxisAlignedBox<T>& box, U& mask) const noexcept;
+	template<std::integral U> bool intersects(const AxisAlignedBox<T>& box, U& mask) const noexcept;
 	bool intersects(const OrientedBox<T>& box) const noexcept;
-	bool intersects(const OrientedBox<T>& box, U& mask) const noexcept;
+	template<std::integral U> bool intersects(const OrientedBox<T>& box, U& mask) const noexcept;
 	bool intersects(const Sphere<T>& sphere) const noexcept;
 
 	HalfSpaceVector halfSpaces;		// normals point outwards
@@ -130,112 +130,112 @@ private:
 	std::atomic_int refCount_;
 };
 
-template<typename T, typename U>
+template<typename T>
 template<std::input_iterator<HalfSpace<T>> I, std::sentinel_for<I> S> 
-inline ConvexPolyhedron<T, U>::ConvexPolyhedron(I first, S last) :
+inline ConvexPolyhedron<T>::ConvexPolyhedron(I first, S last) :
 	refCount_(), 
 	halfSpaces(first, last)
 {
 }
 
-template<typename T, typename U>
-inline ConvexPolyhedron<T, U>::ConvexPolyhedron(const HalfSpace<T>* halfSpaces, std::size_t nHalfSpaces) :
+template<typename T>
+inline ConvexPolyhedron<T>::ConvexPolyhedron(const HalfSpace<T>* halfSpaces, std::size_t nHalfSpaces) :
 	refCount_(), 
 	halfSpaces(halfSpaces, halfSpaces + nHalfSpaces)
 {
 }
 
-template<typename T, typename U>
-inline ConvexPolyhedron<T, U>::ConvexPolyhedron(const std::vector<HalfSpace<T>>& halfSpaces) : 
+template<typename T>
+inline ConvexPolyhedron<T>::ConvexPolyhedron(const std::vector<HalfSpace<T>>& halfSpaces) : 
 	refCount_(), 
 	halfSpaces(halfSpaces)
 {
 }
 
-template<typename T, typename U>
-inline ConvexPolyhedron<T, U>::ConvexPolyhedron(std::vector<HalfSpace<T>>&& halfSpaces) : 
+template<typename T>
+inline ConvexPolyhedron<T>::ConvexPolyhedron(std::vector<HalfSpace<T>>&& halfSpaces) : 
 	refCount_(), 
 	halfSpaces(std::move(halfSpaces))
 {
 }
 
-template<typename T, typename U>
+template<typename T>
 template<std::input_iterator<Plane<T>> I, std::sentinel_for<I> S> 
-inline ConvexPolyhedron<T, U>::ConvexPolyhedron(I first, S last) :
+inline ConvexPolyhedron<T>::ConvexPolyhedron(I first, S last) :
 	refCount_(), 
 	halfSpaces(first, last)
 {
 }
 
-template<typename T, typename U>
-inline ConvexPolyhedron<T, U>::ConvexPolyhedron(const Plane<T>* planes, std::size_t nPlanes) :
+template<typename T>
+inline ConvexPolyhedron<T>::ConvexPolyhedron(const Plane<T>* planes, std::size_t nPlanes) :
 	refCount_(), 
 	halfSpaces(planes, planes + nPlanes)
 {
 }
 
-template<typename T, typename U>
-inline ConvexPolyhedron<T, U>::ConvexPolyhedron(const std::vector<Plane<T>>& planes) : 
+template<typename T>
+inline ConvexPolyhedron<T>::ConvexPolyhedron(const std::vector<Plane<T>>& planes) : 
 	refCount_(), 
 	halfSpaces(planes.begin(), planes.end())
 {
 }
 
-template<typename T, typename U>
-inline ConvexPolyhedron<T, U>::ConvexPolyhedron(const ConvexPolyhedron& polyhedron) : 
+template<typename T>
+inline ConvexPolyhedron<T>::ConvexPolyhedron(const ConvexPolyhedron& polyhedron) : 
 	refCount_(), 
 	halfSpaces(polyhedron.halfSpaces) 
 {
 }
 
-template<typename T, typename U>
-inline ConvexPolyhedron<T, U>::ConvexPolyhedron(ConvexPolyhedron&& polyhedron) : 
+template<typename T>
+inline ConvexPolyhedron<T>::ConvexPolyhedron(ConvexPolyhedron&& polyhedron) : 
 	refCount_(), 
 	halfSpaces(std::move(polyhedron.halfSpaces)) 
 {
 }
 
-template<typename T, typename U>
-inline ConvexPolyhedron<T, U>& ConvexPolyhedron<T, U>::operator=(const ConvexPolyhedron<T, U>& polyhedron)
+template<typename T>
+inline ConvexPolyhedron<T>& ConvexPolyhedron<T>::operator=(const ConvexPolyhedron<T>& polyhedron)
 {
 	halfSpaces = polyhedron.halfSpaces;
 	return *this;
 }
 
-template<typename T, typename U>
-inline ConvexPolyhedron<T, U>& ConvexPolyhedron<T, U>::operator=(ConvexPolyhedron<T, U>&& mesh)
+template<typename T>
+inline ConvexPolyhedron<T>& ConvexPolyhedron<T>::operator=(ConvexPolyhedron<T>&& mesh)
 {
 	halfSpaces = std::move(polyhedron.halfSpaces);
 	return *this;
 }
 
-template<typename T, typename U>
-/*static*/ inline ConvexPolyhedron<T, U>* ConvexPolyhedron<T, U>::from(const AxisAlignedBox<T>& box)
+template<typename T>
+/*static*/ inline ConvexPolyhedron<T>* ConvexPolyhedron<T>::from(const AxisAlignedBox<T>& box)
 {
-	return new ConvexPolyhedron<T, U>(box.getHalfSpaces());
+	return new ConvexPolyhedron<T>(box.getHalfSpaces());
 }
 
-template<typename T, typename U>
-/*static*/ inline ConvexPolyhedron<T, U>* ConvexPolyhedron<T, U>::from(const OrientedBox<T>& box)
+template<typename T>
+/*static*/ inline ConvexPolyhedron<T>* ConvexPolyhedron<T>::from(const OrientedBox<T>& box)
 {
-	return new ConvexPolyhedron<T, U>(box.getHalfSpaces());
+	return new ConvexPolyhedron<T>(box.getHalfSpaces());
 }
 
-template<typename T, typename U>
-/*static*/ inline ConvexPolyhedron<T, U>* ConvexPolyhedron<T, U>::from(const SymmetricFrustum<T>& frustum)
+template<typename T>
+/*static*/ inline ConvexPolyhedron<T>* ConvexPolyhedron<T>::from(const SymmetricFrustum<T>& frustum)
 {
-	return new ConvexPolyhedron<T, U>(frustum.getHalfSpaces());
+	return new ConvexPolyhedron<T>(frustum.getHalfSpaces());
 }
 
-template<typename T, typename U>
-/*static*/ inline const ConvexPolyhedron<T, U>* ConvexPolyhedron<T, U>::getEmpty()
+template<typename T>
+/*static*/ inline const ConvexPolyhedron<T>* ConvexPolyhedron<T>::getEmpty()
 {
-	static const ConvexPolyhedron<T, U> empty;
+	static const ConvexPolyhedron<T> empty;
 	return &empty;
 }
 
-template<typename T, typename U>
-inline void ConvexPolyhedron<T, U>::assign(const ConvexPolyhedron<T, U>* polyhedron)
+template<typename T>
+inline void ConvexPolyhedron<T>::assign(const ConvexPolyhedron<T>* polyhedron)
 {
 	if (polyhedron)
 		halfSpaces.assign(polyhedron->halfSpaces.begin(), polyhedron->halfSpaces.end());
@@ -243,70 +243,77 @@ inline void ConvexPolyhedron<T, U>::assign(const ConvexPolyhedron<T, U>* polyhed
 		halfSpaces.resize(0);
 }
 
-template<typename T, typename U>
-inline void ConvexPolyhedron<T, U>::append(const ConvexPolyhedron<T, U>* polyhedron)
+template<typename T>
+inline void ConvexPolyhedron<T>::append(const ConvexPolyhedron<T>* polyhedron)
 {
 	if (polyhedron)
 		halfSpaces.insert(halfSpaces.end(), polyhedron->halfSpaces.begin(), polyhedron->halfSpaces.end());
 }
 
-template<typename T, typename U>
-inline const HalfSpace<T>& ConvexPolyhedron<T, U>::getHalfSpace(std::size_t index) const
+template<typename T>
+template<std::integral U>
+inline U ConvexPolyhedron<T>::getHalfSpaceMask() const
+{ 
+	return (U(1) << halfSpaces.size()) - U(1); 
+}
+
+template<typename T>
+inline const HalfSpace<T>& ConvexPolyhedron<T>::getHalfSpace(std::size_t index) const
 { 
 	return (index < halfSpaces.size()) ? halfSpaces[index] : HalfSpace<T>::EMPTY; 
 }
 
-template<typename T, typename U>
-inline void ConvexPolyhedron<T, U>::setHalfSpace(std::size_t index, const HalfSpace<T>& value) 
+template<typename T>
+inline void ConvexPolyhedron<T>::setHalfSpace(std::size_t index, const HalfSpace<T>& value) 
 { 
 	if (index >= halfSpaces.size()) 
 		throw std::out_of_range("ConvexPolyhedron::setHalfSpace() : index"); 
 	halfSpaces[index] = value; 
 }
 
-template<typename T, typename U>
+template<typename T>
 template<std::input_iterator<HalfSpace<T>> I, std::sentinel_for<I> S> 
-inline void ConvexPolyhedron<T, U>::addHalfSpaces(I first, S last)
+inline void ConvexPolyhedron<T>::addHalfSpaces(I first, S last)
 {
 	halfSpaces.insert(halfSpaces.end(), first, last); 
 }
 
-template<typename T, typename U>
-inline void ConvexPolyhedron<T, U>::addHalfSpaces(const HalfSpace<T>* halfSpaces, std::size_t nHalfSpaces) 
+template<typename T>
+inline void ConvexPolyhedron<T>::addHalfSpaces(const HalfSpace<T>* halfSpaces, std::size_t nHalfSpaces) 
 { 
 	this->halfSpaces.insert(this->halfSpaces.end(), halfSpaces, halfSpaces + nHalfSpaces); 
 }
 
-template<typename T, typename U>
-inline void ConvexPolyhedron<T, U>::addHalfSpaces(const std::vector<HalfSpace<T>>& halfSpaces) 
+template<typename T>
+inline void ConvexPolyhedron<T>::addHalfSpaces(const std::vector<HalfSpace<T>>& halfSpaces) 
 { 
 	this->halfSpaces.insert(this->halfSpaces.end(), halfSpaces.begin(), halfSpaces.end()); 
 }
 
-template<typename T, typename U>
-inline void ConvexPolyhedron<T, U>::insertHalfSpace(std::size_t index, const HalfSpace<T>& value) 
+template<typename T>
+inline void ConvexPolyhedron<T>::insertHalfSpace(std::size_t index, const HalfSpace<T>& value) 
 { 
 	if (index > halfSpaces.size()) 
 		throw std::out_of_range("ConvexPolyhedron::insertHalfSpace() : index"); 
 	halfSpaces.insert(halfSpaces.begin() + index, value); 
 }
 
-template<typename T, typename U>
-inline void ConvexPolyhedron<T, U>::removeHalfSpaceAt(std::size_t index) 
+template<typename T>
+inline void ConvexPolyhedron<T>::removeHalfSpaceAt(std::size_t index) 
 { 
 	if (index < halfSpaces.size()) 
 		halfSpaces.erase(halfSpaces.begin() + index); 
 }
 
-template<typename T, typename U>
+template<typename T>
 template<std::output_iterator<Plane<T>> O> 
-inline O ConvexPolyhedron<T, U>::copyPlanes(O target) const
+inline O ConvexPolyhedron<T>::copyPlanes(O target) const
 {
 	return std::copy(halfSpaces.begin(), halfSpaces.end(), target);
 }
 
-template<typename T, typename U>
-void ConvexPolyhedron<T, U>::translate(const Vector3<T>& offset)
+template<typename T>
+void ConvexPolyhedron<T>::translate(const Vector3<T>& offset)
 {
 	if (!offset.isZero())
 	{
@@ -315,8 +322,8 @@ void ConvexPolyhedron<T, U>::translate(const Vector3<T>& offset)
 	}
 }
 
-template<typename T, typename U>
-void ConvexPolyhedron<T, U>::transform(const Matrix3<T>& matrix, bool orthogonal)
+template<typename T>
+void ConvexPolyhedron<T>::transform(const Matrix3<T>& matrix, bool orthogonal)
 {
 	if (!halfSpaces.empty() && !matrix.isIdentity())
 	{
@@ -334,8 +341,8 @@ void ConvexPolyhedron<T, U>::transform(const Matrix3<T>& matrix, bool orthogonal
 	}
 }
 
-template<typename T, typename U>
-void ConvexPolyhedron<T, U>::transform(const AffineTransform<T>& transformation, bool orthogonal)
+template<typename T>
+void ConvexPolyhedron<T>::transform(const AffineTransform<T>& transformation, bool orthogonal)
 {
 	if (!halfSpaces.empty() && !transformation.isIdentity())
 	{
@@ -357,8 +364,8 @@ void ConvexPolyhedron<T, U>::transform(const AffineTransform<T>& transformation,
 	}
 }
 
-template<typename T, typename U>
-bool ConvexPolyhedron<T, U>::contains(const Vector3<T>& point) const
+template<typename T>
+bool ConvexPolyhedron<T>::contains(const Vector3<T>& point) const
 {
 	for (const HalfSpace<T>& h : halfSpaces)
 	{
@@ -369,8 +376,8 @@ bool ConvexPolyhedron<T, U>::contains(const Vector3<T>& point) const
 	return true;
 }
 
-template<typename T, typename U>
-bool ConvexPolyhedron<T, U>::contains(const Vector3<T>& point, T tolerance) const
+template<typename T>
+bool ConvexPolyhedron<T>::contains(const Vector3<T>& point, T tolerance) const
 {
 	for (const HalfSpace<T>& h : halfSpaces)
 	{
@@ -381,8 +388,8 @@ bool ConvexPolyhedron<T, U>::contains(const Vector3<T>& point, T tolerance) cons
 	return true;
 }
 
-template<typename T, typename U>
-bool ConvexPolyhedron<T, U>::intersects(const AxisAlignedBox<T>& box) const
+template<typename T>
+bool ConvexPolyhedron<T>::intersects(const AxisAlignedBox<T>& box) const
 {
 	for (const HalfSpace<T>& h : halfSpaces)
 	{
@@ -393,8 +400,9 @@ bool ConvexPolyhedron<T, U>::intersects(const AxisAlignedBox<T>& box) const
 	return true;
 }
 
-template<typename T, typename U>
-bool ConvexPolyhedron<T, U>::intersects(const AxisAlignedBox<T>& box, U& mask) const
+template<typename T>
+template<std::integral U>
+bool ConvexPolyhedron<T>::intersects(const AxisAlignedBox<T>& box, U& mask) const
 {
 	std::size_t count = halfSpaces.size();
 	mask &= (U(1) << count) - U(1);
@@ -418,8 +426,8 @@ bool ConvexPolyhedron<T, U>::intersects(const AxisAlignedBox<T>& box, U& mask) c
 	return true;
 }
 
-template<typename T, typename U>
-bool ConvexPolyhedron<T, U>::intersects(const OrientedBox<T>& box) const
+template<typename T>
+bool ConvexPolyhedron<T>::intersects(const OrientedBox<T>& box) const
 {
 	for (const HalfSpace<T>& h : halfSpaces)
 	{
@@ -430,8 +438,9 @@ bool ConvexPolyhedron<T, U>::intersects(const OrientedBox<T>& box) const
 	return true;
 }
 
-template<typename T, typename U>
-bool ConvexPolyhedron<T, U>::intersects(const OrientedBox<T>& box, U& mask) const
+template<typename T>
+template<std::integral U>
+bool ConvexPolyhedron<T>::intersects(const OrientedBox<T>& box, U& mask) const
 {
 	std::size_t count = halfSpaces.size();
 	mask &= (U(1) << count) - U(1);
@@ -455,8 +464,8 @@ bool ConvexPolyhedron<T, U>::intersects(const OrientedBox<T>& box, U& mask) cons
 	return true;
 }
 
-template<typename T, typename U>
-bool ConvexPolyhedron<T, U>::intersects(const Sphere<T>& sphere) const
+template<typename T>
+bool ConvexPolyhedron<T>::intersects(const Sphere<T>& sphere) const
 {
 	for (const HalfSpace<T>& h : halfSpaces)
 	{
@@ -481,8 +490,8 @@ using ConvexPolyhedron = templates::ConvexPolyhedron<float>;
 
 namespace mathematics::templates {
 
-template<typename T, typename U>
-std::vector<Vector3<T>> ConvexPolyhedron<T, U>::computeVertices(T tolerance) const
+template<typename T>
+std::vector<Vector3<T>> ConvexPolyhedron<T>::computeVertices(T tolerance) const
 {
 	// http://www.gamedev.net/page/resources/_/technical/game-programming/shadow-caster-volumes-for-the-culling-of-potential-shadow-casters-r2330
 
@@ -527,8 +536,8 @@ std::vector<Vector3<T>> ConvexPolyhedron<T, U>::computeVertices(T tolerance) con
 	return vertices;
 }
 
-template<typename T, typename U>
-AxisAlignedBox<T> ConvexPolyhedron<T, U>::computeAxisAlignedBoundingBox(T tolerance) const
+template<typename T>
+AxisAlignedBox<T> ConvexPolyhedron<T>::computeAxisAlignedBoundingBox(T tolerance) const
 {
 	// http://www.gamedev.net/page/resources/_/technical/game-programming/shadow-caster-volumes-for-the-culling-of-potential-shadow-casters-r2330
 
