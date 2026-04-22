@@ -91,6 +91,7 @@ set(MATHEMATICS_HEADERS
 	Plane.hpp
 	Quadrilateral3.hpp
 	Quaternion.hpp
+	Random.hpp
 	Ray2.hpp
 	Ray3.hpp
 	Romberg.inl
