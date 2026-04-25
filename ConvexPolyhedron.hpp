@@ -11,7 +11,7 @@
 #include <vector>
 #include <iterator>
 #include <initializer_list>
-#include <atomic>
+//#include <atomic>
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -39,7 +39,7 @@ public:
 	using HalfSpaceType = HalfSpace<T>;
 	using HalfSpaceVector = std::vector<HalfSpaceType>;
 
-	ConvexPolyhedron() noexcept : refCount_(), halfSpaces() {}
+	ConvexPolyhedron() noexcept : /*refCount_(),*/ halfSpaces() {}
 	template<std::input_iterator<HalfSpace<T>> I, std::sentinel_for<I> S> ConvexPolyhedron(I first, S last);
 	ConvexPolyhedron(const HalfSpace<T>* halfSpaces, std::size_t nHalfSpaces);
 	explicit ConvexPolyhedron(const std::vector<HalfSpace<T>>& halfSpaces);
@@ -47,7 +47,7 @@ public:
 	template<std::input_iterator<Plane<T>> I, std::sentinel_for<I> S> ConvexPolyhedron(I first, S last);
 	ConvexPolyhedron(const Plane<T>* planes, std::size_t nPlanes);
 	explicit ConvexPolyhedron(const std::vector<Plane<T>>& planes);
-	ConvexPolyhedron(std::initializer_list<HalfSpace<T>> halfSpaces) : refCount_(), halfSpaces(halfSpaces) {}
+	ConvexPolyhedron(std::initializer_list<HalfSpace<T>> halfSpaces) : /*refCount_(),*/ halfSpaces(halfSpaces) {}
 	ConvexPolyhedron(const ConvexPolyhedron& polyhedron);
 	ConvexPolyhedron(ConvexPolyhedron&& polyhedron);
 	ConvexPolyhedron& operator=(const ConvexPolyhedron& polyhedron);
@@ -60,17 +60,20 @@ public:
 	static ConvexPolyhedron* from(const AxisAlignedBox<T>& box);
 	static ConvexPolyhedron* from(const Box<T>& box);
 	static ConvexPolyhedron* from(const SymmetricFrustum<T>& frustum);
-	//static ConvexPolyhedron* makeConvexHull(const Vector3<T>* points, std::size_t nPoints); // convex hull of point cloud
-	//static ConvexPolyhedron* makeConvexHull(const std::vector<Vector3<T>>& points);
+#if MATHEMATICS_HAS_QUICKHULL
+	template<std::input_iterator<Vector3<T>> I, std::sentinel_for<I> S> static ConvexPolyhedron* makeConvexHull(I first, S last);
+	static ConvexPolyhedron* makeConvexHull(const Vector3<T>* points, std::size_t nPoints); // convex hull of point cloud
+	static ConvexPolyhedron* makeConvexHull(const std::vector<Vector3<T>>& points);
+#endif
 
 	// Clone
 	ConvexPolyhedron* clone() const { return new ConvexPolyhedron(*this); }
 
 	// References
-	bool hasOwner() const noexcept { return (refCount_ > 0); }
-	int getReferenceCount() const noexcept { return refCount_; }
-	void acquire() noexcept { refCount_++; }
-	void release() { if (--refCount_ <= 0) delete this; }
+	//bool hasOwner() const noexcept { return (refCount_ > 0); }
+	//int getReferenceCount() const noexcept { return refCount_; }
+	//void acquire() noexcept { refCount_++; }
+	//void release() { if (--refCount_ <= 0) delete this; }
 
 	// Clear
 	static const ConvexPolyhedron* getEmpty();
@@ -127,34 +130,34 @@ public:
 	HalfSpaceVector halfSpaces;		// normals point outwards
 
 private:
-	std::atomic_int refCount_;
+	//std::atomic_int refCount_;
 };
 
 template<typename T>
 template<std::input_iterator<HalfSpace<T>> I, std::sentinel_for<I> S> 
 inline ConvexPolyhedron<T>::ConvexPolyhedron(I first, S last) :
-	refCount_(), 
+	//refCount_(), 
 	halfSpaces(first, last)
 {
 }
 
 template<typename T>
 inline ConvexPolyhedron<T>::ConvexPolyhedron(const HalfSpace<T>* halfSpaces, std::size_t nHalfSpaces) :
-	refCount_(), 
+	//refCount_(), 
 	halfSpaces(halfSpaces, halfSpaces + nHalfSpaces)
 {
 }
 
 template<typename T>
 inline ConvexPolyhedron<T>::ConvexPolyhedron(const std::vector<HalfSpace<T>>& halfSpaces) : 
-	refCount_(), 
+	//refCount_(), 
 	halfSpaces(halfSpaces)
 {
 }
 
 template<typename T>
 inline ConvexPolyhedron<T>::ConvexPolyhedron(std::vector<HalfSpace<T>>&& halfSpaces) : 
-	refCount_(), 
+	//refCount_(), 
 	halfSpaces(std::move(halfSpaces))
 {
 }
@@ -162,35 +165,35 @@ inline ConvexPolyhedron<T>::ConvexPolyhedron(std::vector<HalfSpace<T>>&& halfSpa
 template<typename T>
 template<std::input_iterator<Plane<T>> I, std::sentinel_for<I> S> 
 inline ConvexPolyhedron<T>::ConvexPolyhedron(I first, S last) :
-	refCount_(), 
+	//refCount_(), 
 	halfSpaces(first, last)
 {
 }
 
 template<typename T>
 inline ConvexPolyhedron<T>::ConvexPolyhedron(const Plane<T>* planes, std::size_t nPlanes) :
-	refCount_(), 
+	//refCount_(), 
 	halfSpaces(planes, planes + nPlanes)
 {
 }
 
 template<typename T>
 inline ConvexPolyhedron<T>::ConvexPolyhedron(const std::vector<Plane<T>>& planes) : 
-	refCount_(), 
+	//refCount_(), 
 	halfSpaces(planes.begin(), planes.end())
 {
 }
 
 template<typename T>
 inline ConvexPolyhedron<T>::ConvexPolyhedron(const ConvexPolyhedron& polyhedron) : 
-	refCount_(), 
+	//refCount_(), 
 	halfSpaces(polyhedron.halfSpaces) 
 {
 }
 
 template<typename T>
 inline ConvexPolyhedron<T>::ConvexPolyhedron(ConvexPolyhedron&& polyhedron) : 
-	refCount_(), 
+	//refCount_(), 
 	halfSpaces(std::move(polyhedron.halfSpaces)) 
 {
 }
@@ -496,13 +499,13 @@ std::vector<Vector3<T>> ConvexPolyhedron<T>::computeVertices(T tolerance) const
 	// http://www.gamedev.net/page/resources/_/technical/game-programming/shadow-caster-volumes-for-the-culling-of-potential-shadow-casters-r2330
 
 	std::vector<Vector3<T>> vertices;
-	for (auto i0 = halfSpaces.begin(), last = halfSpaces.end(); i0 != last; ++i0)
+	for (auto i0 = halfSpaces.begin(); i0 != halfSpaces.end(); ++i0)
 	{ 
 		auto i1 = i0; 
-        for (++i1; i1 != last; ++i1)
+        for (++i1; i1 != halfSpaces.end(); ++i1)
 		{
 			auto i2 = i1; 
-            for (++i2; i2 != last; ++i2)
+            for (++i2; i2 != halfSpaces.end(); ++i2)
 			{ 
                 // Test if the planes intersect at a point
 				auto d = lu::decompose(Matrix3<T>(i0->getNormal(), i1->getNormal(), i2->getNormal()));
@@ -542,13 +545,13 @@ AxisAlignedBox<T> ConvexPolyhedron<T>::computeAxisAlignedBoundingBox(T tolerance
 	// http://www.gamedev.net/page/resources/_/technical/game-programming/shadow-caster-volumes-for-the-culling-of-potential-shadow-casters-r2330
 
 	AxisAlignedBox<T> box;
-	for (auto i0 = halfSpaces.begin(), last = halfSpaces.end(); i0 != last; ++i0)
+	for (auto i0 = halfSpaces.begin(); i0 != halfSpaces.end(); ++i0)
 	{ 
 		auto i1 = i0; 
-        for (++i1; i1 != last; ++i1)
+        for (++i1; i1 != halfSpaces.end(); ++i1)
 		{ 
 			auto i2 = i1; 
-            for (++i2; i2 != last; ++i2)
+            for (++i2; i2 != halfSpaces.end(); ++i2)
 			{ 
                 // Test if the planes intersect at a point 
 				auto d = lu::decompose(Matrix3<T>(i0->getNormal(), i1->getNormal(), i2->getNormal()));
