@@ -345,7 +345,7 @@ struct alignas(16) Vector2<float>
 	float getLength() const noexcept { return getMagnitude(); }
 	float getLengthSquared() const noexcept { return getMagnitudeSquared(); }
 	void setLength(float length) noexcept { setMagnitude(length); }
-	Axis getMajorAxis() const noexcept { (Axis)simd::asIndex(simd::equal(xy, simd::hMax2(xy))); }
+	Axis getMajorAxis() const noexcept { (Axis)simd::asIndex(simd::equal(xy, simd::hMax2(simd::abs4(xy)))); }
 	float getMinComponent() const noexcept { return simd::toFloat(simd::hMin2(xy)); }
 	float getMaxComponent() const noexcept { return simd::toFloat(simd::hMax2(xy)); }
 	Vector2& setZero() noexcept { xy = simd::zero<simd::float4>(); return *this; }

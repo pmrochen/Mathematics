@@ -359,7 +359,7 @@ struct alignas(16) Vector3<float>
 	float getLength() const noexcept { return getMagnitude(); }
 	float getLengthSquared() const noexcept { return getMagnitudeSquared(); }
 	void setLength(float length) noexcept { setMagnitude(length); }
-	Axis getMajorAxis() const noexcept { (Axis)simd::asIndex(simd::equal(xyz, simd::hMax3(xyz))); }
+	Axis getMajorAxis() const noexcept { (Axis)simd::asIndex(simd::equal(xyz, simd::hMax3(simd::abs4(xyz)))); }
 	float getMinComponent() const noexcept { return simd::toFloat(simd::hMin3(xyz)); }
 	float getMaxComponent() const noexcept { return simd::toFloat(simd::hMax3(xyz)); }
 	Vector3& setZero() noexcept { xyz = simd::zero<simd::float4>(); return *this; }
