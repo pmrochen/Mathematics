@@ -61,9 +61,9 @@ public:
 	static ConvexPolyhedron* from(const Box<T>& box);
 	static ConvexPolyhedron* from(const SymmetricFrustum<T>& frustum);
 #if MATHEMATICS_HAS_QUICKHULL
-	template<std::input_iterator<Vector3<T>> I, std::sentinel_for<I> S> static ConvexPolyhedron* makeConvexHull(I first, S last);
-	static ConvexPolyhedron* makeConvexHull(const Vector3<T>* points, std::size_t nPoints); // convex hull of point cloud
-	static ConvexPolyhedron* makeConvexHull(const std::vector<Vector3<T>>& points);
+	//template<std::input_iterator<Vector3<T>> I, std::sentinel_for<I> S> static ConvexPolyhedron* makeConvexHull(I first, S last);
+	//static ConvexPolyhedron* makeConvexHull(const Vector3<T>* points, std::size_t nPoints); // convex hull of point cloud
+	//static ConvexPolyhedron* makeConvexHull(const std::vector<Vector3<T>>& points);
 #endif
 
 	// Clone
@@ -318,52 +318,52 @@ inline O ConvexPolyhedron<T>::copyPlanes(O target) const
 template<typename T>
 void ConvexPolyhedron<T>::translate(const Vector3<T>& offset)
 {
-	if (!offset.isZero())
-	{
-		for (HalfSpace<T>& h : halfSpaces)
-			h.translate(offset);
-	}
+	if (offset.isZero())
+		return;
+
+	for (HalfSpace<T>& h : halfSpaces)
+		h.translate(offset);
 }
 
 template<typename T>
 void ConvexPolyhedron<T>::transform(const Matrix3<T>& matrix, bool orthogonal)
 {
-	if (!halfSpaces.empty() && !matrix.isIdentity())
+	if (halfSpaces.empty() || matrix.isIdentity())
+		return;
+
+	if (orthogonal)
 	{
-		if (orthogonal)
-		{
-			for (HalfSpace<T>& h : halfSpaces)
-				h.transform(matrix, true);
-		}
-		else
-		{
-			Matrix3<T> normalMatrix = inverseTranspose(matrix);
-			for (HalfSpace<T>& h : halfSpaces)
-				h.set(normalize(h.getNormal()*normalMatrix), -dot(h.getNormal(), (h.getNormal()*(-h.getConstant()))*matrix));
-		}
+		for (HalfSpace<T>& h : halfSpaces)
+			h.transform(matrix, true);
+	}
+	else
+	{
+		Matrix3<T> normalMatrix = inverseTranspose(matrix);
+		for (HalfSpace<T>& h : halfSpaces)
+			h.set(normalize(h.getNormal()*normalMatrix), -dot(h.getNormal(), (h.getNormal()*(-h.getConstant()))*matrix));
 	}
 }
 
 template<typename T>
 void ConvexPolyhedron<T>::transform(const AffineTransform<T>& transformation, bool orthogonal)
 {
-	if (!halfSpaces.empty() && !transformation.isIdentity())
+	if (halfSpaces.empty() || transformation.isIdentity())
+		return;
+
+	if (transformation.getBasis().isIdentity())
 	{
-		if (transformation.getBasis().isIdentity())
-		{
-			translate(transformation.getOrigin());
-		}
-		else if (orthogonal)
-		{
-			for (HalfSpace<T>& h : halfSpaces)
-				h.transform(transformation, true);
-		}
-		else
-		{
-			Matrix3<T> normalMatrix = inverseTranspose(transformation.getBasis()));
-			for (HalfSpace<T>& h : halfSpaces)
-				h.set(normalize(h.getNormal()*normalMatrix), -dot(h.getNormal(), transform(h.getNormal()*(-h.getConstant()), transformation)));
-		}
+		translate(transformation.getOrigin());
+	}
+	else if (orthogonal)
+	{
+		for (HalfSpace<T>& h : halfSpaces)
+			h.transform(transformation, true);
+	}
+	else
+	{
+		Matrix3<T> normalMatrix = inverseTranspose(transformation.getBasis()));
+		for (HalfSpace<T>& h : halfSpaces)
+			h.set(normalize(h.getNormal()*normalMatrix), -dot(h.getNormal(), transform(h.getNormal()*(-h.getConstant()), transformation)));
 	}
 }
 
