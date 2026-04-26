@@ -45,5 +45,6 @@
 #include "Cone.hpp"
 #include "SymmetricFrustum.hpp"
 #include "ConvexPolyhedron.hpp"
-//#include "TriangleMesh.hpp"
-//#include "TetrahedralMesh.hpp"
+#include "TriangleMesh.hpp"
+#include "TetrahedralMesh.hpp"
+#include "Random.hpp"
