@@ -39,6 +39,10 @@ struct SymmetricFrustum;
 
 template<typename T>
 	requires std::floating_point<T>
+class ConvexPolyhedron;
+
+template<typename T>
+	requires std::floating_point<T>
 struct Sphere
 {
 	using Real = T;
@@ -92,6 +96,7 @@ struct Sphere
 	bool intersects(const Sphere& sphere) const noexcept;
 	bool intersects(const Cone<T>& cone) const noexcept;
 	bool intersects(const SymmetricFrustum<T>& frustum) const noexcept;
+	bool intersects(const ConvexPolyhedron<T>* polyhedron) const noexcept;
 
 	Vector3<T> center;
 	T radius;
@@ -187,6 +192,7 @@ struct hash<::mathematics::templates::Sphere<T>>
 #include "Ellipsoid.hpp"
 #include "Cone.hpp"
 #include "SymmetricFrustum.hpp"
+#include "ConvexPolyhedron.hpp"
 #include "Intersections.inl"
 
 namespace mathematics::templates {
@@ -244,6 +250,12 @@ template<typename T>
 inline bool Sphere<T>::intersects(const SymmetricFrustum<T>& frustum) const
 {
 	return frustum.intersects(*this);
+}
+
+template<typename T>
+inline bool Sphere<T>::intersects(const ConvexPolyhedron<T>* polyhedron) const
+{
+	return polyhedron && polyhedron->intersects(*this);
 }
 
 } // namespace mathematics::templates
