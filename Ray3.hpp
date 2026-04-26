@@ -13,6 +13,7 @@
 #include <functional>
 #include <utility>
 #include <optional>
+#include <vector>
 #include <cstddef>
 #include <cmath>
 #include "Vector3.hpp"
@@ -48,6 +49,10 @@ template<typename T>
 	requires std::floating_point<T>
 struct Ellipsoid;
 
+template<typename T, typename U>
+	requires (std::floating_point<T> && std::integral<U>)
+class TriangleMesh;
+
 #if SIMD_HAS_FLOAT4
 
 template<>
@@ -69,7 +74,7 @@ struct Ray3
 	explicit Ray3(const Line3<T>& line) noexcept : origin(line.origin), direction(line.direction) {}
 	//explicit Ray3(const LineSegment3<T>& segment) noexcept;
 
-	//Vector3<T> operator()(T t) const noexcept { return (origin + t*direction); }
+	//Vector3<T> operator()(T t) const noexcept { return origin + t*direction; }
 	bool operator==(const Ray3& ray) const noexcept { return (origin == ray.origin) && (direction == ray.direction); }
 	bool operator!=(const Ray3& ray) const noexcept { return !(*this == ray); }
 
@@ -97,7 +102,7 @@ struct Ray3
 	Ray3& normalize() noexcept { direction.normalize(); return *this; }
 
 	// Evaluation
-	Vector3<T> evaluate(T t) const noexcept { return (origin + t*direction); }
+	Vector3<T> evaluate(T t) const noexcept { return origin + t*direction; }
 
 	// Closest points
 	Vector3<T> getClosestPoint(const Vector3<T>& point) const;											// normalized ray
@@ -113,6 +118,7 @@ struct Ray3
 	bool intersects(const Sphere<T>& sphere) const noexcept { return findIntersection(sphere).has_value(); }
 	template<Normalization U> bool intersects(const Sphere<T>& sphere) const noexcept { return findIntersection<U>(sphere).has_value(); }
 	bool intersects(const Ellipsoid<T>& ellipsoid) const noexcept;
+	template<std::integral U> bool intersects(const TriangleMesh<T, U>* mesh) const noexcept;
 	std::optional<T> findIntersection(const Plane<T>& plane) const noexcept;
 	std::optional<T> findIntersection(const Triangle3<T>& triangle) const noexcept;
 	//template<ScalarOrVector3<T> U> std::optional<U> findIntersection(const Plane<T>& plane) const noexcept;
@@ -121,6 +127,7 @@ struct Ray3
 	std::optional<Interval<T>> findIntersection(const Sphere<T>& sphere) const noexcept;
 	template<Normalization U> std::optional<Interval<T>> findIntersection(const Sphere<T>& sphere) const noexcept;
 	std::optional<Interval<T>> findIntersection(const Ellipsoid<T>& ellipsoid) const noexcept;
+	template<std::integral U> std::vector<T> findIntersections(const TriangleMesh<T, U>* mesh) const noexcept;
 
 	Vector3<T> origin;
 	Vector3<T> direction;
@@ -241,6 +248,7 @@ struct hash<::mathematics::templates::Ray3<T>>
 #include "OrientedBox.hpp"
 #include "Sphere.hpp"
 #include "Ellipsoid.hpp"
+#include "TriangleMesh.hpp"
 #include "Intersections.inl"
 
 namespace mathematics::templates {
@@ -249,6 +257,50 @@ template<typename T>
 inline bool Ray3<T>::intersects(const Ellipsoid<T>& ellipsoid) const
 {
 	return intersections::testRayEllipsoid(origin, direction, ellipsoid.center, ellipsoid.getMatrix());
+}
+
+template<typename T>
+template<std::integral U> 
+bool Ray3<T>::intersects(const TriangleMesh<T, U>* mesh) const
+{
+	if (!mesh)
+		return false;
+
+	if (mesh->indices.empty())
+	{
+		if (mesh->vertices.size() < 3)
+			return false;
+
+		const Vector3<T>* positions = &mesh->vertices[0];
+		std::size_t count = mesh->vertices.size()/3;
+		do
+		{
+			auto result = intersections::findLineTriangle<std::optional<T>>(origin, direction, 
+				positions[0], positions[1], positions[2]);
+			if (result.has_value() && (result.value() >= T(0)))
+				return true;
+			positions += 3;
+		} while (--count);
+	}
+	else
+	{
+		if (mesh->indices.size() < 3)
+			return false;
+
+		const Vector3<T>* positions = &mesh->vertices[0];
+		const U* indices = &mesh->indices[0];
+		std::size_t count = mesh->indices.size()/3;
+		do
+		{
+			auto result = intersections::findLineTriangle<std::optional<T>>(origin, direction, 
+				positions[indices[0]], positions[indices[1]], positions[indices[2]]);
+			if (result.has_value() && (result.value() >= T(0)))
+				return true;
+			indices += 3;
+		} while (--count);
+	}
+
+	return false;
 }
 
 template<typename T>
@@ -364,6 +416,51 @@ template<typename T>
 inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Ellipsoid<T>& ellipsoid) const
 {
 	return intersections::findRayEllipsoid<std::optional<Interval<T>>>(origin, direction, ellipsoid.center, ellipsoid.getMatrix());
+}
+
+template<typename T>
+template<std::integral U> 
+std::vector<T> Ray3<T>::findIntersections(const TriangleMesh<T, U>* mesh) const
+{
+	std::vector<T> intersections;
+	if (!mesh)
+		return intersections;
+
+	if (mesh->indices.empty())
+	{
+		if (mesh->vertices.size() < 3)
+			return intersections;
+
+		const Vector3<T>* positions = &mesh->vertices[0];
+		std::size_t count = mesh->vertices.size()/3;
+		do
+		{
+			auto result = intersections::findLineTriangle<std::optional<T>>(origin, direction, 
+				positions[0], positions[1], positions[2]);
+			if (result.has_value() && (result.value() >= T(0)))
+				intersections.push_back(result.value());
+			positions += 3;
+		} while (--count);
+	}
+	else
+	{
+		if (mesh->indices.size() < 3)
+			return intersections;
+
+		const Vector3<T>* positions = &mesh->vertices[0];
+		const U* indices = &mesh->indices[0];
+		std::size_t count = mesh->indices.size()/3;
+		do
+		{
+			auto result = intersections::findLineTriangle<std::optional<T>>(origin, direction, 
+				positions[indices[0]], positions[indices[1]], positions[indices[2]]);
+			if (result.has_value() && (result.value() >= T(0)))
+				intersections.push_back(result.value());
+			indices += 3;
+		} while (--count);
+	}
+
+	return intersections;
 }
 
 } // namespace mathematics::templates
