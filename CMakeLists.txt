@@ -75,6 +75,7 @@ set(MATHEMATICS_HEADERS
 	Euler.hpp
 	EulerOrder.hpp
 	HalfSpace.hpp
+	Hermite.inl
 	Intersections.inl
 	Interval.hpp
 	LineSegment2.hpp
