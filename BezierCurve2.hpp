@@ -252,7 +252,7 @@ namespace mathematics::templates {
 template<typename T>
 inline Vector2<T> Bezier2<T>::evaluate(T t) const // #TODO SIMD
 {
-	Vector4<T> bt = bezier::basis(t);
+	Vector4<T> bt = bezier::basis<Vector4<T>>(t);
 	return Vector2<T>(points[0].x*bt[0] + points[1].x*bt[1] + points[2].x*bt[2] + points[3].x*bt[3],
 		points[0].y*bt[0] + points[1].y*bt[1] + points[2].y*bt[2] + points[3].y*bt[3]);
 }
@@ -261,14 +261,14 @@ template<typename T>
 template<std::size_t/*int*/ I>
 inline T Bezier2<T>::evaluate(T t) const // #TODO SIMD
 {
-	Vector4<T> bt = bezier::basis(t);
+	Vector4<T> bt = bezier::basis<Vector4<T>>(t);
 	return points[0].get<I>()*bt[0] + points[1].get<I>()*bt[1] + points[2].get<I>()*bt[2] + points[3].get<I>()*bt[3];
 }
 
 template<typename T>
 inline Vector2<T> Bezier2<T>::calculateDerivative(T t) const // #TODO SIMD
 {
-	Vector4 dbt = bezier::derivativeBasis(t);
+	Vector4<T> dbt = bezier::derivativeBasis<Vector4<T>>(t);
 	return Vector2<T>(points[0].x*dbt[0] + points[1].x*dbt[1] + points[2].x*dbt[2] + points[3].x*dbt[3],
 		points[0].y*dbt[0] + points[1].y*dbt[1] + points[2].y*dbt[2] + points[3].y*dbt[3]);
 }
