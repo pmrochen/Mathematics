@@ -83,6 +83,7 @@ struct Euler
 	Euler(const Quaternion<T>& q, EulerOrder order) noexcept;
 	Euler(const Matrix3<T>& m, EulerOrder order) noexcept;
 	explicit Euler(const TupleType& t) noexcept : x(std::get<0>(t)), y(std::get<1>(t)), z(std::get<2>(t)), order(std::get<3>(t)) {}
+	Euler(const std::tuple<T, T, T>& t, EulerOrder order) noexcept : x(std::get<0>(t)), y(std::get<1>(t)), z(std::get<2>(t)), order(order) {}
 	Euler(const T* e, EulerOrder order) noexcept : x(e[0]), y(e[1]), z(e[2]), order(order) {}
 
 	//explicit operator TupleType() { return { x, y, z, order }; }
