@@ -50,69 +50,63 @@ endif()
 
 add_library(${MATHEMATICS_LIB_NAME} INTERFACE)
 
-target_include_directories(${MATHEMATICS_LIB_NAME}		# to remove after moving header files to Include folder
-	INTERFACE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-        $<INSTALL_INTERFACE:include>
-)
-
 set(MATHEMATICS_HEADERS
-	AffineTransform.hpp
-	Axis.hpp
-	AxisAlignedBox.hpp
-	AxisAlignedRectangle.hpp
-	Bezier.inl
-	BezierCurve2.hpp
-	BezierCurve3.hpp
-	Capsule.hpp
-	Circle2.hpp
-	Cone.hpp
-	Constants.hpp
-	Containment.inl
-	Cylinder.hpp
-	Distances.inl
-	Ellipsoid.hpp
-	Euler.hpp
-	EulerOrder.hpp
-	HalfSpace.hpp
-	Hermite.inl
-	Intersections.inl
-	Interval.hpp
-	LineSegment2.hpp
-	LineSegment3.hpp
-	Line2.hpp
-	Line3.hpp
-	LU.inl
-	Mathematics.hpp
-	Matrix2.hpp
-	Matrix3.hpp
-	Matrix4.hpp
-	OrientedBox.hpp
-	Perlin.inl
-	Plane.hpp
-	Quadrilateral3.hpp
-	Quaternion.hpp
-	Random.hpp
-	Ray2.hpp
-	Ray3.hpp
-	Romberg.inl
-	Scalar.hpp
-	Sphere.hpp
-	SymmetricFrustum.hpp
-	Tetrahedron.hpp
-	Torus.hpp
-	Triangle3.hpp
-	Triangulation.inl
-	Vector2.hpp
-	Vector3.hpp
-	Vector4.hpp
-	YawPitchRoll.hpp
+	Include/Mathematics/Transform/AffineTransform.hpp
+	Include/Mathematics/Geometry/Axis.hpp
+	Include/Mathematics/Geometry/AxisAlignedBox.hpp
+	Include/Mathematics/Geometry/AxisAlignedRectangle.hpp
+	Include/Mathematics/Geometry/Bezier.inl
+	Include/Mathematics/Geometry/BezierCurve2.hpp
+	Include/Mathematics/Geometry/BezierCurve3.hpp
+	Include/Mathematics/Geometry/Capsule.hpp
+	Include/Mathematics/Geometry/Circle2.hpp
+	Include/Mathematics/Geometry/Cone.hpp
+	Include/Mathematics/Constants.hpp
+	Include/Mathematics/Analysis/Containment.inl
+	Include/Mathematics/Geometry/Cylinder.hpp
+	Include/Mathematics/Analysis/Distances.inl
+	Include/Mathematics/Geometry/Ellipsoid.hpp
+	Include/Mathematics/Transform/Euler.hpp
+	Include/Mathematics/Transform/EulerOrder.hpp
+	Include/Mathematics/Geometry/HalfSpace.hpp
+	Include/Mathematics/Geometry/Hermite.inl
+	Include/Mathematics/Analysis/Intersections.inl
+	Include/Mathematics/Interval.hpp
+	Include/Mathematics/LineSegment2.hpp
+	Include/Mathematics/LineSegment3.hpp
+	Include/Mathematics/Line2.hpp
+	Include/Mathematics/Line3.hpp
+	Include/Mathematics/Algebra/LU.inl
+	Include/Mathematics/Mathematics.hpp
+	Include/Mathematics/Algebra/Matrix2.hpp
+	Include/Mathematics/Algebra/Matrix3.hpp
+	Include/Mathematics/Algebra/Matrix4.hpp
+	Include/Mathematics/Geometry/OrientedBox.hpp
+	Include/Mathematics/Analysis/Perlin.inl
+	Include/Mathematics/Geometry/Plane.hpp
+	Include/Mathematics/Geometry/Quadrilateral3.hpp
+	Include/Mathematics/Algebra/Quaternion.hpp
+	Include/Mathematics/Random.hpp
+	Include/Mathematics/Geometry/Ray2.hpp
+	Include/Mathematics/Geometry/Ray3.hpp
+	Include/Mathematics/Analysis/Romberg.inl
+	Include/Mathematics/Scalar.hpp
+	Include/Mathematics/Geometry/Sphere.hpp
+	Include/Mathematics/Geometry/SymmetricFrustum.hpp
+	Include/Mathematics/Geometry/Tetrahedron.hpp
+	Include/Mathematics/Geometry/Torus.hpp
+	Include/Mathematics/Geometry/Triangle3.hpp
+	Include/Mathematics/Geometry/Triangulation.inl
+	Include/Mathematics/Algebra/Vector2.hpp
+	Include/Mathematics/Algebra/Vector3.hpp
+	Include/Mathematics/Algebra/Vector4.hpp
+	Include/Mathematics/Transform/YawPitchRoll.hpp
 )
 
 target_sources(${MATHEMATICS_LIB_NAME}
 	INTERFACE
     	FILE_SET HEADERS
-		#BASE_DIRS Include
+		BASE_DIRS Include
     	FILES
 			${MATHEMATICS_HEADERS}
 )
