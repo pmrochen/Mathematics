@@ -15,12 +15,12 @@
 
 ## To Do
 
-- [ ] **Complex 3D geometric shapes** - Work in progress ⚙️
-  - [ ] **Convex polyhedron** - Work in progress ⚙️
-  - [ ] **Triangle mesh** - Work in progress ⚙️
-  - [ ] **Tetrahedral mesh** - Work in progress ⚙️
-- [ ] **Random number generator**
-- [ ] **Place header files in subfolders by category**
+- [x] **Complex 3D geometric shapes**
+  - [x] **Convex polyhedron**
+  - [x] **Triangle mesh**
+  - [x] **Tetrahedral mesh**
+- [x] **Random number generator**
+- [x] **Categorize header files into subfolders**
 - [ ] **Unit tests**
 - [ ] **Full SIMD support**
 - [ ] **Documentation for usage**
