@@ -13,7 +13,7 @@
 #include <vector>
 #include <iterator>
 #include <initializer_list>
-//#include <atomic>
+#include <memory>
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -37,7 +37,7 @@ namespace templates {
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-class TriangleMesh
+class TriangleMesh : public std::enable_shared_from_this<TriangleMesh>
 {
 public:
 	using Real = T;
@@ -83,12 +83,6 @@ public:
 
 	// Clone
 	TriangleMesh* clone() const { return new TriangleMesh(*this); }
-
-	// References
-	//bool hasOwner() const noexcept { return (refCount_ > 0); }
-	//int getReferenceCount() const noexcept { return refCount_; }
-	//void acquire() noexcept { refCount_++; }
-	//void release() { if (--refCount_ <= 0) delete this; }
 
 	// Clear
 	bool isEmpty() const noexcept { return vertices.empty() && indices.empty(); }
@@ -171,9 +165,6 @@ public:
 
 	VertexVector vertices;
 	VertexIndexVector indices;
-
-private:
-	//std::atomic_int refCount_;
 };
 
 template<typename T, typename U>

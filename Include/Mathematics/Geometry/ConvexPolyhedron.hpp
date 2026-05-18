@@ -11,7 +11,7 @@
 #include <vector>
 #include <iterator>
 #include <initializer_list>
-//#include <atomic>
+#include <memory>
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -32,7 +32,7 @@ namespace templates {
 
 template<typename T>
 	requires std::floating_point<T>
-class ConvexPolyhedron
+class ConvexPolyhedron : public std::enable_shared_from_this<ConvexPolyhedron>
 {
 public:
 	using Real = T;
@@ -68,12 +68,6 @@ public:
 
 	// Clone
 	ConvexPolyhedron* clone() const { return new ConvexPolyhedron(*this); }
-
-	// References
-	//bool hasOwner() const noexcept { return (refCount_ > 0); }
-	//int getReferenceCount() const noexcept { return refCount_; }
-	//void acquire() noexcept { refCount_++; }
-	//void release() { if (--refCount_ <= 0) delete this; }
 
 	// Clear
 	static const ConvexPolyhedron* getEmpty();
@@ -128,9 +122,6 @@ public:
 	bool intersects(const Sphere<T>& sphere) const noexcept;
 
 	HalfSpaceVector halfSpaces;		// normals point outwards
-
-private:
-	//std::atomic_int refCount_;
 };
 
 template<typename T>
