@@ -32,10 +32,10 @@ struct Normalized {};
 struct Unnormalized {};
 
 template<typename T>
-concept Normalization = (std::same_as<T, Normalized> || std::same_as<T, Unnormalized>); // #TODO Move to Concepts.inl
+concept Normalization = (std::same_as<T, Normalized> || std::same_as<T, Unnormalized>); // #TODO Move to Concepts.hpp
 
 template<typename T>
-concept Arithmetic = (std::floating_point<T> || std::integral<T>); // #TODO Move to Concepts.inl
+concept Arithmetic = (std::floating_point<T> || std::integral<T>); // #TODO Move to Concepts.hpp
 
 namespace templates {
 
