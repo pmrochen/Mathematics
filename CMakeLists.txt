@@ -49,6 +49,16 @@ if(MATHEMATICS_HAS_SIMD)
 endif()
 
 add_library(${MATHEMATICS_LIB_NAME} INTERFACE)
+add_library(Core::${MATHEMATICS_LIB_NAME} ALIAS ${MATHEMATICS_LIB_NAME})
+#set_target_properties(${MATHEMATICS_LIB_NAME} PROPERTIES EXPORT_NAME Core::${MATHEMATICS_LIB_NAME})
+
+target_link_libraries(${MATHEMATICS_LIB_NAME} INTERFACE ${SIMD_TARGET})
+
+#target_include_directories(${IMAGING_LIB_NAME}
+#	PUBLIC
+#		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Simd/Include>
+#		$<INSTALL_INTERFACE:Simd/Include>
+#)
 
 set(MATHEMATICS_HEADERS
 	Include/Mathematics/Transform/AffineTransform.hpp
