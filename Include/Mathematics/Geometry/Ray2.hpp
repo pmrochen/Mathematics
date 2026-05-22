@@ -185,7 +185,7 @@ inline Ray2<T> normalize(Ray2<T>&& ray) noexcept
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Ray2 = templates::Ray2<double>;
 using Ray2Arg = templates::Ray2<double>::ConstArg;
 using Ray2Result = templates::Ray2<double>::ConstResult;

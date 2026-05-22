@@ -118,7 +118,7 @@ inline bool Circle2<T>::intersects(const Circle2<T>& circle) const
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Circle2 = templates::Circle2<double>;
 using Circle2Arg = templates::Circle2<double>::ConstArg;
 using Circle2Result = templates::Circle2<double>::ConstResult;

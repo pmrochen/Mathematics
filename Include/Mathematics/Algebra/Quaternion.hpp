@@ -1213,7 +1213,7 @@ inline Quaternion<float> rotate(const Quaternion<float>& q1, const Quaternion<fl
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Quaternion = templates::Quaternion<double>;
 using QuaternionArg = templates::Quaternion<double>::ConstArg;
 using QuaternionResult = templates::Quaternion<double>::ConstResult;

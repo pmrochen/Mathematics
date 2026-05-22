@@ -261,7 +261,7 @@ inline Quadrilateral3<T>& Quadrilateral3<T>::flip()
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Quadrilateral3 = templates::Quadrilateral3<double>;
 using Quadrilateral3Arg = templates::Quadrilateral3<double>::ConstArg;
 using Quadrilateral3Result = templates::Quadrilateral3<double>::ConstResult;

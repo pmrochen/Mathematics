@@ -216,7 +216,7 @@ inline Ellipsoid<T> Ellipsoid<T>::orthonormalize()
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Ellipsoid = templates::Ellipsoid<double>;
 using EllipsoidArg = templates::Ellipsoid<double>::ConstArg;
 using EllipsoidResult = templates::Ellipsoid<double>::ConstResult;

@@ -159,7 +159,7 @@ inline OrientedBox<T> Torus<T>::getCircumscribedBox() const
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Torus = templates::Torus<double>;
 using TorusArg = templates::Torus<double>::ConstArg;
 using TorusResult = templates::Torus<double>::ConstResult;

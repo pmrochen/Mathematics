@@ -159,7 +159,7 @@ inline bool Sphere<T>::intersects(const Sphere<T>& sphere) const
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Sphere = templates::Sphere<double>;
 using SphereArg = templates::Sphere<double>::ConstArg;
 using SphereResult = templates::Sphere<double>::ConstResult;

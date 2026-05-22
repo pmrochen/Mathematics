@@ -291,7 +291,7 @@ inline const T&& get(const YawPitchRoll<T>&& r) noexcept
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using YawPitchRoll = templates::YawPitchRoll<double>;
 #else
 using YawPitchRoll = templates::YawPitchRoll<float>;

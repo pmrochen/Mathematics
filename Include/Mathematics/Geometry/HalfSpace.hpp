@@ -518,7 +518,7 @@ inline HalfSpace<T> normalize(HalfSpace<T>&& h) noexcept
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using HalfSpace = templates::HalfSpace<double>;
 using HalfSpaceArg = templates::HalfSpace<double>::ConstArg;
 using HalfSpaceResult = templates::HalfSpace<double>::ConstResult;

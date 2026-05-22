@@ -553,7 +553,7 @@ inline Plane<T> normalize(Plane<T>&& p) noexcept
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Plane = templates::Plane<double>;
 using PlaneArg = templates::Plane<double>::ConstArg;
 using PlaneResult = templates::Plane<double>::ConstResult;

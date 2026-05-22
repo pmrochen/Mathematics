@@ -347,7 +347,7 @@ inline bool OrientedBox<T>::contains(const Vector3<T>& point) const
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using OrientedBox = templates::OrientedBox<double>;
 using OrientedBoxArg = templates::OrientedBox<double>::ConstArg;
 using OrientedBoxResult = templates::OrientedBox<double>::ConstResult;

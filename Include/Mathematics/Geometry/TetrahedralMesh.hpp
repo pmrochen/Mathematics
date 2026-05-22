@@ -741,7 +741,7 @@ bool TetrahedralMesh<T, U>::weldVertices(T tolerance)
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using TetrahedralMesh = templates::TetrahedralMesh<double>;
 #else
 using TetrahedralMesh = templates::TetrahedralMesh<float>;

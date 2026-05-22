@@ -1529,7 +1529,7 @@ inline AffineTransform<float> inverseOrthogonal(AffineTransform<float>&& m) noex
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using AffineTransform = templates::AffineTransform<double>;
 using AffineTransformArg = templates::AffineTransform<double>::ConstArg;
 using AffineTransformResult = templates::AffineTransform<double>::ConstResult;

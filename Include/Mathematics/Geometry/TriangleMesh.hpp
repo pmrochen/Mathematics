@@ -923,7 +923,7 @@ bool TriangleMesh<T, U>::contains(const Vector3<T>& point) const
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using TriangleMesh = templates::TriangleMesh<double>;
 #else
 using TriangleMesh = templates::TriangleMesh<float>;

@@ -1073,7 +1073,7 @@ inline Matrix2<float> transpose(Matrix2<float>&& m) noexcept
 using Matrix2f = templates::Matrix2<float>;
 using Matrix2d = templates::Matrix2<double>;
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Matrix2 = templates::Matrix2<double>;
 using Matrix2Arg = templates::Matrix2<double>::ConstArg;
 using Matrix2Result = templates::Matrix2<double>::ConstResult;

@@ -183,7 +183,7 @@ inline Cylinder<T> Cylinder<T>::normalize()
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Cylinder = templates::Cylinder<double>;
 using CylinderArg = templates::Cylinder<double>::ConstArg;
 using CylinderResult = templates::Cylinder<double>::ConstResult;

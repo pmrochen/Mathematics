@@ -190,7 +190,7 @@ inline Vector2<T> LineSegment2<T>::getClosestPoint(const Vector2<T>& point) cons
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using LineSegment2 = templates::LineSegment2<double>;
 using LineSegment2Arg = templates::LineSegment2<double>::ConstArg;
 using LineSegment2Result = templates::LineSegment2<double>::ConstResult;

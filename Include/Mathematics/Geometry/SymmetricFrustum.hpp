@@ -377,7 +377,7 @@ inline bool SymmetricFrustum<T>::contains(const Vector3<T>& point) const
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using SymmetricFrustum = templates::SymmetricFrustum<double>;
 using SymmetricFrustumArg = templates::SymmetricFrustum<double>::ConstArg;
 using SymmetricFrustumResult = templates::SymmetricFrustum<double>::ConstResult;

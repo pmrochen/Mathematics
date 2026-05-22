@@ -1092,7 +1092,7 @@ concept AnyVector = (std::same_as<T, Vector2<U>> || std::same_as<T, Vector3<U>> 
 using Vector4f = templates::Vector4<float>;
 using Vector4d = templates::Vector4<double>;
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Vector4 = templates::Vector4<double>;
 using Vector4Arg = templates::Vector4<double>::ConstArg;
 using Vector4Result = templates::Vector4<double>::ConstResult;

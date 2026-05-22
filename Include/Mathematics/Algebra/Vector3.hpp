@@ -1208,7 +1208,7 @@ inline T angle(const Vector3<T>& v1, const Vector3<T>& v2)
 using Vector3f = templates::Vector3<float>;
 using Vector3d = templates::Vector3<double>;
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Vector3 = templates::Vector3<double>;
 using Vector3Arg = templates::Vector3<double>::ConstArg;
 using Vector3Result = templates::Vector3<double>::ConstResult;

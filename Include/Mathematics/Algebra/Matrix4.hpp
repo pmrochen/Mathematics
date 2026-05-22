@@ -1771,7 +1771,7 @@ concept AnyMatrix = (std::same_as<T, Matrix2<U>> || std::same_as<T, Matrix3<U>> 
 using Matrix4f = templates::Matrix4<float>;
 using Matrix4d = templates::Matrix4<double>;
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Matrix4 = templates::Matrix4<double>;
 using Matrix4Arg = templates::Matrix4<double>::ConstArg;
 using Matrix4Result = templates::Matrix4<double>::ConstResult;

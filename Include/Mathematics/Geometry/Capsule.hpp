@@ -182,7 +182,7 @@ inline Capsule<T> Capsule<T>::normalize()
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Capsule = templates::Capsule<double>;
 using CapsuleArg = templates::Capsule<double>::ConstArg;
 using CapsuleResult = templates::Capsule<double>::ConstResult;

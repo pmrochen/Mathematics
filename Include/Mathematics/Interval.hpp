@@ -229,7 +229,7 @@ inline std::optional<Interval<T>> Interval<T>::findIntersection(const Interval& 
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Interval = templates::Interval<double>;
 using IntervalArg = templates::Interval<double>::ConstArg;
 using IntervalResult = templates::Interval<double>::ConstResult;

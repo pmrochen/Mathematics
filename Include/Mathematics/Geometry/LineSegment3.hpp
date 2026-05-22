@@ -212,7 +212,7 @@ inline Vector3<T> LineSegment3<T>::getClosestPoint(const Vector3<T>& point) cons
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using LineSegment3 = templates::LineSegment3<double>;
 using LineSegment3Arg = templates::LineSegment3<double>::ConstArg;
 using LineSegment3Result = templates::LineSegment3<double>::ConstResult;

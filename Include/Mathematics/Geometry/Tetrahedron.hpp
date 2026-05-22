@@ -232,7 +232,7 @@ inline Tetrahedron<T>& Tetrahedron<T>::transform(const AffineTransform<T>& trans
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Tetrahedron = templates::Tetrahedron<double>;
 using TetrahedronArg = templates::Tetrahedron<double>::ConstArg;
 using TetrahedronResult = templates::Tetrahedron<double>::ConstResult;

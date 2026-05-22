@@ -349,7 +349,7 @@ inline bool AxisAlignedBox<T>::intersects(const AxisAlignedBox<T>& box) const
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using AxisAlignedBox = templates::AxisAlignedBox<double>;
 using AxisAlignedBoxArg = templates::AxisAlignedBox<double>::ConstArg;
 using AxisAlignedBoxResult = templates::AxisAlignedBox<double>::ConstResult;

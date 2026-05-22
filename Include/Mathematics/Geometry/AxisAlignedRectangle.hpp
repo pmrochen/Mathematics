@@ -247,7 +247,7 @@ inline bool AxisAlignedRectangle<T>::intersects(const AxisAlignedRectangle<T>& r
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using AxisAlignedRectangle = templates::AxisAlignedRectangle<double>;
 using AxisAlignedRectangleArg = templates::AxisAlignedRectangle<double>::ConstArg;
 using AxisAlignedRectangleResult = templates::AxisAlignedRectangle<double>::ConstResult;

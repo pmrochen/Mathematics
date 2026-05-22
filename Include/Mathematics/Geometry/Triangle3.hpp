@@ -370,7 +370,7 @@ inline bool Triangle3<T>::intersects(const HalfSpace<T>& halfSpace) const
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Triangle3 = templates::Triangle3<double>;
 using Triangle3Arg = templates::Triangle3<double>::ConstArg;
 using Triangle3Result = templates::Triangle3<double>::ConstResult;

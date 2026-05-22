@@ -466,7 +466,7 @@ inline const typename std::tuple_element<I, Euler<T>>::type&& get(const Euler<T>
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Euler = templates::Euler<double>;
 #else
 using Euler = templates::Euler<float>;

@@ -1591,7 +1591,7 @@ inline Matrix3<float> transpose(Matrix3<float>&& m) noexcept
 using Matrix3f = templates::Matrix3<float>;
 using Matrix3d = templates::Matrix3<double>;
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Matrix3 = templates::Matrix3<double>;
 using Matrix3Arg = templates::Matrix3<double>::ConstArg;
 using Matrix3Result = templates::Matrix3<double>::ConstResult;

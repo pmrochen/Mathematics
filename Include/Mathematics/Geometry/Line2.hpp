@@ -263,7 +263,7 @@ inline Line2<T> normalize(Line2<T>&& line) noexcept
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Line2 = templates::Line2<double>;
 using Line2Arg = templates::Line2<double>::ConstArg;
 using Line2Result = templates::Line2<double>::ConstResult;

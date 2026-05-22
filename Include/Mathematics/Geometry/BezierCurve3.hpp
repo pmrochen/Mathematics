@@ -223,7 +223,7 @@ inline BezierCurve3<T>& BezierCurve3<T>::transform(const AffineTransform<T>& tra
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using BezierCurve3 = templates::BezierCurve3<double>;
 using BezierCurve3Arg = templates::BezierCurve3<double>::ConstArg;
 using BezierCurve3Result = templates::BezierCurve3<double>::ConstResult;

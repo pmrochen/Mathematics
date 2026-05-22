@@ -211,7 +211,7 @@ inline BezierCurve2<T>& BezierCurve2<T>::transform(const Matrix2<T>& matrix)
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using BezierCurve2 = templates::BezierCurve2<double>;
 using BezierCurve2Arg = templates::BezierCurve2<double>::ConstArg;
 using BezierCurve2Result = templates::BezierCurve2<double>::ConstResult;

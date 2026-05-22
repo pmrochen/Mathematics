@@ -217,7 +217,7 @@ inline Cone<T> Cone<T>::normalize()
 
 } // namespace templates
 
-#if MATHEMATICS_DOUBLE
+#if MATHEMATICS_DOUBLE_PRECISION
 using Cone = templates::Cone<double>;
 using ConeArg = templates::Cone<double>::ConstArg;
 using ConeResult = templates::Cone<double>::ConstResult;
