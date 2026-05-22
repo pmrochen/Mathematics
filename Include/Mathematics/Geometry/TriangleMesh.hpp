@@ -35,7 +35,7 @@
 namespace mathematics {
 namespace templates {
 
-template<typename T, typename U>
+template<typename T, typename U = std::uint32_t>
 	requires (std::floating_point<T> && std::integral<U>)
 class TriangleMesh : public std::enable_shared_from_this<TriangleMesh>
 {
@@ -924,9 +924,9 @@ bool TriangleMesh<T, U>::contains(const Vector3<T>& point) const
 } // namespace templates
 
 #if MATHEMATICS_DOUBLE
-using TriangleMesh = templates::TriangleMesh<double, std::uint32_t>;
+using TriangleMesh = templates::TriangleMesh<double>;
 #else
-using TriangleMesh = templates::TriangleMesh<float, std::uint32_t>;
+using TriangleMesh = templates::TriangleMesh<float>;
 #endif
 
 } // namespace mathematics

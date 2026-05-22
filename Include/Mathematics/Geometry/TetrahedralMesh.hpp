@@ -29,7 +29,7 @@
 namespace mathematics {
 namespace templates {
 
-template<typename T, typename U>
+template<typename T, typename U = std::uint32_t>
 	requires (std::floating_point<T> && std::integral<U>)
 class TetrahedralMesh : public std::enable_shared_from_this<TetrahedralMesh>
 {
@@ -742,9 +742,9 @@ bool TetrahedralMesh<T, U>::weldVertices(T tolerance)
 } // namespace templates
 
 #if MATHEMATICS_DOUBLE
-using TetrahedralMesh = templates::TetrahedralMesh<double, std::uint32_t>;
+using TetrahedralMesh = templates::TetrahedralMesh<double>;
 #else
-using TetrahedralMesh = templates::TetrahedralMesh<float, std::uint32_t>;
+using TetrahedralMesh = templates::TetrahedralMesh<float>;
 #endif
 
 } // namespace mathematics
