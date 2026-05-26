@@ -11,7 +11,9 @@
 #include <optional>
 #include <algorithm>
 #include <cmath>
+#if MATHEMATICS_HAS_SIMD
 #include <Simd/Intrinsics.hpp>
+#endif
 #include "../Constants.hpp"
 #include "../Scalar.hpp"
 #include "../Algebra/Vector2.hpp"

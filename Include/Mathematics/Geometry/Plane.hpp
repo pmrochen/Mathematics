@@ -17,8 +17,10 @@
 #include <iterator>
 #include <cstddef>
 #include <cmath>
+#if MATHEMATICS_HAS_SIMD
 #include <Simd/Intrinsics.hpp>
 #include <Simd/Functional.hpp>
+#endif
 #include "../Constants.hpp"
 #include "../Algebra/Vector3.hpp"
 #include "../Algebra/Matrix3.hpp"

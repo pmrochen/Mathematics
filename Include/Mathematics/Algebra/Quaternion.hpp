@@ -15,9 +15,11 @@
 #include <tuple>
 #include <cstddef>
 #include <cmath>
-//#include <Tuples/Tuple4.hpp>
+#if MATHEMATICS_HAS_SIMD
 #include <Simd/Intrinsics.hpp>
 #include <Simd/Functional.hpp>
+#endif
+//#include <Tuples/Tuple4.hpp>
 #include "../Constants.hpp"
 #include "Vector3.hpp"
 #include "Matrix2.hpp"

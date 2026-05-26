@@ -16,8 +16,10 @@
 #include <tuple>
 #include <cstddef>
 #include <cmath>
+#if MATHEMATICS_HAS_SIMD
 #include <Simd/Intrinsics.hpp>
 #include <Simd/Functional.hpp>
+#endif
 #include "../Constants.hpp"
 #include "Vector2.hpp"
 #include "Vector3.hpp"

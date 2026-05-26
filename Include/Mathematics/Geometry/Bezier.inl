@@ -6,7 +6,9 @@
 #pragma once
 
 #include <concepts>
+#if MATHEMATICS_HAS_SIMD
 #include <Simd/Intrinsics.hpp>
+#endif
 
 namespace mathematics::bezier {
 
