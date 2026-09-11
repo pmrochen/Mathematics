@@ -90,10 +90,10 @@ set(MATHEMATICS_HEADERS
 	Include/Mathematics/Geometry/Hermite.inl
 	Include/Mathematics/Analysis/Intersections.inl
 	Include/Mathematics/Interval.hpp
-	Include/Mathematics/LineSegment2.hpp
-	Include/Mathematics/LineSegment3.hpp
-	Include/Mathematics/Line2.hpp
-	Include/Mathematics/Line3.hpp
+	Include/Mathematics/Geometry/LineSegment2.hpp
+	Include/Mathematics/Geometry/LineSegment3.hpp
+	Include/Mathematics/Geometry/Line2.hpp
+	Include/Mathematics/Geometry/Line3.hpp
 	Include/Mathematics/Algebra/LU.inl
 	Include/Mathematics/Mathematics.hpp
 	Include/Mathematics/Algebra/Matrix2.hpp
