@@ -10,41 +10,47 @@
 #include <concepts>
 #include <iterator>
 #include <utility>
+#include <tuple>
 #include <cstddef>
 #include <cmath>
 #include <malloc.h>
-#include "../Algebra/Vector2.hpp"
-#include "../Algebra/Vector3.hpp"
 
 namespace mathematics::triangulation {
 namespace detail {
 
-template<std::floating_point T, std::random_access_iterator<Vector2<T>> I>
-inline T computeSignedPolygonArea(I firstVertex, I lastVertex) noexcept
+template<std::random_access_iterator I>
+inline typename std::tuple_element<0, typename std::iterator_traits<I>::value_type>::type computeSignedPolygonArea(I firstVertex, I lastVertex) noexcept
 {
+	using VectorType = typename std::iterator_traits<I>::value_type;
+	using ScalarType = typename std::tuple_element<0, VectorType>::type;
+
 	std::ptrdiff_t nVertices = std::distance(firstVertex, lastVertex);
 	if (nVertices < 3)
-		return T(0);
+		return ScalarType(0);
 
-	T area = cross(firstVertex[nVertices - 1], firstVertex[0]);
+	ScalarType area = cross(firstVertex[nVertices - 1], firstVertex[0]);
 	for (std::ptrdiff_t i = 0, n = nVertices - 1; i < n; i++)
 		area += cross(firstVertex[i], firstVertex[i + 1]);
 	
-	return area*T(0.5);
+	return area*ScalarType(0.5);
 }
 
-template<std::floating_point T, std::random_access_iterator<Vector2<T>> I, std::integral U, std::random_access_iterator<U> J>
+template<std::random_access_iterator I, std::random_access_iterator J>
 inline bool snip(I firstVertex, I lastVertex, J firstIndex, std::ptrdiff_t u, std::ptrdiff_t v, std::ptrdiff_t w) noexcept
 {
-    const Vector2<T>& a = firstVertex[firstIndex[u]];
-    const Vector2<T>& b = firstVertex[firstIndex[v]];
-    const Vector2<T>& c = firstVertex[firstIndex[w]];
-    if (cross(b - a, c - a) < std::numeric_limits<T>::epsilon())
+	static_assert(std::is_integral_v<typename std::iterator_traits<J>::value_type>);
+	using VectorType = typename std::iterator_traits<I>::value_type;
+	using ScalarType = typename std::tuple_element<0, VectorType>::type;
+
+    const VectorType& a = firstVertex[firstIndex[u]];
+    const VectorType& b = firstVertex[firstIndex[v]];
+    const VectorType& c = firstVertex[firstIndex[w]];
+    if (cross(b - a, c - a) < std::numeric_limits<ScalarType>::epsilon())
         return false;
 
-	Vector2<T> bc = c - b;
-	Vector2<T> ab = b - a;
-	Vector2<T> ca = a - c;
+	VectorType bc = c - b;
+	VectorType ab = b - a;
+	VectorType ca = a - c;
 
 	std::ptrdiff_t nVertices = std::distance(firstVertex, lastVertex);
     for (std::ptrdiff_t i = 0; i < nVertices; i++)
@@ -52,8 +58,8 @@ inline bool snip(I firstVertex, I lastVertex, J firstIndex, std::ptrdiff_t u, st
         if ((i == u) || (i == v) || (i == w))
             continue;
 
-        const Vector2<T>& p = firstVertex[firstIndex[i]];
-		if ((cross(bc, p - b) >= T(0)) && (cross(ca, p - c) >= T(0)) && (cross(ab, p - a) >= T(0)))
+        const VectorType& p = firstVertex[firstIndex[i]];
+		if ((cross(bc, p - b) >= ScalarType(0)) && (cross(ca, p - c) >= ScalarType(0)) && (cross(ab, p - a) >= ScalarType(0)))
             return false;
     }
 
@@ -62,9 +68,11 @@ inline bool snip(I firstVertex, I lastVertex, J firstIndex, std::ptrdiff_t u, st
 
 } // namespace detail
 
-template<std::floating_point T, std::random_access_iterator<Vector2<T>> I, std::integral U, std::output_iterator<U> O>
-std::pair<O, bool> triangulate2(I firstVertex, I lastVertex, O outIndex)
+template<std::random_access_iterator I, std::integral U, std::output_iterator<U> O>
+std::pair<O, bool> triangulate(I firstVertex, I lastVertex, O outIndex)
 {
+	using VectorType = typename std::iterator_traits<I>::value_type;
+	using ScalarType = typename std::tuple_element<0, VectorType>::type;
 	//using IndexType = typename std::iterator_traits<O>::value_type;
 
 	std::ptrdiff_t nVertices = std::distance(firstVertex, lastVertex);
@@ -81,7 +89,7 @@ std::pair<O, bool> triangulate2(I firstVertex, I lastVertex, O outIndex)
 	//U* vertexIndices = (nVertices > BUFFER_SIZE) ? new U[nVertices] : indexBuffer;
 	U* vertexIndices = (U*)alloca(nVertices*sizeof(U));
 
-	bool reverse = (computeSignedPolygonArea(firstVertex, lastVertex) < T(0));
+	bool reverse = (computeSignedPolygonArea(firstVertex, lastVertex) < ScalarType(0));
 	if (reverse)
 	{
 		for (std::ptrdiff_t i = 0; i < nVertices; i++)
@@ -160,20 +168,9 @@ std::pair<O, bool> triangulate2(I firstVertex, I lastVertex, O outIndex)
 	return { outIndex, true };
 }
 
-//template<std::floating_point T, std::random_access_iterator<Vector2<T>> I, std::integral U, std::random_access_iterator<U> J,
+//template<std::random_access_iterator I, std::random_access_iterator J, std::integral U,
 //	std::output_iterator<U> O>
-//std::pair<O, bool> triangulate2(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex)
-//{
-//}
-//
-//template<std::floating_point T, std::random_access_iterator<Vector3<T>> I, std::integral U, std::output_iterator<U> O>
-//std::pair<O, bool> triangulate3(I firstVertex, I lastVertex, O outIndex)
-//{
-//}
-//
-//template<std::floating_point T, std::random_access_iterator<Vector3<T>> I, std::integral U, std::random_access_iterator<U> J, 
-//	std::output_iterator<U> O>
-//std::pair<O, bool> triangulate3(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex)
+//std::pair<O, bool> triangulate(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex)
 //{
 //}
 
