@@ -62,7 +62,7 @@ struct Plane
 	constexpr Plane() noexcept : a(), b(), c(), d() {}
 	explicit Plane(Uninitialized) noexcept {}
 	constexpr Plane(T a, T b, T c, T d) noexcept : a(a), b(b), c(c), d(d) {}
-	constexpr Plane(const Vector3<T>& normal, T constant) noexcept : x(normal.x), y(normal.y), z(normal.z), w(constant) {}
+	constexpr Plane(const Vector3<T>& normal, T constant) noexcept : a(normal.x), b(normal.y), c(normal.z), d(constant) {}
 	Plane(const Vector3<T>& normal, const Vector3<T>& point) noexcept : a(normal.x), b(normal.y), c(normal.z), d(-dot(normal, point)) {}
 	Plane(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2) noexcept;
 	explicit Plane(const HalfSpace<T>& h) noexcept : a(h.a), b(h.b), c(h.c), d(h.d) {}
@@ -94,7 +94,7 @@ struct Plane
 	bool approxEquals(const Plane& p) const noexcept;
 	bool approxEquals(const Plane& p, T tolerance) const noexcept;
 	bool isFinite() const noexcept { return std::isfinite(a) && std::isfinite(b) && std::isfinite(c) && std::isfinite(d); }
-	const Vector3<T>& getNormal() const noexcept { return reinterpret_cast<const Vector3&>(*this); }
+	const Vector3<T>& getNormal() const noexcept { return reinterpret_cast<const Vector3<T>&>(*this); }
 	void setNormal(const Vector3<T>& normal) noexcept { a = normal.x; b = normal.y; c = normal.z; }
 	T getConstant() const noexcept { return d; }
 	void setConstant(T constant) noexcept { d = constant; }
@@ -131,7 +131,9 @@ struct Plane
 	T a, b, c, d;
 };
 
-template<typename T> const Plane<T> Plane<T>::EMPTY{};
+template<typename T> 
+	requires std::floating_point<T> 
+const Plane<T> Plane<T>::EMPTY{};
 
 #if SIMD_HAS_FLOAT4
 
@@ -184,8 +186,8 @@ struct alignas(16) Plane<float>
 
 	// Properties
 	bool isZero() const noexcept { return simd::all4(simd::equal(abcd, simd::zero<simd::float4>())); }
-	bool approxEquals(const Plane& p) const noexcept { simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, p)), simd::set4(Constants<float>::TOLERANCE))); }
-	bool approxEquals(const Plane& p, float tolerance) const noexcept { simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, p)), simd::set4(tolerance))); }
+	bool approxEquals(const Plane& p) const noexcept { return simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, p)), simd::set4(Constants<float>::TOLERANCE))); }
+	bool approxEquals(const Plane& p, float tolerance) const noexcept { return simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, p)), simd::set4(tolerance))); }
 	bool isFinite() const noexcept { return simd::all4(simd::isFinite(abcd)); }
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	const Vector3<float> getNormal() const noexcept { return Vector3<float>(simd::xyzz(abcd)); }
@@ -237,7 +239,8 @@ const Plane<float> Plane<float>::EMPTY{};
 #endif /* SIMD_HAS_FLOAT4 */
 
 template<typename T>
-inline Plane<T>::Plane<T>(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2)
+	requires std::floating_point<T>
+inline Plane<T>::Plane(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2) noexcept
 {
 	Vector3<T> normal(cross(p1 - p0, p2 - p0));
 	normal.normalize();
@@ -260,8 +263,9 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const P
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::size_t I>
-inline T& Plane<T>::get()
+inline T& Plane<T>::get() noexcept
 {
 	if constexpr (I == 0)
 		return a;
@@ -275,8 +279,9 @@ inline T& Plane<T>::get()
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::size_t I>
-inline const T& Plane<T>::get() const
+inline const T& Plane<T>::get() const noexcept
 {
 	if constexpr (I == 0)
 		return a;
@@ -290,48 +295,54 @@ inline const T& Plane<T>::get() const
 }
 
 template<typename T>
-inline bool Plane<T>::approxEquals(const Plane<T>& p) const
+	requires std::floating_point<T>
+inline bool Plane<T>::approxEquals(const Plane<T>& p) const noexcept
 { 
 	return (std::fabs(p.a - a) < Constants<T>::TOLERANCE) && (std::fabs(p.b - b) < Constants<T>::TOLERANCE) && 
 		(std::fabs(p.c - c) < Constants<T>::TOLERANCE) && (std::fabs(p.d - d) < Constants<T>::TOLERANCE); 
 }
 
 template<typename T>
-inline bool Plane<T>::approxEquals(const Plane<T>& p, T tolerance) const
+	requires std::floating_point<T>
+inline bool Plane<T>::approxEquals(const Plane<T>& p, T tolerance) const noexcept
 {
 	return (std::fabs(p.a - a) < tolerance) && (std::fabs(p.b - b) < tolerance) && 
 		(std::fabs(p.c - c) < tolerance) && (std::fabs(p.d - d) < tolerance); 
 }
 
 template<typename T>
-inline Plane<T>& Plane<T>::translate(const Vector3<T>& offset)
+	requires std::floating_point<T>
+inline Plane<T>& Plane<T>::translate(const Vector3<T>& offset) noexcept
 {
 	setConstant(-dot(getNormal(), getNormal()*(-getConstant()) + offset));
 	return *this;
 }
 
 template<typename T>
-inline Plane<T>& Plane<T>::transform(const Matrix3<T>& matrix, bool orthogonal)
+	requires std::floating_point<T>
+inline Plane<T>& Plane<T>::transform(const Matrix3<T>& matrix, bool orthogonal) noexcept
 {
 	if (orthogonal)
 		set(getNormal()*matrix, -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
 	else
-		set(::normalize(getNormal()*inverseTranspose(matrix)), -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
+		set(mathematics::templates::normalize(getNormal()*inverseTranspose(matrix)), -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
 	return *this;
 }
 
 template<typename T>
-inline Plane<T>& Plane<T>::transform(const AffineTransform<T>& transformation, bool orthogonal)
+	requires std::floating_point<T>
+inline Plane<T>& Plane<T>::transform(const AffineTransform<T>& transformation, bool orthogonal) noexcept
 {
 	if (orthogonal)
-		set(getNormal()*transformation.getBasis(), -dot(getNormal(), ::transform(getNormal()*(-getConstant()), transformation)));
+		set(getNormal()*transformation.getBasis(), -dot(getNormal(), mathematics::templates::transform(getNormal()*(-getConstant()), transformation)));
 	else
-		set(::normalize(getNormal()*inverseTranspose(transformation.getBasis())), -dot(getNormal(), ::transform(getNormal()*(-getConstant()), transformation)));
+		set(mathematics::templates::normalize(getNormal()*inverseTranspose(transformation.getBasis())), -dot(getNormal(), mathematics::templates::transform(getNormal()*(-getConstant()), transformation)));
 	return *this;
 }
 
 template<typename T>
-inline Plane<T>& Plane<T>::normalize()
+	requires std::floating_point<T>
+inline Plane<T>& Plane<T>::normalize() noexcept
 {
 //#if MATHEMATICS_FAST_NORMALIZE
 //	if costexpr(std::is_same_v<T, float>)
@@ -357,20 +368,22 @@ inline Plane<T>& Plane<T>::normalize()
 }
 
 //template<typename T>
-//inline Vector3<T> Plane<T>::reflect(const Vector3<T>& point) const
+//	requires std::floating_point<T>
+//inline Vector3<T> Plane<T>::reflect(const Vector3<T>& point) const noexcept
 //{ 
 //	return (getNormal()*(T(-2)*(dot(getNormal(), point) + d)) + point); 
 //}
 
 template<typename T>
-inline bool Plane<T>::contains(const Vector3<T>& point) const
+	requires std::floating_point<T>
+inline bool Plane<T>::contains(const Vector3<T>& point) const noexcept
 { 
 	return (std::fabs(dot(getNormal(), point) + d) < Constants<T>::TOLERANCE); 
 }
 
 #if SIMD_HAS_FLOAT4
 
-inline Plane<float>::Plane<float>(const Vector3<float>& p0, const Vector3<float>& p1, const Vector3<float>& p2)
+inline Plane<float>::Plane(const Vector3<float>& p0, const Vector3<float>& p1, const Vector3<float>& p2) noexcept
 {
 	Vector3<float> normal(cross(p1 - p0, p2 - p0));
 	normal.normalize();
@@ -395,58 +408,58 @@ inline void Plane<float>::load(A& ar)
 }
 
 template<std::size_t I>
-inline float& Plane<float>::get()
+inline float& Plane<float>::get() noexcept
 {
 	if constexpr (I == 0)
-		return x;
+		return a;
 	else if constexpr (I == 1)
-		return y;
+		return b;
 	else if constexpr (I == 2)
-		return z;
+		return c;
 	else if constexpr (I == 3)
-		return w;
+		return d;
 	static_assert(false);
 }
 
 template<std::size_t I>
-inline const float& Plane<float>::get() const
+inline const float& Plane<float>::get() const noexcept
 {
 	if constexpr (I == 0)
-		return x;
+		return a;
 	else if constexpr (I == 1)
-		return y;
+		return b;
 	else if constexpr (I == 2)
-		return z;
+		return c;
 	else if constexpr (I == 3)
-		return w;
+		return d;
 	static_assert(false);
 }
 
-inline Plane<float>& Plane<float>::translate(const Vector3<float>& offset)
+inline Plane<float>& Plane<float>::translate(const Vector3<float>& offset) noexcept
 {
 	setConstant(-dot(getNormal(), getNormal()*(-getConstant()) + offset));
 	return *this;
 }
 
-inline Plane<float>& Plane<float>::transform(const Matrix3<float>& matrix, bool orthogonal)
+inline Plane<float>& Plane<float>::transform(const Matrix3<float>& matrix, bool orthogonal) noexcept
 {
 	if (orthogonal)
 		set(getNormal()*matrix, -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
 	else
-		set(::normalize(getNormal()*inverseTranspose(matrix)), -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
+		set(mathematics::templates::normalize(getNormal()*inverseTranspose(matrix)), -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
 	return *this;
 }
 
-inline Plane<float>& Plane<float>::transform(const AffineTransform<float>& transformation, bool orthogonal)
+inline Plane<float>& Plane<float>::transform(const AffineTransform<float>& transformation, bool orthogonal) noexcept
 {
 	if (orthogonal)
-		set(getNormal()*transformation.getBasis(), -dot(getNormal(), ::transform(getNormal()*(-getConstant()), transformation)));
+		set(getNormal()*transformation.getBasis(), -dot(getNormal(), mathematics::templates::transform(getNormal()*(-getConstant()), transformation)));
 	else
-		set(::normalize(getNormal()*inverseTranspose(transformation.getBasis())), -dot(getNormal(), ::transform(getNormal()*(-getConstant()), transformation)));
+		set(mathematics::templates::normalize(getNormal()*inverseTranspose(transformation.getBasis())), -dot(getNormal(), mathematics::templates::transform(getNormal()*(-getConstant()), transformation)));
 	return *this;
 }
 
-inline Plane<float>& Plane<float>::normalize()
+inline Plane<float>& Plane<float>::normalize() noexcept
 {
 #if MATHEMATICS_FAST_NORMALIZE
 	float m = simd::toFloat(simd::rcpSqrtApprox1(simd::dot3(abcd, abcd)));
@@ -460,12 +473,12 @@ inline Plane<float>& Plane<float>::normalize()
 	return *this;
 }
 
-//inline Vector3<float> Plane<float>::reflect(const Vector3<float>& point) const
+//inline Vector3<float> Plane<float>::reflect(const Vector3<float>& point) const noexcept
 //{ 
 //	return (getNormal()*(-2.f*(dot(getNormal(), point) + d)) + point); 
 //}
 
-inline bool Plane<float>::contains(const Vector3<float>& point) const
+inline bool Plane<float>::contains(const Vector3<float>& point) const noexcept
 {
 	return (std::fabs(dot(getNormal(), point) + d) < Constants<float>::TOLERANCE);
 }
@@ -570,24 +583,15 @@ using PlaneResult = templates::Plane<float>::ConstResult;
 namespace std {
 
 template<size_t I, typename T>
-struct tuple_element;
-
-template<size_t I, typename T>
 struct tuple_element<I, ::mathematics::templates::Plane<T>>
 {
 	using type = T;
 };
 
 template<typename T>
-struct tuple_size;
-
-template<typename T>
-struct tuple_size<::mathematics::templates::Plane<T>> : integral_constant<size_t, 4> 
+struct tuple_size<::mathematics::templates::Plane<T>> : public integral_constant<size_t, 4> 
 {
 };
-
-template<typename T>
-struct hash;
 
 template<typename T>
 struct hash<::mathematics::templates::Plane<T>>
@@ -629,51 +633,58 @@ struct hash<::mathematics::templates::Plane<float>>
 namespace mathematics::templates {
 
 template<typename T>
+	requires std::floating_point<T>
 template<Normalization U>
-inline T Plane<T>::getDistanceTo(const Vector3<T>& point) const
+inline T Plane<T>::getDistanceTo(const Vector3<T>& point) const noexcept
 {
-	if costexpr(std::is_same_v<U, Normalized>)
+	if constexpr (std::is_same_v<U, Normalized>)
 		return distances::getPointNormalizedPlane(point, getNormal(), d);
 	else
 		return distances::getPointPlane(point, getNormal(), d);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<Normalization U>
-inline T Plane<T>::getSignedDistanceTo(const Vector3<T>& point) const
+inline T Plane<T>::getSignedDistanceTo(const Vector3<T>& point) const noexcept
 {
-	if costexpr(std::is_same_v<U, Normalized>)
+	if constexpr (std::is_same_v<U, Normalized>)
 		return distances::getPointNormalizedPlaneSigned(point, getNormal(), d);
 	else
 		return distances::getPointPlaneSigned(point, getNormal(), d);
 }
 
 template<typename T>
-inline bool Plane<T>::intersects(const Triangle3<T>& triangle) const
+	requires std::floating_point<T>
+inline bool Plane<T>::intersects(const Triangle3<T>& triangle) const noexcept
 {
 	return triangle.intersects(*this);
 }
 
 template<typename T>
-inline bool Plane<T>::intersects(const AxisAlignedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool Plane<T>::intersects(const AxisAlignedBox<T>& box) const noexcept
 {
 	return intersections::testAxisAlignedBoxPlane(box.getCenter(), box.getHalfDimensions(), getNormal(), d);
 }
 
 template<typename T>
-inline bool Plane<T>::intersects(const OrientedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool Plane<T>::intersects(const OrientedBox<T>& box) const noexcept
 {
 	return intersections::testOrientedBoxPlane(box.center, box.basis, box.halfDims, getNormal(), d);
 }
 
 template<typename T>
-inline bool Plane<T>::intersects(const Sphere<T>& sphere) const
+	requires std::floating_point<T>
+inline bool Plane<T>::intersects(const Sphere<T>& sphere) const noexcept
 {
 	return sphere.intersects(*this);
 }
 
 template<typename T>
-inline bool Plane<T>::intersects(const Ellipsoid<T>& ellipsoid) const
+	requires std::floating_point<T>
+inline bool Plane<T>::intersects(const Ellipsoid<T>& ellipsoid) const noexcept
 {
 	return ellipsoid.intersects(*this);
 }
@@ -681,44 +692,44 @@ inline bool Plane<T>::intersects(const Ellipsoid<T>& ellipsoid) const
 #if SIMD_HAS_FLOAT4
 
 template<Normalization U>
-inline float Plane<float>::getDistanceTo(const Vector3<float>& point) const
+inline float Plane<float>::getDistanceTo(const Vector3<float>& point) const noexcept
 {
-	if costexpr(std::is_same_v<U, Normalized>)
+	if constexpr (std::is_same_v<U, Normalized>)
 		return distances::getPointNormalizedPlane(point, getNormal(), d);
 	else
 		return distances::getPointPlane(point, getNormal(), d);
 }
 
 template<Normalization U>
-inline float Plane<float>::getSignedDistanceTo(const Vector3<float>& point) const
+inline float Plane<float>::getSignedDistanceTo(const Vector3<float>& point) const noexcept
 {
-	if costexpr(std::is_same_v<U, Normalized>)
+	if constexpr (std::is_same_v<U, Normalized>)
 		return distances::getPointNormalizedPlaneSigned(point, getNormal(), d);
 	else
 		return distances::getPointPlaneSigned(point, getNormal(), d);
 }
 
-inline bool Plane<float>::intersects(const Triangle3<float>& triangle) const
+inline bool Plane<float>::intersects(const Triangle3<float>& triangle) const noexcept
 {
 	return triangle.intersects(*this);
 }
 
-inline bool Plane<float>::intersects(const AxisAlignedBox<float>& box) const
+inline bool Plane<float>::intersects(const AxisAlignedBox<float>& box) const noexcept
 {
 	return intersections::testAxisAlignedBoxPlane(box.getCenter(), box.getHalfDimensions(), getNormal(), d);
 }
 
-inline bool Plane<float>::intersects(const OrientedBox<float>& box) const
+inline bool Plane<float>::intersects(const OrientedBox<float>& box) const noexcept
 {
 	return intersections::testOrientedBoxPlane(box.center, box.basis, box.halfDims, getNormal(), d);
 }
 
-inline bool Plane<float>::intersects(const Sphere<float>& sphere) const
+inline bool Plane<float>::intersects(const Sphere<float>& sphere) const noexcept
 {
 	return sphere.intersects(*this);
 }
 
-inline bool Plane<float>::intersects(const Ellipsoid<float>& ellipsoid) const
+inline bool Plane<float>::intersects(const Ellipsoid<float>& ellipsoid) const noexcept
 {
 	return ellipsoid.intersects(*this);
 }

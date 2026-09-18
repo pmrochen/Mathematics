@@ -102,7 +102,10 @@ std::optional<Decomposition<Order, T>> decompose(const M& matrix) noexcept
 		}
 	}
 
-	return (d != T(0)) ? { { a, index } } : {};
+	if (d != T(0)) 
+		return { { a, index } };
+	else
+		return {};
 }
 
 template<typename V, int Order = V::NUM_COMPONENTS, std::floating_point T = typename V::Real>

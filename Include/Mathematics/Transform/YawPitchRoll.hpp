@@ -65,7 +65,7 @@ struct YawPitchRoll
 	template<std::size_t I> const T& get() const noexcept;
 
     static YawPitchRoll fromForward(const Vector3<T>& forward, T roll = T()) noexcept;
-	Vector3 toForward/*toDirection*/() const noexcept;
+	Vector3<T> toForward/*toDirection*/() const noexcept;
 
     bool isZero() const noexcept { return (yaw == T()) && (pitch == T()) && (roll == T()); }
 	bool isApproxZero() const noexcept;
@@ -82,10 +82,11 @@ struct YawPitchRoll
     T yaw, pitch, roll;
 };
 
-template<typename T> const YawPitchRoll<T> YawPitchRoll<T>::ZERO{};
+template<typename T> requires std::floating_point<T> const YawPitchRoll<T> YawPitchRoll<T>::ZERO{};
 
 template<typename T>
-inline YawPitchRoll<T>::YawPitchRoll(const Quaternion<T>& q) : 
+	requires std::floating_point<T>
+inline YawPitchRoll<T>::YawPitchRoll(const Quaternion<T>& q) noexcept : 
 	YawPitchRoll(Matrix3<T>::makeRotation(q)) // #FIXME Don't call converting constructor when q is identity
 {
 	if (q.isIdentity())
@@ -150,8 +151,9 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const Y
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::size_t I>
-inline T& YawPitchRoll<T>::get()
+inline T& YawPitchRoll<T>::get() noexcept
 {
 	if constexpr (I == 0)
 		return yaw;
@@ -163,8 +165,9 @@ inline T& YawPitchRoll<T>::get()
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::size_t I>
-inline const T& YawPitchRoll<T>::get() const
+inline const T& YawPitchRoll<T>::get() const noexcept
 {
 	if constexpr (I == 0)
 		return yaw;
@@ -176,11 +179,12 @@ inline const T& YawPitchRoll<T>::get() const
 }
 
 template<typename T>
-inline YawPitchRoll<T> YawPitchRoll<T>::fromForward(const Vector3<T>& forward, T roll)
+	requires std::floating_point<T>
+inline YawPitchRoll<T> YawPitchRoll<T>::fromForward(const Vector3<T>& forward, T roll) noexcept
 {
     T h = T(0);
     T p = T(0);
-    T m = direction.getMagnitude();
+    T m = forward.getMagnitude();
     if (m > T(0))
     {
         Vector3<T> direction = forward/m;
@@ -198,7 +202,8 @@ inline YawPitchRoll<T> YawPitchRoll<T>::fromForward(const Vector3<T>& forward, T
 }
 
 template<typename T>
-inline Vector3<T> YawPitchRoll<T>::toForward() const
+	requires std::floating_point<T>
+inline Vector3<T> YawPitchRoll<T>::toForward() const noexcept
 {
 	T sh = std::sin(yaw);
     T ch = std::cos(yaw);
@@ -208,27 +213,31 @@ inline Vector3<T> YawPitchRoll<T>::toForward() const
 }
 
 template<typename T>
-inline bool YawPitchRoll<T>::isApproxZero() const
+	requires std::floating_point<T>
+inline bool YawPitchRoll<T>::isApproxZero() const noexcept
 { 
 	return (std::fabs(yaw) < Constants<T>::TOLERANCE) && (std::fabs(pitch) < Constants<T>::TOLERANCE) && 
 		(std::fabs(roll) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
-inline bool YawPitchRoll<T>::approxEquals(const YawPitchRoll<T>& r) const
+	requires std::floating_point<T>
+inline bool YawPitchRoll<T>::approxEquals(const YawPitchRoll<T>& r) const noexcept
 { 
 	return (std::fabs(r.yaw - yaw) < Constants<T>::TOLERANCE) && (std::fabs(r.pitch - pitch) < Constants<T>::TOLERANCE) &&
 		(std::fabs(r.roll - roll) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
-inline bool YawPitchRoll<T>::approxEquals(const YawPitchRoll<T>& r, T tolerance) const
+	requires std::floating_point<T>
+inline bool YawPitchRoll<T>::approxEquals(const YawPitchRoll<T>& r, T tolerance) const noexcept
 { 
 	return (std::fabs(r.yaw - yaw) < tolerance) && (std::fabs(r.pitch - pitch) < tolerance) &&
 		(std::fabs(r.roll - roll) < tolerance);
 }
 
 //template<typename T>
+//	requires std::floating_point<T>
 //inline YawPitchRoll<T>& YawPitchRoll<T>::clamp(T low, T high)
 //{
 //	yaw = std::clamp(yaw, low, high);
@@ -302,24 +311,15 @@ using YawPitchRoll = templates::YawPitchRoll<float>;
 namespace std {
 
 template<size_t I, typename T>
-struct tuple_element;
-
-template<size_t I, typename T>
 struct tuple_element<I, ::mathematics::templates::YawPitchRoll<T>>
 {
 	using type = T;
 };
 
 template<typename T>
-struct tuple_size;
-
-template<typename T>
-struct tuple_size<::mathematics::templates::YawPitchRoll<T>> : integral_constant<size_t, 3> 
+struct tuple_size<::mathematics::templates::YawPitchRoll<T>> : public integral_constant<size_t, 3> 
 {
 };
-
-template<typename T>
-struct hash;
 
 template<typename T>
 struct hash<::mathematics::templates::YawPitchRoll<T>>
@@ -341,7 +341,8 @@ struct hash<::mathematics::templates::YawPitchRoll<T>>
 namespace mathematics::templates {
 
 template<typename T>
-inline YawPitchRoll<T>::YawPitchRoll(const Euler<T>& e)
+	requires std::floating_point<T>
+inline YawPitchRoll<T>::YawPitchRoll(const Euler<T>& e) noexcept
 {
 	if (e.order == EulerOrder::ZXY)
 	{
@@ -365,7 +366,9 @@ inline YawPitchRoll<T>::YawPitchRoll(const Euler<T>& e)
 }
 
 template<typename T>
-inline YawPitchRoll<T>::YawPitchRoll(const Matrix3<T>& m) : YawPitchRoll<T>(Euler<T>(m, EulerOrder::ZXY))
+	requires std::floating_point<T>
+inline YawPitchRoll<T>::YawPitchRoll(const Matrix3<T>& m) noexcept : 
+	YawPitchRoll<T>(Euler<T>(m, EulerOrder::ZXY))
 {
 }
 

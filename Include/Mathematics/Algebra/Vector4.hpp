@@ -46,7 +46,7 @@ struct Vector4<T>
 	using ConstArg = const Vector4&;
 	using ConstResult = const Vector4&;
 	using TupleType = std::tuple<T, T, T, T>;
-	template<Arithmetic U> OtherTupleType = std::tuple<U, U, U, U>;
+	template<Arithmetic U> using OtherTupleType = std::tuple<U, U, U, U>;
 
 	static constexpr int NUM_COMPONENTS = 4;
 
@@ -65,7 +65,7 @@ struct Vector4<T>
 	template<Arithmetic U> explicit Vector4(const OtherTupleType<U>& t) noexcept : x(T(std::get<0>(t))), y(T(std::get<1>(t))), z(T(std::get<2>(t))), w(T(std::get<3>(t))) {}
 	explicit Vector4(const T* v) noexcept : x(v[0]), y(v[1]), z(v[2]), w(v[3]) {}
 	explicit Vector4(Axis axis) noexcept : x((axis == Axis::X) ? T(1) : T(0)), y((axis == Axis::Y) ? T(1) : T(0)), z((axis == Axis::Z) ? T(1) : T(0)), w((axis == Axis::W) ? T(1) : T(0)) {}
-	template<Arithmetic U> explicit Vector4(const Vector4<U>& v) noexcept : x(T(t.x)), y(T(t.y)), z(T(t.z)), w(T(t.w)) {}
+	template<Arithmetic U> explicit Vector4(const Vector4<U>& v) noexcept : x(T(v.x)), y(T(v.y)), z(T(v.z)), w(T(v.w)) {}
 
 	//operator Tuple4<T>() const noexcept { return Tuple4<T>(x, y, z, w); }
 	//template<Arithmetic U> explicit operator Tuple4<U>() const noexcept { return Tuple4<U>(U(x), U(y), U(z), U(w)); }
@@ -165,7 +165,7 @@ struct Vector4<T>
 	using ConstArg = const Vector4&;
 	using ConstResult = const Vector4&;
 	using TupleType = std::tuple<T, T, T, T>;
-	template<Arithmetic U> OtherTupleType = std::tuple<U, U, U, U>;
+	template<Arithmetic U> using OtherTupleType = std::tuple<U, U, U, U>;
 
 	static constexpr int NUM_COMPONENTS = 4;
 
@@ -251,7 +251,7 @@ struct alignas(16) Vector4<float>
 	using ConstArg = const Vector4;
 	using ConstResult = const Vector4;
 	using TupleType = std::tuple<float, float, float, float>;
-	template<Arithmetic U> OtherTupleType = std::tuple<U, U, U, U>;
+	template<Arithmetic U> using OtherTupleType = std::tuple<U, U, U, U>;
 	using SimdType = simd::float4;
 
 	static constexpr int NUM_COMPONENTS = 4;
@@ -270,7 +270,7 @@ struct alignas(16) Vector4<float>
 	explicit Vector4(const TupleType& t) noexcept : xyzw(simd::set4(std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t))) {}
 	template<Arithmetic U> explicit Vector4(const OtherTupleType<U>& t) noexcept : xyzw(simd::set4((float)std::get<0>(t), (float)std::get<1>(t), (float)std::get<2>(t), (float)std::get<3>(t))) {}
 	explicit Vector4(const float* v) noexcept : xyzw(simd::load4(v)) {}
-	explicit Vector4(Axis axis) noexcept : Vector4((axis == Axis::X) ? 1.f : 0.f, (axis == Axis::Y) ? 1.f : 0.f, (axis == Axis::Z) ? 1.f : 0.f, (axis == Axis::W) ? 1.f : 0.f)) {}
+	explicit Vector4(Axis axis) noexcept : Vector4((axis == Axis::X) ? 1.f : 0.f, (axis == Axis::Y) ? 1.f : 0.f, (axis == Axis::Z) ? 1.f : 0.f, (axis == Axis::W) ? 1.f : 0.f) {}
 	explicit Vector4(simd::float4 v) noexcept : xyzw(v) {}
 	Vector4(const Vector4& v) noexcept : xyzw(v.xyzw) {}
 	template<Arithmetic U> explicit Vector4(const Vector4<U>& v) noexcept : xyzw(simd::set4((float)v.x, (float)v.y, (float)v.z, (float)v.w)) {}
@@ -419,6 +419,14 @@ inline Vector4<T> operator*(const Vector4<T>& v, T f) noexcept
 }
 
 template<typename T>
+	requires std::floating_point<T>
+inline Vector4<T> operator*(const Vector4<T>& v, const Matrix4<T>& m) noexcept;
+
+template<typename T>
+	requires std::floating_point<T>
+inline Vector4<T> operator*(const Matrix4<T>& m, const Vector4<T>& v) noexcept;
+
+template<typename T>
 	requires (std::floating_point<T> || std::integral<T>)
 inline Vector4<T> operator/(const Vector4<T>& v1, const Vector4<T>& v2) noexcept
 { 
@@ -459,7 +467,7 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const V
 
 template<std::floating_point T>
 template<std::size_t I>
-inline T& Vector4<T>::get()
+inline T& Vector4<T>::get() noexcept
 {
 	if constexpr (I == 0)
 		return x;
@@ -474,7 +482,7 @@ inline T& Vector4<T>::get()
 
 template<std::floating_point T>
 template<std::size_t I>
-inline const T& Vector4<T>::get() const
+inline const T& Vector4<T>::get() const noexcept
 {
 	if constexpr (I == 0)
 		return x;
@@ -488,28 +496,28 @@ inline const T& Vector4<T>::get() const
 }
 
 template<std::floating_point T>
-inline bool Vector4<T>::isApproxZero() const
+inline bool Vector4<T>::isApproxZero() const noexcept
 { 
 	return (std::fabs(x) < Constants<T>::TOLERANCE) && (std::fabs(y) < Constants<T>::TOLERANCE) && 
 		(std::fabs(z) < Constants<T>::TOLERANCE) && (std::fabs(w) < Constants<T>::TOLERANCE);
 }
 
 template<std::floating_point T>
-inline bool Vector4<T>::approxEquals(const Vector4<T>& v) const
+inline bool Vector4<T>::approxEquals(const Vector4<T>& v) const noexcept
 { 
 	return (std::fabs(v.x - x) < Constants<T>::TOLERANCE) && (std::fabs(v.y - y) < Constants<T>::TOLERANCE) && 
 		(std::fabs(v.z - z) < Constants<T>::TOLERANCE) && (std::fabs(v.w - w) < Constants<T>::TOLERANCE); 
 }
 
 template<std::floating_point T>
-inline bool Vector4<T>::approxEquals(const Vector4<T>& v, T tolerance) const
+inline bool Vector4<T>::approxEquals(const Vector4<T>& v, T tolerance) const noexcept
 {
 	return (std::fabs(v.x - x) < tolerance) && (std::fabs(v.y - y) < tolerance) && 
 		(std::fabs(v.z - z) < tolerance) && (std::fabs(v.w - w) < tolerance); 
 }
 
 template<std::floating_point T>
-inline void Vector4<T>::setMagnitude(T magnitude) 
+inline void Vector4<T>::setMagnitude(T magnitude) noexcept
 { 
 	T m = getMagnitude(); 
 	if (m > T(0)) 
@@ -537,7 +545,7 @@ inline Vector4<T>& Vector4<T>::setMaximum(const Vector4<T>& v1, const Vector4<T>
 }
 
 template<std::floating_point T>
-inline Vector4<T>& Vector4<T>::normalize()
+inline Vector4<T>& Vector4<T>::normalize() noexcept
 {
 //#if MATHEMATICS_FAST_NORMALIZE
 //	if costexpr(std::is_same_v<T, float>)
@@ -558,7 +566,7 @@ inline Vector4<T>& Vector4<T>::normalize()
 
 template<std::integral T>
 template<std::size_t I>
-inline T& Vector4<T>::get()
+inline T& Vector4<T>::get() noexcept
 {
 	if constexpr (I == 0)
 		return x;
@@ -573,7 +581,7 @@ inline T& Vector4<T>::get()
 
 template<std::integral T>
 template<std::size_t I>
-inline const T& Vector4<T>::get() const
+inline const T& Vector4<T>::get() const noexcept
 {
 	if constexpr (I == 0)
 		return x;
@@ -639,6 +647,12 @@ inline Vector4<float> operator*(const Vector4<float>& v, float f) noexcept
 }
 
 template<>
+inline Vector4<float> operator*(const Vector4<float>& v, const Matrix4<float>& m) noexcept;
+
+template<>
+inline Vector4<float> operator*(const Matrix4<float>& m, const Vector4<float>& v) noexcept;
+
+template<>
 inline Vector4<float> operator/(const Vector4<float>& v1, const Vector4<float>& v2) noexcept 
 { 
 	return Vector4<float>(simd::div4(v1, v2)); 
@@ -674,7 +688,7 @@ inline void Vector4<float>::load(A& ar)
 }
 
 template<std::size_t I>
-inline float& Vector4<float>::get()
+inline float& Vector4<float>::get() noexcept
 {
 	if constexpr (I == 0)
 		return x;
@@ -688,7 +702,7 @@ inline float& Vector4<float>::get()
 }
 
 template<std::size_t I>
-inline const float& Vector4<float>::get() const
+inline const float& Vector4<float>::get() const noexcept
 {
 	if constexpr (I == 0)
 		return x;
@@ -701,14 +715,14 @@ inline const float& Vector4<float>::get() const
 	static_assert(false);
 }
 
-inline void Vector4<float>::setMagnitude(float magnitude)
+inline void Vector4<float>::setMagnitude(float magnitude) noexcept
 { 
 	float m = getMagnitude();
 	if (m > 0.f) 
 		*this *= magnitude/m;
 }
 
-inline Vector4<float>& Vector4<float>::normalize()
+inline Vector4<float>& Vector4<float>::normalize() noexcept
 {
 #if MATHEMATICS_FAST_NORMALIZE
 	float m = simd::toFloat(simd::rcpSqrtApprox1(simd::dot4(xyzw, xyzw)));
@@ -933,6 +947,14 @@ inline Vector4<T> slerp(const Vector4<T>& v1, const Vector4<T>& v2, T t)
 	return Vector4<T>(v1.x*ct + c.x*st, v1.y*ct + c.y*st, v1.z*ct + c.z*st, v1.w*ct + c.w*st);
 }
 
+template<typename T>
+	requires std::floating_point<T>
+inline Vector4<T> transform(const Vector4<T>& v, const Matrix4<T>& m) noexcept;
+
+template<typename T>
+	requires std::floating_point<T>
+inline Matrix4<T> tensor(const Vector4<T>& v1, const Vector4<T>& v2) noexcept;
+
 #if SIMD_HAS_FLOAT4
 
 template<>
@@ -942,7 +964,7 @@ inline Vector4<float> abs(const Vector4<float>& v) noexcept
 }
 
 template<>
-inline T sum(const Vector4<float>& v) noexcept
+inline float sum(const Vector4<float>& v) noexcept
 {
 	return simd::toFloat(simd::hAdd4(v));
 }
@@ -1036,6 +1058,12 @@ inline Vector4<float> slerp(const Vector4<float>& v1, const Vector4<float>& v2, 
 	return Vector4<float>(simd::mulAdd4(v1, simd::set4(ct), simd::mul4(c, simd::set4(st))));
 }
 
+template<>
+inline Vector4<float> transform(const Vector4<float>& v, const Matrix4<float>& m) noexcept;
+
+template<>
+inline Matrix4<float> tensor(const Vector4<float>& v1, const Vector4<float>& v2) noexcept;
+
 #endif /* SIMD_HAS_FLOAT4 */
 
 template<typename T>
@@ -1113,24 +1141,15 @@ using IntVector4Result = templates::Vector4<int>::ConstResult;
 namespace std {
 
 template<size_t I, typename T>
-struct tuple_element;
-
-template<size_t I, typename T>
 struct tuple_element<I, ::mathematics::templates::Vector4<T>>
 {
 	using type = T;
 };
 
 template<typename T>
-struct tuple_size;
-
-template<typename T>
-struct tuple_size<::mathematics::templates::Vector4<T>> : integral_constant<size_t, 4> 
+struct tuple_size<::mathematics::templates::Vector4<T>> : public integral_constant<size_t, 4> 
 {
 };
-
-template<typename T>
-struct hash;
 
 template<typename T>
 struct hash<::mathematics::templates::Vector4<T>>
@@ -1161,12 +1180,14 @@ struct hash<::mathematics::templates::Vector4<float>>
 
 } // namespace std
 
+#include "Matrix2.hpp"
+#include "Matrix3.hpp"
 #include "Matrix4.hpp"
 
 namespace mathematics::templates {
 
-template<typename T>
-inline Vector4<T>& Vector4<T>::operator*=(const Matrix4<T>& m)
+template<std::floating_point T>
+inline Vector4<T>& Vector4<T>::operator*=(const Matrix4<T>& m) noexcept
 {
 	set(x*m.m00 + y*m.m10 + z*m.m20 + w*m.m30, x*m.m01 + y*m.m11 + z*m.m21 + w*m.m31, 
 		x*m.m02 + y*m.m12 + z*m.m22 + w*m.m32, x*m.m03 + y*m.m13 + z*m.m23 + w*m.m33);
@@ -1189,8 +1210,8 @@ inline Vector4<T> operator*(const Matrix4<T>& m, const Vector4<T>& v) noexcept
 		m.m20*v.x + m.m21*v.y + m.m22*v.z + m.m23*v.w, m.m30*v.x + m.m31*v.y + m.m32*v.z + m.m33*v.w);
 }
 
-template<typename T>
-inline Vector4& Vector4<T>::transform(const Matrix4<T>& m)
+template<std::floating_point T>
+inline Vector4<T>& Vector4<T>::transform(const Matrix4<T>& m) noexcept
 {
 	*this *= m;
 	return *this;
@@ -1215,7 +1236,7 @@ inline Matrix4<T> tensor(const Vector4<T>& v1, const Vector4<T>& v2) noexcept
 
 #if SIMD_HAS_FLOAT4
 
-inline Vector4<float>& Vector4<float>::operator*=(const Matrix4<float>& m)
+inline Vector4<float>& Vector4<float>::operator*=(const Matrix4<float>& m) noexcept
 {
 	auto t = simd::mulAdd4(simd::xxxx(xyzw), m.row0, simd::mul4(simd::yyyy(xyzw), m.row1));
 	t = simd::add4(t, simd::mul4(simd::zzzz(xyzw), m.row2));
@@ -1237,7 +1258,7 @@ inline Vector4<float> operator*(const Matrix4<float>& m, const Vector4<float>& v
 	return Vector4<float>(simd::set4(simd::dot4(m.row0, v), simd::dot4(m.row1, v), simd::dot4(m.row2, v), simd::dot4(m.row3, v)));
 }
 
-inline Vector4<float>& Vector4<float>::transform(const Matrix4<float>& m)
+inline Vector4<float>& Vector4<float>::transform(const Matrix4<float>& m) noexcept
 {
 	*this *= m;
 	return *this;

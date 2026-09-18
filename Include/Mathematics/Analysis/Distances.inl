@@ -8,9 +8,15 @@
 #include <algorithm>
 #include <cmath>
 #include "../Scalar.hpp"
+#include "../Algebra/Vector2.hpp"
 #include "../Algebra/Vector3.hpp"
+#include "../Algebra/Matrix3.hpp"
 
 namespace mathematics::distances {
+
+using templates::Vector2;
+using templates::Vector3;
+using templates::Matrix3;
 
 template<typename T>
     requires std::floating_point<T>
@@ -359,7 +365,7 @@ T getPointSymmetricFrustumSquared(const Vector3<T>& point, const Vector3<T>& ori
 	T maxUDDot = dRatio*minUDDot;
 	T maxRUDDot = dRatio*minRUDDot;
 
-	Vector3<T> closest(Uninitialized());
+	Vector3<T> closest{ Uninitialized() };
 	T rDot, uDot, rdDot, udDot, rudDot, rEdgeDot, uEdgeDot, t;
 	if (test.z >= depthMax)
 	{

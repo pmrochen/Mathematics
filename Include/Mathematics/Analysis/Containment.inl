@@ -9,6 +9,8 @@
 
 namespace mathematics::containment {
 
+using templates::Vector3;
+
 template<typename T>
 	requires std::floating_point<T>
 inline bool testCylinderPoint(const Vector3<T>& center, const Vector3<T>& axis, T height, T radius, const Vector3<T>& point) noexcept

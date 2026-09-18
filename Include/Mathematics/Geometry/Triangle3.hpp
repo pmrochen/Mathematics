@@ -109,9 +109,9 @@ struct Triangle3
 	//std::vector<Triangle3<T>> split(const Plane<T>& plane); // #TODO
 
 	// Triangulation (returns (vertices - 2)*3 indices)
-	template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::output_iterator<U> O>
+	template<std::random_access_iterator I, std::integral U, std::output_iterator<U> O>
 	static std::pair<O, bool> triangulate(I firstVertex, I lastVertex, O outIndex);
-	template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::random_access_iterator<U> J, std::output_iterator<U> O>
+	template<std::random_access_iterator I, std::integral U, std::random_access_iterator J, std::output_iterator<U> O>
 	static std::pair<O, bool> triangulate(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex);
 
 	// Evaluation (u + v + w = 1)
@@ -126,7 +126,7 @@ struct Triangle3
 	// Intersection
 	bool intersects(const HalfSpace<T>& halfSpace) const noexcept;
 	bool intersects(const Plane<T>& plane) const noexcept;
-	bool intersects(const AxisAlignedBox& box) const noexcept;
+	bool intersects(const AxisAlignedBox<T>& box) const noexcept;
 	bool intersects(const OrientedBox<T>& box) const noexcept;
 	bool intersects(const Sphere<T>& sphere) const noexcept;
 
@@ -134,7 +134,8 @@ struct Triangle3
 };
 
 template<typename T>
-inline bool Triangle3<T>::operator==(const Triangle3<T>& triangle) const
+	requires std::floating_point<T>
+inline bool Triangle3<T>::operator==(const Triangle3<T>& triangle) const noexcept
 { 
 	return (vertices[0] == triangle.vertices[0]) && (vertices[1] == triangle.vertices[1]) && (vertices[2] == triangle.vertices[2]);
 }
@@ -155,13 +156,15 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const T
 }
 
 template<typename T>
-inline bool Triangle3<T>::isApproxZero() const
+	requires std::floating_point<T>
+inline bool Triangle3<T>::isApproxZero() const noexcept
 {
 	return vertices[0].isApproxZero() && vertices[1].isApproxZero() && vertices[2].isApproxZero();
 }
 
 template<typename T>
-inline bool Triangle3<T>::approxEquals(const Triangle3<T>& triangle) const
+	requires std::floating_point<T>
+inline bool Triangle3<T>::approxEquals(const Triangle3<T>& triangle) const noexcept
 {
 	return vertices[0].approxEquals(triangle.vertices[0]) &&
 		vertices[1].approxEquals(triangle.vertices[1]) &&
@@ -169,7 +172,8 @@ inline bool Triangle3<T>::approxEquals(const Triangle3<T>& triangle) const
 }
 
 template<typename T>
-inline bool Triangle3<T>::approxEquals(const Triangle3<T>& triangle, T tolerance) const
+	requires std::floating_point<T>
+inline bool Triangle3<T>::approxEquals(const Triangle3<T>& triangle, T tolerance) const noexcept
 {
 	return vertices[0].approxEquals(triangle.vertices[0], tolerance) &&
 		vertices[1].approxEquals(triangle.vertices[1], tolerance) &&
@@ -177,7 +181,8 @@ inline bool Triangle3<T>::approxEquals(const Triangle3<T>& triangle, T tolerance
 }
 
 template<typename T>
-inline Triangle3<T>& Triangle3<T>::setZero()
+	requires std::floating_point<T>
+inline Triangle3<T>& Triangle3<T>::setZero() noexcept
 {
 	vertices[0].setZero();
 	vertices[1].setZero();
@@ -186,7 +191,8 @@ inline Triangle3<T>& Triangle3<T>::setZero()
 }
 
 template<typename T>
-inline Triangle3<T>& Triangle3<T>::set(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2)
+	requires std::floating_point<T>
+inline Triangle3<T>& Triangle3<T>::set(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2) noexcept
 {
 	vertices[0] = v0;
 	vertices[1] = v1;
@@ -195,18 +201,21 @@ inline Triangle3<T>& Triangle3<T>::set(const Vector3<T>& v0, const Vector3<T>& v
 }
 
 template<typename T>
-inline T Triangle3<T>::getPerimeter() const
+	requires std::floating_point<T>
+inline T Triangle3<T>::getPerimeter() const noexcept
 {
 	return distance(vertices[0], vertices[1]) + distance(vertices[1], vertices[2]) + distance(vertices[2], vertices[0]);
 }
 
 template<typename T>
-inline T Triangle3<T>::getArea() const
+	requires std::floating_point<T>
+inline T Triangle3<T>::getArea() const noexcept
 {
 	return (cross(vertices[0], vertices[1]) + cross(vertices[1], vertices[2]) + cross(vertices[2], vertices[0])).getMagnitude()*T(0.5);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline void Triangle3<T>::setVertex(int index, const Vector3<T>& vertex)
 {
 	if ((unsigned int)index >= 3u)
@@ -215,6 +224,7 @@ inline void Triangle3<T>::setVertex(int index, const Vector3<T>& vertex)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::output_iterator<Vector3<T>> O>
 inline O Triangle3<T>::copyVertices(O target) const
 {
@@ -225,26 +235,30 @@ inline O Triangle3<T>::copyVertices(O target) const
 }
 
 template<typename T>
-inline typename Triangle3<T>::TupleType Triangle3<T>::getVertices() const
+	requires std::floating_point<T>
+inline typename Triangle3<T>::TupleType Triangle3<T>::getVertices() const noexcept
 { 
 	return { vertices[0], vertices[1], vertices[2] }; 
 }
 
 template<typename T>
-/*static*/ inline Vector3<T> Triangle3<T>::computeNormal(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2)
+	requires std::floating_point<T>
+/*static*/ inline Vector3<T> Triangle3<T>::computeNormal(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2) noexcept
 {
 	return normalize(cross(v1 - v0, v2 - v0));
 }
 
 template<typename T>
-inline Vector3<T> Triangle3<T>::getNormal() const
+	requires std::floating_point<T>
+inline Vector3<T> Triangle3<T>::getNormal() const noexcept
 {
 	return normalize(cross(vertices[1] - vertices[0], vertices[2] - vertices[0]));
 }
 
 template<typename T>
+	requires std::floating_point<T>
 /*static*/ inline Matrix3<T> Triangle3<T>::computeTangentSpaceBasis(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2,
-	const Vector2<T>& uv0, const Vector2<T>& uv1, const Vector2<T>& uv2, bool weightedByArea)
+	const Vector2<T>& uv0, const Vector2<T>& uv1, const Vector2<T>& uv2, bool weightedByArea) noexcept
 {
 	Vector3<T> e1 = v1 - v0;
 	Vector3<T> e2 = v2 - v0;
@@ -254,8 +268,8 @@ template<typename T>
 	Vector2<T> delta2 = uv2 - uv0;
 	T d = cross(delta1, delta2);
 
-	Vector3<T> tangent(Uninitialized());
-	Vector3<T> bitangent(Uninitialized());
+	Vector3<T> tangent{ Uninitialized() };
+	Vector3<T> bitangent{ Uninitialized() };
 	if (/*!_isnan(d) &&*/ (d != T(0)))
 	{
 		tangent = normalize(e1*(delta2.y/d) + e2*(-delta1.y/d));
@@ -277,15 +291,17 @@ template<typename T>
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Matrix3<T> Triangle3<T>::getTangentSpaceBasis(const Vector2<T>& uv0, const Vector2<T>& uv1, const Vector2<T>& uv2,
-	bool weightedByArea)
+	bool weightedByArea) noexcept
 {
 	return computeTangentSpaceBasis(vertices[0], vertices[1], vertices[2], uv0, uv1, uv2, weightedByArea);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<typename U>
-inline U Triangle3<T>::getInscribedCircle() const
+inline U Triangle3<T>::getInscribedCircle() const noexcept
 {
 	T area = getArea();
 	if (area > std::numeric_limits<T>::epsilon())
@@ -301,8 +317,9 @@ inline U Triangle3<T>::getInscribedCircle() const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<typename U>
-inline U Triangle3<T>::getCircumscribedCircle() const
+inline U Triangle3<T>::getCircumscribedCircle() const noexcept
 {
 	T d1 = dot(vertices[2] - vertices[0], vertices[1] - vertices[0]);
 	T d2 = dot(vertices[2] - vertices[1], vertices[0] - vertices[1]);
@@ -316,7 +333,8 @@ inline U Triangle3<T>::getCircumscribedCircle() const
 }
 
 template<typename T>
-inline Triangle3<T>& Triangle3<T>::translate(const Vector3<T>& offset)
+	requires std::floating_point<T>
+inline Triangle3<T>& Triangle3<T>::translate(const Vector3<T>& offset) noexcept
 {
 	vertices[0] += offset;
 	vertices[1] += offset;
@@ -325,7 +343,8 @@ inline Triangle3<T>& Triangle3<T>::translate(const Vector3<T>& offset)
 }
 
 template<typename T>
-inline Triangle3<T>& Triangle3<T>::transform(const Matrix3<T>& matrix)
+	requires std::floating_point<T>
+inline Triangle3<T>& Triangle3<T>::transform(const Matrix3<T>& matrix) noexcept
 {
 	vertices[0] *= matrix;
 	vertices[1] *= matrix;
@@ -334,7 +353,8 @@ inline Triangle3<T>& Triangle3<T>::transform(const Matrix3<T>& matrix)
 }
 
 template<typename T>
-inline Triangle3<T>& Triangle3<T>::transform(const AffineTransform<T>& transformation)
+	requires std::floating_point<T>
+inline Triangle3<T>& Triangle3<T>::transform(const AffineTransform<T>& transformation) noexcept
 {
 	vertices[0].transform(transformation);
 	vertices[1].transform(transformation);
@@ -343,7 +363,8 @@ inline Triangle3<T>& Triangle3<T>::transform(const AffineTransform<T>& transform
 }
 
 template<typename T>
-inline Vector3<T> Triangle3<T>::getBarycentricCoords(const Vector3<T>& point) const
+	requires std::floating_point<T>
+inline Vector3<T> Triangle3<T>::getBarycentricCoords(const Vector3<T>& point) const noexcept
 {
 	Vector3<T> edge1 = vertices[1] - vertices[0];
 	Vector3<T> edge2 = vertices[2] - vertices[0];
@@ -354,13 +375,15 @@ inline Vector3<T> Triangle3<T>::getBarycentricCoords(const Vector3<T>& point) co
 }
 
 template<typename T>
-inline bool Triangle3<T>::intersects(const HalfSpace<T>& halfSpace) const
+	requires std::floating_point<T>
+inline bool Triangle3<T>::intersects(const HalfSpace<T>& halfSpace) const noexcept
 {
 	return halfSpace.contains(vertices[0]) || halfSpace.contains(vertices[1]) || halfSpace.contains(vertices[2]);
 }
 
 //template<typename T>
-//inline bool Triangle3<T>::intersects(const Plane<T>& plane) const // #TODO Check if all vertices are on one side
+//	requires std::floating_point<T>
+//inline bool Triangle3<T>::intersects(const Plane<T>& plane) const noexcept // #TODO Check if all vertices are on one side
 //{
 //	T d0 = plane.getSignedDistanceTo(vertices[0]);
 //	T d1 = plane.getSignedDistanceTo(vertices[1]);
@@ -383,9 +406,6 @@ using Triangle3Result = templates::Triangle3<float>::ConstResult;
 } // namespace mathematics
 
 namespace std {
-
-template<typename T>
-struct hash;
 
 template<typename T>
 struct hash<::mathematics::templates::Triangle3<T>>
@@ -412,23 +432,24 @@ struct hash<::mathematics::templates::Triangle3<T>>
 namespace mathematics::templates {
 
 template<typename T>
-inline AxisAlignedBox<T> Triangle3<T>::getCircumscribedBox() const
+	requires std::floating_point<T>
+inline AxisAlignedBox<T> Triangle3<T>::getCircumscribedBox() const noexcept
 {
-	return { min(min(vertex0_, vertex1_), vertex2_), max(max(vertex0_, vertex1_), vertex2_) };
+	return { min(min(vertices[0], vertices[1]), vertices[2]), max(max(vertices[0], vertices[1]), vertices[2]) };
 }
 
 template<typename T>
-inline Sphere<T> Triangle3<T>::getCircumscribedSphere() const
+	requires std::floating_point<T>
+inline Sphere<T> Triangle3<T>::getCircumscribedSphere() const noexcept
 { 
 	return getCircumscribedCircle<Sphere<T>>(); 
 }
 
 template<typename T>
-template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::output_iterator<U> O>
+	requires std::floating_point<T>
+template<std::random_access_iterator I, std::integral U, std::output_iterator<U> O>
 /*static*/ std::pair<O, bool> Triangle3<T>::triangulate(I firstVertex, I lastVertex, O outIndex)
 {
-	//return triangulation::triangulate3<T, I, U, O>(firstVertex, lastVertex, outIndex);
-
 	std::ptrdiff_t nVertices = std::distance(firstVertex, lastVertex);
 	if (nVertices <= 3)
 	{
@@ -464,7 +485,7 @@ template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::output
 
 	Vector3<T> e1 = firstVertex[1] - firstVertex[0];
 	Vector3<T> e2 = firstVertex[nVertices - 1] - firstVertex[0];
-	Matrix3<T> basis(Uninitialized());
+	Matrix3<T> basis{ Uninitialized() };
 	basis[0] = normalize(e1);
 	basis[2] = normalize(cross(e1, e2));
 	basis[1] = normalize(cross(basis[2], basis[0]));
@@ -474,15 +495,14 @@ template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::output
 	for (std::ptrdiff_t i = 0; i < nVertices; i++)
 		vertices2[i] = (firstVertex[i]*basis).xy();
 
-	return triangulation::triangulate2(vertices2, vertices2 + nVertices, outIndex);
+	return triangulation::triangulate(vertices2, vertices2 + nVertices, outIndex);
 }
 
 template<typename T>
-template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::random_access_iterator<U> J, std::output_iterator<U> O>
+	requires std::floating_point<T>
+template<std::random_access_iterator I, std::integral U, std::random_access_iterator J, std::output_iterator<U> O>
 /*static*/ std::pair<O, bool> Triangle3<T>::triangulate(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex)
 {
-	//return triangulation::triangulate3<T, I, U, J, O>(firstVertex, lastVertex, firstIndex, lastIndex, outIndex);
-
 	std::ptrdiff_t nIndices = std::distance(firstIndex, lastIndex);
 	if (nIndices <= 3)
 	{
@@ -536,7 +556,7 @@ template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::random
 
 	Vector3<T> e1 = firstVertex[firstIndex[1]] - firstVertex[firstIndex[0]];
 	Vector3<T> e2 = firstVertex[firstIndex[nIndices - 1]] - firstVertex[firstIndex[0]];
-	Matrix3<T> basis(Uninitialized());
+	Matrix3<T> basis{ Uninitialized() };
 	basis[0] = normalize(e1);
 	basis[2] = normalize(cross(e1, e2));
 	basis[1] = normalize(cross(basis[2], basis[0]));
@@ -546,7 +566,7 @@ template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::random
 	for (std::ptrdiff_t i = 0; i < nIndices; i++)
 		vertices2[i] = (firstVertex[firstIndex[i]]*basis).xy();
 
-	auto [outEnd, result] = triangulation::triangulate2(vertices2, vertices2 + nIndices, outIndex);
+	auto [outEnd, result] = triangulation::triangulate(vertices2, vertices2 + nIndices, outIndex);
 	for (; outIndex != outEnd; ++outIndex)
 		*outIndex = firstIndex[*outIndex];
 
@@ -554,33 +574,38 @@ template<std::random_access_iterator<Vector3<T>> I, std::integral U, std::random
 }
 
 template<typename T>
-inline Vector3<T> Triangle3<T>::getClosestPoint(const Vector3<T>& point) const
+	requires std::floating_point<T>
+inline Vector3<T> Triangle3<T>::getClosestPoint(const Vector3<T>& point) const noexcept
 {
-	Vector3<T> closestPoint(Uninitialized());
+	Vector3<T> closestPoint{ Uninitialized() };
 	distances::getPointTriangleSquared(point, vertices[0], vertices[1], vertices[2], &closestPoint);
 	return closestPoint;
 }
 
 template<typename T>
-inline T Triangle3<T>::getDistanceTo(const Vector3<T>& point) const
+	requires std::floating_point<T>
+inline T Triangle3<T>::getDistanceTo(const Vector3<T>& point) const noexcept
 {
 	return distances::getPointTriangle(point, vertices[0], vertices[1], vertices[2]);
 }
 
 template<typename T>
-inline bool Triangle3<T>::intersects(const AxisAlignedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool Triangle3<T>::intersects(const AxisAlignedBox<T>& box) const noexcept
 {
 	return intersections::testAxisAlignedBoxTriangle(box.getCenter(), box.getHalfDimensions(), vertices[0], vertices[1], vertices[2]);
 }
 
 template<typename T>
-inline bool Triangle3<T>::intersects(const OrientedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool Triangle3<T>::intersects(const OrientedBox<T>& box) const noexcept
 {
 	return intersections::testOrientedBoxTriangle(box.center, box.basis, box.halfDims, vertices[0], vertices[1], vertices[2]);
 }
 
 template<typename T>
-inline bool Triangle3<T>::intersects(const Sphere<T>& sphere) const
+	requires std::floating_point<T>
+inline bool Triangle3<T>::intersects(const Sphere<T>& sphere) const noexcept
 {
 	return (distances::getPointTriangleSquared(sphere.center, vertices[0], vertices[1], vertices[2]) <= sphere.radius*sphere.radius);
 }

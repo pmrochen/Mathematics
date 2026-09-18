@@ -89,6 +89,7 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const C
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Circle2<T>::approxEquals(const Circle2<T>& circle) const
 {
 	return center.approxEquals(circle.center) && 
@@ -96,6 +97,7 @@ inline bool Circle2<T>::approxEquals(const Circle2<T>& circle) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Circle2<T>::approxEquals(const Circle2<T>& circle, T tolerance) const
 {
 	return center.approxEquals(circle.center, tolerance) && 
@@ -103,6 +105,7 @@ inline bool Circle2<T>::approxEquals(const Circle2<T>& circle, T tolerance) cons
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline AxisAlignedRectangle<T> Circle2<T>::getCircumscribedRectangle() const
 {
 	Vector2<T> halfDims(radius);
@@ -110,6 +113,7 @@ inline AxisAlignedRectangle<T> Circle2<T>::getCircumscribedRectangle() const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Circle2<T>::intersects(const Circle2<T>& circle) const
 {
 	T d = circle.radius + radius;
@@ -133,9 +137,6 @@ using Circle2Result = templates::Circle2<float>::ConstResult;
 namespace std {
 
 template<typename T>
-struct hash;
-
-template<typename T>
 struct hash<::mathematics::templates::Circle2<T>>
 {
 	size_t operator()(const ::mathematics::templates::Circle2<T>& circle) const noexcept
@@ -153,6 +154,7 @@ struct hash<::mathematics::templates::Circle2<T>>
 namespace mathematics::templates {
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Circle2<T>::intersects(const AxisAlignedRectangle<T>& rectangle) const
 {
 	return intersections::testAxisAlignedRectangleCircle(rectangle.minimum, rectangle.maximum, center, radius);

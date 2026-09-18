@@ -82,21 +82,26 @@ struct BezierCurve2
 	Vector2<T> points[4];
 };
 
-template<typename T> const BezierCurve<T> BezierCurve<T>::ZERO{};
+template<typename T> 
+	requires std::floating_point<T>
+const BezierCurve<T> BezierCurve<T>::ZERO{};
 
 template<typename T>
+	requires std::floating_point<T>
 inline BezierCurve2<T>::BezierCurve2(Uninitialized) : 
 	points{ { Uninitialized() }, { Uninitialized() }, { Uninitialized() }, { Uninitialized() } } 
 {
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline BezierCurve2<T>::BezierCurve2(const Vector2<T>& p0, const Vector2<T>& p1, const Vector2<T>& p2, const Vector2<T>& p3) :
 	points{ p0, p1, p2, p3 }
 { 
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool BezierCurve2<T>::operator==(const BezierCurve2<T>& curve) const
 { 
 	return (points[0] == curve.points[0]) && (points[1] == curve.points[1]) && (points[2] == curve.points[2]) &&
@@ -119,12 +124,14 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const B
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool BezierCurve2<T>::isApproxZero() const
 {
 	return points[0].isApproxZero() && points[1].isApproxZero() && points[2].isApproxZero() && points[3].isApproxZero();
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool BezierCurve2<T>::approxEquals(const BezierCurve2<T>& curve) const
 {
 	return points[0].approxEquals(curve.points[0]) && points[1].approxEquals(curve.points[1]) && 
@@ -132,6 +139,7 @@ inline bool BezierCurve2<T>::approxEquals(const BezierCurve2<T>& curve) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool BezierCurve2<T>::approxEquals(const BezierCurve2<T>& curve, T tolerance) const
 {
 	return points[0].approxEquals(curve.points[0], tolerance) && points[1].approxEquals(curve.points[1], tolerance) &&
@@ -139,12 +147,14 @@ inline bool BezierCurve2<T>::approxEquals(const BezierCurve2<T>& curve, T tolera
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool BezierCurve2<T>::isFinite() const
 { 
 	return points[0].isFinite() && points[1].isFinite() && points[2].isFinite() && points[3].isFinite();
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline BezierCurve2<T>& BezierCurve2<T>::setZero()
 {
 	points[0].setZero();
@@ -155,6 +165,7 @@ inline BezierCurve2<T>& BezierCurve2<T>::setZero()
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline BezierCurve2<T>& BezierCurve2<T>::set(const Vector2<T>& p0, const Vector2<T>& p1, const Vector2<T>& p2, const Vector2<T>& p3)
 {
 	points[0] = p0;
@@ -165,6 +176,7 @@ inline BezierCurve2<T>& BezierCurve2<T>::set(const Vector2<T>& p0, const Vector2
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline void BezierCurve2<T>::setControlPoint(int index, const Vector2<T>& point)
 {
 	if ((unsigned int)index >= 4u)
@@ -173,6 +185,7 @@ inline void BezierCurve2<T>::setControlPoint(int index, const Vector2<T>& point)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::output_iterator<Vector2<T>> O>
 inline O BezierCurve2<T>::copyControlPoints(O target) const
 {
@@ -184,12 +197,14 @@ inline O BezierCurve2<T>::copyControlPoints(O target) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline typename BezierCurve2<T>::TupleType BezierCurve2<T>::getControlPoints() const
 { 
 	return { points[0], points[1], points[2], points[3] }; 
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline BezierCurve2<T>& BezierCurve2<T>::translate(const Vector2<T>& offset)
 {
 	points[0] += offset;
@@ -200,6 +215,7 @@ inline BezierCurve2<T>& BezierCurve2<T>::translate(const Vector2<T>& offset)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline BezierCurve2<T>& BezierCurve2<T>::transform(const Matrix2<T>& matrix)
 {
 	points[0] *= matrix;
@@ -226,9 +242,6 @@ using BezierCurve2Result = templates::BezierCurve2<float>::ConstResult;
 namespace std {
 
 template<typename T>
-struct hash;
-
-template<typename T>
 struct hash<::mathematics::templates::BezierCurve2<T>>
 {
 	size_t operator()(const ::mathematics::templates::BezierCurve2<T>& curve) const noexcept
@@ -250,6 +263,7 @@ struct hash<::mathematics::templates::BezierCurve2<T>>
 namespace mathematics::templates {
 
 template<typename T>
+	requires std::floating_point<T>
 inline Vector2<T> Bezier2<T>::evaluate(T t) const // #TODO SIMD
 {
 	Vector4<T> bt = bezier::basis<Vector4<T>>(t);
@@ -258,6 +272,7 @@ inline Vector2<T> Bezier2<T>::evaluate(T t) const // #TODO SIMD
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::size_t/*int*/ I>
 inline T Bezier2<T>::evaluate(T t) const // #TODO SIMD
 {
@@ -266,6 +281,7 @@ inline T Bezier2<T>::evaluate(T t) const // #TODO SIMD
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Vector2<T> Bezier2<T>::calculateDerivative(T t) const // #TODO SIMD
 {
 	Vector4<T> dbt = bezier::derivativeBasis<Vector4<T>>(t);
@@ -274,6 +290,7 @@ inline Vector2<T> Bezier2<T>::calculateDerivative(T t) const // #TODO SIMD
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<int Order>
 inline T Bezier2<T>::calculateLength(T t) const
 {
@@ -284,6 +301,7 @@ inline T Bezier2<T>::calculateLength(T t) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<int Order, int Iterations>
 inline std::optional<T> Bezier2<T>::calculateTime(T s, T tolerance) const
 {

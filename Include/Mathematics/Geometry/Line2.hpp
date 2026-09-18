@@ -131,6 +131,7 @@ struct Line2
 };
 
 template<typename T>
+	requires std::floating_point<T>
 inline Line2<T>::Line2(const Vector2<T>& origin, T inclinationAngle) : 
 	origin(origin), 
 	direction(std::cos(inclinationAngle), std::sin(inclinationAngle))
@@ -153,24 +154,28 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const L
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Line2<T>::approxEquals(const Line2<T>& line) const
 { 
 	return origin.approxEquals(line.origin) && direction.approxEquals(line.direction); 
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Line2<T>::approxEquals(const Line2<T>& line, T tolerance) const
 { 
 	return origin.approxEquals(line.origin, tolerance) && direction.approxEquals(line.direction, tolerance); 
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Line2<T>::isParallel(const Line2<T>& line) const
 {
 	return (std::fabs(cross(direction, line.direction)) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Line2<T>::isCoincident(const Line2<T>& line) const
 {
 	return (std::fabs(cross(direction, line.direction)) < Constants<T>::TOLERANCE) &&
@@ -178,6 +183,7 @@ inline bool Line2<T>::isCoincident(const Line2<T>& line) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Line2<T>& Line2<T>::transform(const Matrix2<T>& matrix)
 {
 	origin *= matrix;
@@ -186,12 +192,14 @@ inline Line2<T>& Line2<T>::transform(const Matrix2<T>& matrix)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Vector2<T> Line2<T>::getClosestPoint(const Vector2<T>& point) const
 {
 	return dot(point - origin, direction)*direction + origin;
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<Normalization U>
 inline Vector2<T> Line2<T>::getClosestPoint(const Vector2<T>& point) const
 {
@@ -202,12 +210,14 @@ inline Vector2<T> Line2<T>::getClosestPoint(const Vector2<T>& point) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline T Line2<T>::getSignedDistanceTo(const Vector2<T>& point) const
 {
 	return cross(origin - point, direction);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline T Line2<T>::getSignedDistanceTo(const Line2& line) const
 {
 	return (std::fabs(cross(direction, line.direction)) < Constants<T>::TOLERANCE) ?
@@ -216,6 +226,7 @@ inline T Line2<T>::getSignedDistanceTo(const Line2& line) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Line2<T>::intersects(const Line2& line) const
 {
 	return !(std::fabs(cross(direction, line.direction)) < Constants<T>::TOLERANCE) ||
@@ -223,6 +234,7 @@ inline bool Line2<T>::intersects(const Line2& line) const
 }
 
 //template<typename T>
+//	requires std::floating_point<T>
 //template<ScalarOrVector2<T> U>
 //inline std::optional<U> Line2<T>::findIntersection(const Line2& line) const
 //{
@@ -234,6 +246,7 @@ inline bool Line2<T>::intersects(const Line2& line) const
 //}
 //
 //template<typename T>
+//	requires std::floating_point<T>
 //template<ScalarOrVector2<T> U>
 //inline std::optional<U> Line2<T>::findIntersection(const LineSegment2<T>& segment) const
 //{
@@ -278,9 +291,6 @@ using Line2Result = templates::Line2<float>::ConstResult;
 namespace std {
 
 template<typename T>
-struct hash;
-
-template<typename T>
 struct hash<::mathematics::templates::Line2<T>>
 {
 	size_t operator()(const ::mathematics::templates::Line2<T>& line) const noexcept
@@ -303,23 +313,27 @@ struct hash<::mathematics::templates::Line2<T>>
 namespace mathematics::templates {
 
 template<typename T>
+	requires std::floating_point<T>
 inline Line2<T>::Line2(const Ray2<T>& ray) : origin(ray.origin), direction(ray.direction)
 {
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline const Ray2<T>& Line2<T>::asRay() const
 { 
 	return reinterpret_cast<const Ray2<T>&>(*this);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Line2<T>::intersects(const Circle2<T>& circle) const
 {
 	return intersections::testLineNSphere(origin, direction, circle.center, circle.radius);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<Normalization U>
 inline bool Line2<T>::intersects(const Circle2<T>& circle) const
 {
@@ -330,36 +344,42 @@ inline bool Line2<T>::intersects(const Circle2<T>& circle) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<T> Line2<T>::findIntersection(const Line2& line) const
 {
 	return intersections::findLineLine<std::optional<T>>(origin, direction, line.origin, line.direction);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<T> Line2<T>::findIntersection(const Ray2& ray) const
 {
 	return intersections::findLineRay<std::optional<T>>(origin, direction, ray.origin, ray.direction);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<T> Line2<T>::findIntersection(const LineSegment2<T>& segment) const
 {
 	return intersections::findLineLineSegment<std::optional<T>>(origin, direction, segment.start, segment.end);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<Interval<T>> Line2<T>::findIntersection(const AxisAlignedRectangle& rectangle) const
 {
 	return intersections::findLineAxisAlignedRectangle<std::optional<Interval<T>>>(origin, direction, rectangle.minimum, rectangle.maximum);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<Interval<T>> Line2<T>::findIntersection(const Circle2<T>& circle) const
 {
 	return intersections::findLineNSphere<std::optional<Interval<T>>>(origin, direction, circle.center, circle.radius);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<Normalization U>
 inline std::optional<Interval<T>> Line2<T>::findIntersection(const Circle2<T>& circle) const
 {

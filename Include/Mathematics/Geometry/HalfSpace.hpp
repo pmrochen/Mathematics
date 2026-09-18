@@ -60,7 +60,7 @@ struct HalfSpace
 	constexpr HalfSpace() noexcept : a(), b(), c(), d() {}
 	explicit HalfSpace(Uninitialized) noexcept {}
 	constexpr HalfSpace(T a, T b, T c, T d) noexcept : a(a), b(b), c(c), d(d) {}
-	constexpr HalfSpace(const Vector3<T>& normal, T constant) noexcept : x(normal.x), y(normal.y), z(normal.z), w(constant) {}
+	constexpr HalfSpace(const Vector3<T>& normal, T constant) noexcept : a(normal.x), b(normal.y), c(normal.z), d(constant) {}
 	HalfSpace(const Vector3<T>& normal, const Vector3<T>& point) noexcept : a(normal.x), b(normal.y), c(normal.z), d(-dot(normal, point)) {}
 	HalfSpace(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2) noexcept;
 	HalfSpace(const Plane<T>& p) noexcept;
@@ -106,7 +106,7 @@ struct HalfSpace
 
 	// Distances
 	T getDistanceTo(const Vector3<T>& point) const { return std::max(dot(getNormal(), point) + d, T(0)); }	// normalized half-space
-	template<Normalization U> T getDistanceTo(const Vector3<T>& point) const;
+	template<Normalization U> T getDistanceTo(const Vector3<T>& point) const noexcept;
 	T getSignedDistanceTo(const Vector3<T>& point) const noexcept { return (dot(getNormal(), point) + d); }	// normalized half-space
 	template<Normalization U> T getSignedDistanceTo(const Vector3<T>& point) const noexcept;
 
@@ -122,7 +122,9 @@ struct HalfSpace
 	T a, b, c, d;
 };
 
-template<typename T> const HalfSpace<T> HalfSpace<T>::EMPTY{};
+template<typename T> 
+	requires std::floating_point<T> 
+const HalfSpace<T> HalfSpace<T>::EMPTY{};
 
 #if SIMD_HAS_FLOAT4
 
@@ -175,8 +177,8 @@ struct alignas(16) HalfSpace<float>
 
 	// Properties
 	bool isZero() const noexcept { return simd::all4(simd::equal(abcd, simd::zero<simd::float4>())); }
-	bool approxEquals(const HalfSpace& h) const noexcept { simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, h)), simd::set4(Constants<float>::TOLERANCE))); }
-	bool approxEquals(const HalfSpace& h, float tolerance) const noexcept { simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, h)), simd::set4(tolerance))); }
+	bool approxEquals(const HalfSpace& h) const noexcept { return simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, h)), simd::set4(Constants<float>::TOLERANCE))); }
+	bool approxEquals(const HalfSpace& h, float tolerance) const noexcept { return simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, h)), simd::set4(tolerance))); }
 	bool isFinite() const noexcept { return simd::all4(simd::isFinite(abcd)); }
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	const Vector3<float> getNormal() const noexcept { return Vector3<float>(simd::xyzz(abcd)); }
@@ -199,7 +201,7 @@ struct alignas(16) HalfSpace<float>
 
 	// Distances
 	float getDistanceTo(const Vector3<float>& point) const { return std::max(dot(getNormal(), point) + d, 0.f); }	// normalized half-space
-	template<Normalization U> float getDistanceTo(const Vector3<float>& point) const;
+	template<Normalization U> float getDistanceTo(const Vector3<float>& point) const noexcept;
 	float getSignedDistanceTo(const Vector3<float>& point) const noexcept { return (dot(getNormal(), point) + d); }	// normalized half-space
 	template<Normalization U> float getSignedDistanceTo(const Vector3<float>& point) const noexcept;
 
@@ -224,7 +226,8 @@ const HalfSpace<float> HalfSpace<float>::EMPTY{};
 #endif /* SIMD_HAS_FLOAT4 */
 
 template<typename T>
-inline HalfSpace<T>::HalfSpace<T>(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2)
+	requires std::floating_point<T>
+inline HalfSpace<T>::HalfSpace(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2) noexcept
 {
 	Vector3<T> normal(cross(p1 - p0, p2 - p0));
 	normal.normalize();
@@ -247,8 +250,9 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const H
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::size_t I>
-inline T& HalfSpace<T>::get()
+inline T& HalfSpace<T>::get() noexcept
 {
 	if constexpr (I == 0)
 		return a;
@@ -262,8 +266,9 @@ inline T& HalfSpace<T>::get()
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::size_t I>
-inline const T& HalfSpace<T>::get() const
+inline const T& HalfSpace<T>::get() const noexcept
 {
 	if constexpr (I == 0)
 		return a;
@@ -277,48 +282,54 @@ inline const T& HalfSpace<T>::get() const
 }
 
 template<typename T>
-inline bool HalfSpace<T>::approxEquals(const HalfSpace<T>& h) const
+	requires std::floating_point<T>
+inline bool HalfSpace<T>::approxEquals(const HalfSpace<T>& h) const noexcept
 { 
 	return (std::fabs(h.a - a) < Constants<T>::TOLERANCE) && (std::fabs(h.b - b) < Constants<T>::TOLERANCE) && 
 		(std::fabs(h.c - c) < Constants<T>::TOLERANCE) && (std::fabs(h.d - d) < Constants<T>::TOLERANCE); 
 }
 
 template<typename T>
-inline bool HalfSpace<T>::approxEquals(const HalfSpace<T>& h, T tolerance) const
+	requires std::floating_point<T>
+inline bool HalfSpace<T>::approxEquals(const HalfSpace<T>& h, T tolerance) const noexcept
 {
 	return (std::fabs(h.a - a) < tolerance) && (std::fabs(h.b - b) < tolerance) && 
 		(std::fabs(h.c - c) < tolerance) && (std::fabs(h.d - d) < tolerance); 
 }
 
 template<typename T>
-inline HalfSpace<T>& HalfSpace<T>::translate(const Vector3<T>& offset)
+	requires std::floating_point<T>
+inline HalfSpace<T>& HalfSpace<T>::translate(const Vector3<T>& offset) noexcept
 {
 	setConstant(-dot(getNormal(), getNormal()*(-getConstant()) + offset));
 	return *this;
 }
 
 template<typename T>
-inline HalfSpace<T>& HalfSpace<T>::transform(const Matrix3<T>& matrix, bool orthogonal)
+	requires std::floating_point<T>
+inline HalfSpace<T>& HalfSpace<T>::transform(const Matrix3<T>& matrix, bool orthogonal) noexcept
 {
 	if (orthogonal)
 		set(getNormal()*matrix, -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
 	else
-		set(::normalize(getNormal()*inverseTranspose(matrix)), -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
+		set(normalize(getNormal()*inverseTranspose(matrix)), -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
 	return *this;
 }
 
 template<typename T>
-inline HalfSpace<T>& HalfSpace<T>::transform(const AffineTransform<T>& transformation, bool orthogonal)
+	requires std::floating_point<T>
+inline HalfSpace<T>& HalfSpace<T>::transform(const AffineTransform<T>& transformation, bool orthogonal) noexcept
 {
 	if (orthogonal)
-		set(getNormal()*transformation.getBasis(), -dot(getNormal(), ::transform(getNormal()*(-getConstant()), transformation)));
+		set(getNormal()*transformation.getBasis(), -dot(getNormal(), transform(getNormal()*(-getConstant()), transformation)));
 	else
-		set(::normalize(getNormal()*inverseTranspose(transformation.getBasis())), -dot(getNormal(), ::transform(getNormal()*(-getConstant()), transformation)));
+		set(normalize(getNormal()*inverseTranspose(transformation.getBasis())), -dot(getNormal(), transform(getNormal()*(-getConstant()), transformation)));
 	return *this;
 }
 
 template<typename T>
-inline HalfSpace<T>& HalfSpace<T>::normalize()
+	requires std::floating_point<T>
+inline HalfSpace<T>& HalfSpace<T>::normalize() noexcept
 {
 //#if MATHEMATICS_FAST_NORMALIZE
 //	if costexpr(std::is_same_v<T, float>)
@@ -345,7 +356,7 @@ inline HalfSpace<T>& HalfSpace<T>::normalize()
 
 #if SIMD_HAS_FLOAT4
 
-inline HalfSpace<float>::HalfSpace<float>(const Vector3<float>& p0, const Vector3<float>& p1, const Vector3<float>& p2)
+inline HalfSpace<float>::HalfSpace(const Vector3<float>& p0, const Vector3<float>& p1, const Vector3<float>& p2) noexcept
 {
 	Vector3<float> normal(cross(p1 - p0, p2 - p0));
 	normal.normalize();
@@ -370,58 +381,58 @@ inline void HalfSpace<float>::load(A& ar)
 }
 
 template<std::size_t I>
-inline float& HalfSpace<float>::get()
+inline float& HalfSpace<float>::get() noexcept
 {
 	if constexpr (I == 0)
-		return x;
+		return a;
 	else if constexpr (I == 1)
-		return y;
+		return b;
 	else if constexpr (I == 2)
-		return z;
+		return c;
 	else if constexpr (I == 3)
-		return w;
+		return d;
 	static_assert(false);
 }
 
 template<std::size_t I>
-inline const float& HalfSpace<float>::get() const
+inline const float& HalfSpace<float>::get() const noexcept
 {
 	if constexpr (I == 0)
-		return x;
+		return a;
 	else if constexpr (I == 1)
-		return y;
+		return b;
 	else if constexpr (I == 2)
-		return z;
+		return c;
 	else if constexpr (I == 3)
-		return w;
+		return d;
 	static_assert(false);
 }
 
-inline HalfSpace<float>& HalfSpace<float>::translate(const Vector3<float>& offset)
+inline HalfSpace<float>& HalfSpace<float>::translate(const Vector3<float>& offset) noexcept
 {
 	setConstant(-dot(getNormal(), getNormal()*(-getConstant()) + offset));
 	return *this;
 }
 
-inline HalfSpace<float>& HalfSpace<float>::transform(const Matrix3<float>& matrix, bool orthogonal)
+inline HalfSpace<float>& HalfSpace<float>::transform(const Matrix3<float>& matrix, bool orthogonal) noexcept
 {
 	if (orthogonal)
 		set(getNormal()*matrix, -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
 	else
-		set(::normalize(getNormal()*inverseTranspose(matrix)), -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
+		set(::mathematics::templates::normalize(getNormal()*inverseTranspose(matrix)), -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
 	return *this;
 }
 
-inline HalfSpace<float>& HalfSpace<float>::transform(const AffineTransform<float>& transformation, bool orthogonal)
+inline HalfSpace<float>& HalfSpace<float>::transform(const AffineTransform<float>& transformation, bool orthogonal) noexcept
 {
 	if (orthogonal)
-		set(getNormal()*transformation.getBasis(), -dot(getNormal(), ::transform(getNormal()*(-getConstant()), transformation)));
+		set(getNormal()*transformation.getBasis(), -dot(getNormal(), ::mathematics::templates::transform(getNormal()*(-getConstant()), transformation)));
 	else
-		set(::normalize(getNormal()*inverseTranspose(transformation.getBasis())), -dot(getNormal(), ::transform(getNormal()*(-getConstant()), transformation)));
+		set(::mathematics::templates::normalize(getNormal()*inverseTranspose(transformation.getBasis())), -dot(getNormal(), ::mathematics::templates::transform(getNormal()*(-getConstant()), transformation)));
 	return *this;
 }
 
-inline HalfSpace<float>& HalfSpace<float>::normalize()
+inline HalfSpace<float>& HalfSpace<float>::normalize() noexcept
 {
 #if MATHEMATICS_FAST_NORMALIZE
 	float m = simd::toFloat(simd::rcpSqrtApprox1(simd::dot3(abcd, abcd)));
@@ -535,24 +546,15 @@ using HalfSpaceResult = templates::HalfSpace<float>::ConstResult;
 namespace std {
 
 template<size_t I, typename T>
-struct tuple_element;
-
-template<size_t I, typename T>
 struct tuple_element<I, ::mathematics::templates::HalfSpace<T>>
 {
 	using type = T;
 };
 
 template<typename T>
-struct tuple_size;
-
-template<typename T>
-struct tuple_size<::mathematics::templates::HalfSpace<T>> : integral_constant<size_t, 4> 
+struct tuple_size<::mathematics::templates::HalfSpace<T>> : public integral_constant<size_t, 4> 
 {
 };
-
-template<typename T>
-struct hash;
 
 template<typename T>
 struct hash<::mathematics::templates::HalfSpace<T>>
@@ -594,105 +596,113 @@ struct hash<::mathematics::templates::HalfSpace<float>>
 namespace mathematics::templates {
 
 template<typename T>
-inline HalfSpace<T>::HalfSpace(const Plane<T>& p) : a(p.a), b(p.b), c(p.c), d(p.d)
+	requires std::floating_point<T>
+inline HalfSpace<T>::HalfSpace(const Plane<T>& p) noexcept : a(p.a), b(p.b), c(p.c), d(p.d)
 {
 }
 
 template<typename T>
-inline const Plane<T>& HalfSpace<T>::asPlane() const 
+	requires std::floating_point<T>
+inline const Plane<T>& HalfSpace<T>::asPlane() const noexcept
 { 
 	return reinterpret_cast<const Plane<T>&>(*this); 
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<Normalization U>
-inline T HalfSpace<T>::getDistanceTo(const Vector3<T>& point) const
+inline T HalfSpace<T>::getDistanceTo(const Vector3<T>& point) const noexcept
 {
-	if costexpr(std::is_same_v<U, Normalized>)
+	if constexpr (std::is_same_v<U, Normalized>)
 		return distances::getPointNormalizedHalfSpace(point, getNormal(), d);
 	else
 		return distances::getPointHalfSpace(point, getNormal(), d);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<Normalization U>
-inline T HalfSpace<T>::getSignedDistanceTo(const Vector3<T>& point) const
+inline T HalfSpace<T>::getSignedDistanceTo(const Vector3<T>& point) const noexcept
 {
-	if costexpr(std::is_same_v<U, Normalized>)
+	if constexpr (std::is_same_v<U, Normalized>)
 		return distances::getPointNormalizedPlaneSigned(point, getNormal(), d);
 	else
 		return distances::getPointPlaneSigned(point, getNormal(), d);
 }
 
 template<typename T>
-inline bool HalfSpace<T>::intersects(const Triangle3<T>& triangle) const
+	requires std::floating_point<T>
+inline bool HalfSpace<T>::intersects(const Triangle3<T>& triangle) const noexcept
 {
 	return triangle.intersects(*this);
 }
 
 template<typename T>
-inline bool HalfSpace<T>::intersects(const AxisAlignedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool HalfSpace<T>::intersects(const AxisAlignedBox<T>& box) const noexcept
 {
 	return intersections::testAxisAlignedBoxHalfSpace(box.getCenter(), box.getHalfDimensions(), getNormal(), d);
 }
 
 template<typename T>
-inline bool HalfSpace<T>::intersects(const OrientedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool HalfSpace<T>::intersects(const OrientedBox<T>& box) const noexcept
 {
 	return intersections::testOrientedBoxHalfSpace(box.center, box.basis, box.halfDims, getNormal(), d);
 }
 
 template<typename T>
-inline bool HalfSpace<T>::intersects(const Sphere<T>& sphere) const
+	requires std::floating_point<T>
+inline bool HalfSpace<T>::intersects(const Sphere<T>& sphere) const noexcept
 {
 	return sphere.intersects(*this);
 }
 
 #if SIMD_HAS_FLOAT4
 
-inline HalfSpace<float>::HalfSpace(const Plane<float>& p) : abcd(p.abcd)
+inline HalfSpace<float>::HalfSpace(const Plane<float>& p) noexcept : abcd(p.abcd)
 {
 }
 
-inline const Plane<float> HalfSpace<float>::asPlane() const
+inline const Plane<float> HalfSpace<float>::asPlane() const noexcept
 { 
 	return Plane<float>(abcd); 
 }
 
 template<Normalization U>
-inline float HalfSpace<float>::getDistanceTo(const Vector3<float>& point) const
+inline float HalfSpace<float>::getDistanceTo(const Vector3<float>& point) const noexcept
 {
-	if costexpr(std::is_same_v<U, Normalized>)
+	if constexpr (std::is_same_v<U, Normalized>)
 		return distances::getPointNormalizedHalfSpace(point, getNormal(), d);
 	else
 		return distances::getPointHalfSpace(point, getNormal(), d);
 }
 
 template<Normalization U>
-inline float HalfSpace<float>::getSignedDistanceTo(const Vector3<float>& point) const
+inline float HalfSpace<float>::getSignedDistanceTo(const Vector3<float>& point) const noexcept
 {
-	if costexpr(std::is_same_v<U, Normalized>)
+	if constexpr (std::is_same_v<U, Normalized>)
 		return distances::getPointNormalizedPlaneSigned(point, getNormal(), d);
 	else
 		return distances::getPointPlaneSigned(point, getNormal(), d);
 }
 
-inline bool HalfSpace<float>::intersects(const Triangle3<float>& triangle) const
+inline bool HalfSpace<float>::intersects(const Triangle3<float>& triangle) const noexcept
 {
 	return triangle.intersects(*this);
 }
 
-inline bool HalfSpace<float>::intersects(const AxisAlignedBox<float>& box) const
+inline bool HalfSpace<float>::intersects(const AxisAlignedBox<float>& box) const noexcept
 {
 	return intersections::testAxisAlignedBoxHalfSpace(box.getCenter(), box.getHalfDimensions(), getNormal(), d);
 }
 
-inline bool HalfSpace<float>::intersects(const OrientedBox<float>& box) const
+inline bool HalfSpace<float>::intersects(const OrientedBox<float>& box) const noexcept
 {
 	return intersections::testOrientedBoxHalfSpace(box.center, box.basis, box.halfDims, getNormal(), d);
 }
 
-inline bool HalfSpace<float>::intersects(const Sphere<float>& sphere) const
+inline bool HalfSpace<float>::intersects(const Sphere<float>& sphere) const noexcept
 {
 	return sphere.intersects(*this);
 }

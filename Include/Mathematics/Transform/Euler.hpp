@@ -20,6 +20,7 @@
 #include <cctype>
 #include <cmath>
 #include "../Constants.hpp"
+#include "EulerOrder.hpp"
 #include "../Algebra/Vector3.hpp"
 #include "../Algebra/Matrix3.hpp"
 #include "../Algebra/Quaternion.hpp"
@@ -36,9 +37,6 @@ struct Euler;
 namespace std {
 
 template<size_t I, typename T>
-struct tuple_element;
-
-template<size_t I, typename T>
 struct tuple_element<I, ::mathematics::templates::Euler<T>>
 {
 	using type = T;
@@ -47,14 +45,11 @@ struct tuple_element<I, ::mathematics::templates::Euler<T>>
 template<typename T>
 struct tuple_element<3, ::mathematics::templates::Euler<T>>
 {
-	using type = EulerOrder;
+	using type = ::mathematics::EulerOrder;
 };
 
 template<typename T>
-struct tuple_size;
-
-template<typename T>
-struct tuple_size<::mathematics::templates::Euler<T>> : integral_constant<size_t, 4> 
+struct tuple_size<::mathematics::templates::Euler<T>> : public integral_constant<size_t, 4> 
 {
 };
 
@@ -130,16 +125,17 @@ struct Euler
 	EulerOrder order;
 };
 
-template<typename T> const Euler<T> Euler<T>::ZERO{};
-template<typename T> const Euler<T> Euler<T>::ZERO_XYZ{ T(), T(), T(), EulerOrder::XYZ };
-template<typename T> const Euler<T> Euler<T>::ZERO_XZY{ T(), T(), T(), EulerOrder::XZY };
-template<typename T> const Euler<T> Euler<T>::ZERO_YZX{ T(), T(), T(), EulerOrder::YZX };
-template<typename T> const Euler<T> Euler<T>::ZERO_YXZ{ T(), T(), T(), EulerOrder::YXZ };
-template<typename T> const Euler<T> Euler<T>::ZERO_ZXY{ T(), T(), T(), EulerOrder::ZXY };
-template<typename T> const Euler<T> Euler<T>::ZERO_ZYX{ T(), T(), T(), EulerOrder::ZYX };
+template<typename T> requires std::floating_point<T> const Euler<T> Euler<T>::ZERO{};
+template<typename T> requires std::floating_point<T> const Euler<T> Euler<T>::ZERO_XYZ{ T(), T(), T(), EulerOrder::XYZ };
+template<typename T> requires std::floating_point<T> const Euler<T> Euler<T>::ZERO_XZY{ T(), T(), T(), EulerOrder::XZY };
+template<typename T> requires std::floating_point<T> const Euler<T> Euler<T>::ZERO_YZX{ T(), T(), T(), EulerOrder::YZX };
+template<typename T> requires std::floating_point<T> const Euler<T> Euler<T>::ZERO_YXZ{ T(), T(), T(), EulerOrder::YXZ };
+template<typename T> requires std::floating_point<T> const Euler<T> Euler<T>::ZERO_ZXY{ T(), T(), T(), EulerOrder::ZXY };
+template<typename T> requires std::floating_point<T> const Euler<T> Euler<T>::ZERO_ZYX{ T(), T(), T(), EulerOrder::ZYX };
 
 template<typename T>
-inline Euler<T>::Euler(const Quaternion<T>& q, EulerOrder order) : 
+	requires std::floating_point<T>
+inline Euler<T>::Euler(const Quaternion<T>& q, EulerOrder order) noexcept : 
 	Euler(Matrix3<T>::makeRotation(q), order) // #FIXME Don't call converting constructor when q is identity
 {
 	if (q.isIdentity())
@@ -147,7 +143,8 @@ inline Euler<T>::Euler(const Quaternion<T>& q, EulerOrder order) :
 }
 
 template<typename T>
-inline Euler<T>::Euler(const Matrix3<T>& m, EulerOrder order)
+	requires std::floating_point<T>
+inline Euler<T>::Euler(const Matrix3<T>& m, EulerOrder order) noexcept
 {
 	if (order != EulerOrder::UNSPECIFIED)
 	{
@@ -222,6 +219,7 @@ inline Euler<T>::Euler(const Matrix3<T>& m, EulerOrder order)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Euler<T>& Euler<T>::operator+=(const Euler<T>& e)
 {
 	if (order != e.order) 
@@ -233,6 +231,7 @@ inline Euler<T>& Euler<T>::operator+=(const Euler<T>& e)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Euler<T>& Euler<T>::operator-=(const Euler<T>& e)
 {
 	if (order != e.order) 
@@ -345,8 +344,9 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const E
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::size_t I>
-inline typename std::tuple_element<I, Euler<T>>::type& Euler<T>::get()
+inline typename std::tuple_element<I, Euler<T>>::type& Euler<T>::get() noexcept
 {
 	if constexpr (I == 0)
 		return x;
@@ -360,8 +360,9 @@ inline typename std::tuple_element<I, Euler<T>>::type& Euler<T>::get()
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::size_t I>
-inline const typename std::tuple_element<I, Euler<T>>::type& Euler<T>::get() const
+inline const typename std::tuple_element<I, Euler<T>>::type& Euler<T>::get() const noexcept
 {
 	if constexpr (I == 0)
 		return x;
@@ -375,27 +376,31 @@ inline const typename std::tuple_element<I, Euler<T>>::type& Euler<T>::get() con
 }
 
 template<typename T>
-inline bool Euler<T>::isApproxZero() const
+	requires std::floating_point<T>
+inline bool Euler<T>::isApproxZero() const noexcept
 { 
 	return (std::fabs(x) < Constants<T>::TOLERANCE) && (std::fabs(y) < Constants<T>::TOLERANCE) && 
 		(std::fabs(z) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
-inline bool Euler<T>::approxEquals(const Euler<T>& e) const
+	requires std::floating_point<T>
+inline bool Euler<T>::approxEquals(const Euler<T>& e) const noexcept
 { 
 	return (order == e.order) && (std::fabs(e.x - x) < Constants<T>::TOLERANCE) && 
         (std::fabs(e.y - y) < Constants<T>::TOLERANCE) && (std::fabs(e.z - z) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
-inline bool Euler<T>::approxEquals(const Euler<T>& e, T tolerance) const
+	requires std::floating_point<T>
+inline bool Euler<T>::approxEquals(const Euler<T>& e, T tolerance) const noexcept
 { 
 	return (order == e.order) && (std::fabs(e.x - x) < tolerance) && 
         (std::fabs(e.y - y) < tolerance) && (std::fabs(e.z - z) < tolerance);
 }
 
 //template<typename T>
+//	requires std::floating_point<T>
 //inline Euler<T>& Euler<T>::clamp(T low, T high)
 //{
 //	x = std::clamp(x, low, high);
@@ -475,9 +480,6 @@ using Euler = templates::Euler<float>;
 } // namespace mathematics
 
 namespace std {
-
-template<typename T>
-struct hash;
 
 template<typename T>
 struct hash<::mathematics::templates::Euler<T>>

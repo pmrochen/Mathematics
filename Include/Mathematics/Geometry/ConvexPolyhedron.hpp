@@ -32,7 +32,7 @@ namespace templates {
 
 template<typename T>
 	requires std::floating_point<T>
-class ConvexPolyhedron : public std::enable_shared_from_this<ConvexPolyhedron>
+class ConvexPolyhedron : public std::enable_shared_from_this<ConvexPolyhedron<T>>
 {
 public:
 	using Real = T;
@@ -40,11 +40,10 @@ public:
 	using HalfSpaceVector = std::vector<HalfSpaceType>;
 
 	ConvexPolyhedron() noexcept : /*refCount_(),*/ halfSpaces() {}
-	template<std::input_iterator<HalfSpace<T>> I, std::sentinel_for<I> S> ConvexPolyhedron(I first, S last);
+	template<std::input_iterator I, std::sentinel_for<I> S> ConvexPolyhedron(I first, S last);
 	ConvexPolyhedron(const HalfSpace<T>* halfSpaces, std::size_t nHalfSpaces);
 	explicit ConvexPolyhedron(const std::vector<HalfSpace<T>>& halfSpaces);
 	explicit ConvexPolyhedron(std::vector<HalfSpace<T>>&& halfSpaces);
-	template<std::input_iterator<Plane<T>> I, std::sentinel_for<I> S> ConvexPolyhedron(I first, S last);
 	ConvexPolyhedron(const Plane<T>* planes, std::size_t nPlanes);
 	explicit ConvexPolyhedron(const std::vector<Plane<T>>& planes);
 	ConvexPolyhedron(std::initializer_list<HalfSpace<T>> halfSpaces) : /*refCount_(),*/ halfSpaces(halfSpaces) {}
@@ -58,10 +57,10 @@ public:
 
 	// Create
 	static ConvexPolyhedron* from(const AxisAlignedBox<T>& box);
-	static ConvexPolyhedron* from(const Box<T>& box);
+	static ConvexPolyhedron* from(const OrientedBox<T>& box);
 	static ConvexPolyhedron* from(const SymmetricFrustum<T>& frustum);
 #if MATHEMATICS_HAS_QUICKHULL
-	//template<std::input_iterator<Vector3<T>> I, std::sentinel_for<I> S> static ConvexPolyhedron* makeConvexHull(I first, S last);
+	//template<std::input_iterator I, std::sentinel_for<I> S> static ConvexPolyhedron* makeConvexHull(I first, S last);
 	//static ConvexPolyhedron* makeConvexHull(const Vector3<T>* points, std::size_t nPoints); // convex hull of point cloud
 	//static ConvexPolyhedron* makeConvexHull(const std::vector<Vector3<T>>& points);
 #endif
@@ -88,7 +87,7 @@ public:
 	const HalfSpace<T>& getHalfSpace(std::size_t index) const noexcept;
 	void setHalfSpace(std::size_t index, const HalfSpace<T>& value); // throw (std::out_of_range)
 	void addHalfSpace(const HalfSpace<T>& value) { halfSpaces.push_back(value); }
-	template<std::input_iterator<HalfSpace<T>> I, std::sentinel_for<I> S> void addHalfSpaces(I first, S last);
+	template<std::input_iterator I, std::sentinel_for<I> S> void addHalfSpaces(I first, S last);
 	void addHalfSpaces(const HalfSpace<T>* halfSpaces, std::size_t nHalfSpaces);
 	void addHalfSpaces(const std::vector<HalfSpace<T>>& halfSpaces);
 	void insertHalfSpace(std::size_t index, const HalfSpace<T>& value); // throw (std::out_of_range)
@@ -125,7 +124,8 @@ public:
 };
 
 template<typename T>
-template<std::input_iterator<HalfSpace<T>> I, std::sentinel_for<I> S> 
+	requires std::floating_point<T>
+template<std::input_iterator I, std::sentinel_for<I> S> 
 inline ConvexPolyhedron<T>::ConvexPolyhedron(I first, S last) :
 	//refCount_(), 
 	halfSpaces(first, last)
@@ -133,6 +133,7 @@ inline ConvexPolyhedron<T>::ConvexPolyhedron(I first, S last) :
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline ConvexPolyhedron<T>::ConvexPolyhedron(const HalfSpace<T>* halfSpaces, std::size_t nHalfSpaces) :
 	//refCount_(), 
 	halfSpaces(halfSpaces, halfSpaces + nHalfSpaces)
@@ -140,6 +141,7 @@ inline ConvexPolyhedron<T>::ConvexPolyhedron(const HalfSpace<T>* halfSpaces, std
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline ConvexPolyhedron<T>::ConvexPolyhedron(const std::vector<HalfSpace<T>>& halfSpaces) : 
 	//refCount_(), 
 	halfSpaces(halfSpaces)
@@ -147,6 +149,7 @@ inline ConvexPolyhedron<T>::ConvexPolyhedron(const std::vector<HalfSpace<T>>& ha
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline ConvexPolyhedron<T>::ConvexPolyhedron(std::vector<HalfSpace<T>>&& halfSpaces) : 
 	//refCount_(), 
 	halfSpaces(std::move(halfSpaces))
@@ -154,14 +157,7 @@ inline ConvexPolyhedron<T>::ConvexPolyhedron(std::vector<HalfSpace<T>>&& halfSpa
 }
 
 template<typename T>
-template<std::input_iterator<Plane<T>> I, std::sentinel_for<I> S> 
-inline ConvexPolyhedron<T>::ConvexPolyhedron(I first, S last) :
-	//refCount_(), 
-	halfSpaces(first, last)
-{
-}
-
-template<typename T>
+	requires std::floating_point<T>
 inline ConvexPolyhedron<T>::ConvexPolyhedron(const Plane<T>* planes, std::size_t nPlanes) :
 	//refCount_(), 
 	halfSpaces(planes, planes + nPlanes)
@@ -169,6 +165,7 @@ inline ConvexPolyhedron<T>::ConvexPolyhedron(const Plane<T>* planes, std::size_t
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline ConvexPolyhedron<T>::ConvexPolyhedron(const std::vector<Plane<T>>& planes) : 
 	//refCount_(), 
 	halfSpaces(planes.begin(), planes.end())
@@ -176,6 +173,7 @@ inline ConvexPolyhedron<T>::ConvexPolyhedron(const std::vector<Plane<T>>& planes
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline ConvexPolyhedron<T>::ConvexPolyhedron(const ConvexPolyhedron& polyhedron) : 
 	//refCount_(), 
 	halfSpaces(polyhedron.halfSpaces) 
@@ -183,6 +181,7 @@ inline ConvexPolyhedron<T>::ConvexPolyhedron(const ConvexPolyhedron& polyhedron)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline ConvexPolyhedron<T>::ConvexPolyhedron(ConvexPolyhedron&& polyhedron) : 
 	//refCount_(), 
 	halfSpaces(std::move(polyhedron.halfSpaces)) 
@@ -190,6 +189,7 @@ inline ConvexPolyhedron<T>::ConvexPolyhedron(ConvexPolyhedron&& polyhedron) :
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline ConvexPolyhedron<T>& ConvexPolyhedron<T>::operator=(const ConvexPolyhedron<T>& polyhedron)
 {
 	halfSpaces = polyhedron.halfSpaces;
@@ -197,31 +197,36 @@ inline ConvexPolyhedron<T>& ConvexPolyhedron<T>::operator=(const ConvexPolyhedro
 }
 
 template<typename T>
-inline ConvexPolyhedron<T>& ConvexPolyhedron<T>::operator=(ConvexPolyhedron<T>&& mesh)
+	requires std::floating_point<T>
+inline ConvexPolyhedron<T>& ConvexPolyhedron<T>::operator=(ConvexPolyhedron<T>&& polyhedron)
 {
 	halfSpaces = std::move(polyhedron.halfSpaces);
 	return *this;
 }
 
 template<typename T>
+	requires std::floating_point<T>
 /*static*/ inline ConvexPolyhedron<T>* ConvexPolyhedron<T>::from(const AxisAlignedBox<T>& box)
 {
 	return new ConvexPolyhedron<T>(box.getHalfSpaces());
 }
 
 template<typename T>
+	requires std::floating_point<T>
 /*static*/ inline ConvexPolyhedron<T>* ConvexPolyhedron<T>::from(const OrientedBox<T>& box)
 {
 	return new ConvexPolyhedron<T>(box.getHalfSpaces());
 }
 
 template<typename T>
+	requires std::floating_point<T>
 /*static*/ inline ConvexPolyhedron<T>* ConvexPolyhedron<T>::from(const SymmetricFrustum<T>& frustum)
 {
 	return new ConvexPolyhedron<T>(frustum.getHalfSpaces());
 }
 
 template<typename T>
+	requires std::floating_point<T>
 /*static*/ inline const ConvexPolyhedron<T>* ConvexPolyhedron<T>::getEmpty()
 {
 	static const ConvexPolyhedron<T> empty;
@@ -229,6 +234,7 @@ template<typename T>
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline void ConvexPolyhedron<T>::assign(const ConvexPolyhedron<T>* polyhedron)
 {
 	if (polyhedron)
@@ -238,6 +244,7 @@ inline void ConvexPolyhedron<T>::assign(const ConvexPolyhedron<T>* polyhedron)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline void ConvexPolyhedron<T>::append(const ConvexPolyhedron<T>* polyhedron)
 {
 	if (polyhedron)
@@ -245,19 +252,22 @@ inline void ConvexPolyhedron<T>::append(const ConvexPolyhedron<T>* polyhedron)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::integral U>
-inline U ConvexPolyhedron<T>::getHalfSpaceMask() const
+inline U ConvexPolyhedron<T>::getHalfSpaceMask() const noexcept
 { 
 	return (U(1) << halfSpaces.size()) - U(1); 
 }
 
 template<typename T>
-inline const HalfSpace<T>& ConvexPolyhedron<T>::getHalfSpace(std::size_t index) const
+	requires std::floating_point<T>
+inline const HalfSpace<T>& ConvexPolyhedron<T>::getHalfSpace(std::size_t index) const noexcept
 { 
 	return (index < halfSpaces.size()) ? halfSpaces[index] : HalfSpace<T>::EMPTY; 
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline void ConvexPolyhedron<T>::setHalfSpace(std::size_t index, const HalfSpace<T>& value) 
 { 
 	if (index >= halfSpaces.size()) 
@@ -266,25 +276,29 @@ inline void ConvexPolyhedron<T>::setHalfSpace(std::size_t index, const HalfSpace
 }
 
 template<typename T>
-template<std::input_iterator<HalfSpace<T>> I, std::sentinel_for<I> S> 
+	requires std::floating_point<T>
+template<std::input_iterator I, std::sentinel_for<I> S> 
 inline void ConvexPolyhedron<T>::addHalfSpaces(I first, S last)
 {
 	halfSpaces.insert(halfSpaces.end(), first, last); 
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline void ConvexPolyhedron<T>::addHalfSpaces(const HalfSpace<T>* halfSpaces, std::size_t nHalfSpaces) 
 { 
 	this->halfSpaces.insert(this->halfSpaces.end(), halfSpaces, halfSpaces + nHalfSpaces); 
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline void ConvexPolyhedron<T>::addHalfSpaces(const std::vector<HalfSpace<T>>& halfSpaces) 
 { 
 	this->halfSpaces.insert(this->halfSpaces.end(), halfSpaces.begin(), halfSpaces.end()); 
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline void ConvexPolyhedron<T>::insertHalfSpace(std::size_t index, const HalfSpace<T>& value) 
 { 
 	if (index > halfSpaces.size()) 
@@ -293,6 +307,7 @@ inline void ConvexPolyhedron<T>::insertHalfSpace(std::size_t index, const HalfSp
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline void ConvexPolyhedron<T>::removeHalfSpaceAt(std::size_t index) 
 { 
 	if (index < halfSpaces.size()) 
@@ -300,6 +315,7 @@ inline void ConvexPolyhedron<T>::removeHalfSpaceAt(std::size_t index)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::output_iterator<Plane<T>> O> 
 inline O ConvexPolyhedron<T>::copyPlanes(O target) const
 {
@@ -307,7 +323,8 @@ inline O ConvexPolyhedron<T>::copyPlanes(O target) const
 }
 
 template<typename T>
-void ConvexPolyhedron<T>::translate(const Vector3<T>& offset)
+	requires std::floating_point<T>
+void ConvexPolyhedron<T>::translate(const Vector3<T>& offset) noexcept
 {
 	if (offset.isZero())
 		return;
@@ -317,7 +334,8 @@ void ConvexPolyhedron<T>::translate(const Vector3<T>& offset)
 }
 
 template<typename T>
-void ConvexPolyhedron<T>::transform(const Matrix3<T>& matrix, bool orthogonal)
+	requires std::floating_point<T>
+void ConvexPolyhedron<T>::transform(const Matrix3<T>& matrix, bool orthogonal) noexcept
 {
 	if (halfSpaces.empty() || matrix.isIdentity())
 		return;
@@ -336,7 +354,8 @@ void ConvexPolyhedron<T>::transform(const Matrix3<T>& matrix, bool orthogonal)
 }
 
 template<typename T>
-void ConvexPolyhedron<T>::transform(const AffineTransform<T>& transformation, bool orthogonal)
+	requires std::floating_point<T>
+void ConvexPolyhedron<T>::transform(const AffineTransform<T>& transformation, bool orthogonal) noexcept
 {
 	if (halfSpaces.empty() || transformation.isIdentity())
 		return;
@@ -352,14 +371,15 @@ void ConvexPolyhedron<T>::transform(const AffineTransform<T>& transformation, bo
 	}
 	else
 	{
-		Matrix3<T> normalMatrix = inverseTranspose(transformation.getBasis()));
+		Matrix3<T> normalMatrix = inverseTranspose(transformation.getBasis());
 		for (HalfSpace<T>& h : halfSpaces)
 			h.set(normalize(h.getNormal()*normalMatrix), -dot(h.getNormal(), transform(h.getNormal()*(-h.getConstant()), transformation)));
 	}
 }
 
 template<typename T>
-bool ConvexPolyhedron<T>::contains(const Vector3<T>& point) const
+	requires std::floating_point<T>
+bool ConvexPolyhedron<T>::contains(const Vector3<T>& point) const noexcept
 {
 	for (const HalfSpace<T>& h : halfSpaces)
 	{
@@ -371,7 +391,8 @@ bool ConvexPolyhedron<T>::contains(const Vector3<T>& point) const
 }
 
 template<typename T>
-bool ConvexPolyhedron<T>::contains(const Vector3<T>& point, T tolerance) const
+	requires std::floating_point<T>
+bool ConvexPolyhedron<T>::contains(const Vector3<T>& point, T tolerance) const noexcept
 {
 	for (const HalfSpace<T>& h : halfSpaces)
 	{
@@ -383,7 +404,8 @@ bool ConvexPolyhedron<T>::contains(const Vector3<T>& point, T tolerance) const
 }
 
 template<typename T>
-bool ConvexPolyhedron<T>::intersects(const AxisAlignedBox<T>& box) const
+	requires std::floating_point<T>
+bool ConvexPolyhedron<T>::intersects(const AxisAlignedBox<T>& box) const noexcept
 {
 	for (const HalfSpace<T>& h : halfSpaces)
 	{
@@ -395,8 +417,9 @@ bool ConvexPolyhedron<T>::intersects(const AxisAlignedBox<T>& box) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::integral U>
-bool ConvexPolyhedron<T>::intersects(const AxisAlignedBox<T>& box, U& mask) const
+bool ConvexPolyhedron<T>::intersects(const AxisAlignedBox<T>& box, U& mask) const noexcept
 {
 	std::size_t count = halfSpaces.size();
 	mask &= (U(1) << count) - U(1);
@@ -421,7 +444,8 @@ bool ConvexPolyhedron<T>::intersects(const AxisAlignedBox<T>& box, U& mask) cons
 }
 
 template<typename T>
-bool ConvexPolyhedron<T>::intersects(const OrientedBox<T>& box) const
+	requires std::floating_point<T>
+bool ConvexPolyhedron<T>::intersects(const OrientedBox<T>& box) const noexcept
 {
 	for (const HalfSpace<T>& h : halfSpaces)
 	{
@@ -433,8 +457,9 @@ bool ConvexPolyhedron<T>::intersects(const OrientedBox<T>& box) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::integral U>
-bool ConvexPolyhedron<T>::intersects(const OrientedBox<T>& box, U& mask) const
+bool ConvexPolyhedron<T>::intersects(const OrientedBox<T>& box, U& mask) const noexcept
 {
 	std::size_t count = halfSpaces.size();
 	mask &= (U(1) << count) - U(1);
@@ -459,7 +484,8 @@ bool ConvexPolyhedron<T>::intersects(const OrientedBox<T>& box, U& mask) const
 }
 
 template<typename T>
-bool ConvexPolyhedron<T>::intersects(const Sphere<T>& sphere) const
+	requires std::floating_point<T>
+bool ConvexPolyhedron<T>::intersects(const Sphere<T>& sphere) const noexcept
 {
 	for (const HalfSpace<T>& h : halfSpaces)
 	{
@@ -485,6 +511,7 @@ using ConvexPolyhedron = templates::ConvexPolyhedron<float>;
 namespace mathematics::templates {
 
 template<typename T>
+	requires std::floating_point<T>
 std::vector<Vector3<T>> ConvexPolyhedron<T>::computeVertices(T tolerance) const
 {
 	// http://www.gamedev.net/page/resources/_/technical/game-programming/shadow-caster-volumes-for-the-culling-of-potential-shadow-casters-r2330
@@ -531,7 +558,8 @@ std::vector<Vector3<T>> ConvexPolyhedron<T>::computeVertices(T tolerance) const
 }
 
 template<typename T>
-AxisAlignedBox<T> ConvexPolyhedron<T>::computeAxisAlignedBoundingBox(T tolerance) const
+	requires std::floating_point<T>
+AxisAlignedBox<T> ConvexPolyhedron<T>::computeAxisAlignedBoundingBox(T tolerance) const noexcept
 {
 	// http://www.gamedev.net/page/resources/_/technical/game-programming/shadow-caster-volumes-for-the-culling-of-potential-shadow-casters-r2330
 

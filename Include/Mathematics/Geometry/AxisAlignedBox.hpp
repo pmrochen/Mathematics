@@ -144,7 +144,9 @@ struct AxisAlignedBox
 	Vector3<T> maximum;
 };
 
-template<typename T> const AxisAlignedBox<T> AxisAlignedBox<T>::EMPTY{ Vector3<T>::INF, Vector3<T>::MINUS_INF };
+template<typename T> 
+	requires std::floating_point<T> 
+const AxisAlignedBox<T> AxisAlignedBox<T>::EMPTY{ Vector3<T>::INF, Vector3<T>::MINUS_INF };
 
 template<typename C, typename T, typename U>
 	requires std::floating_point<U>
@@ -162,19 +164,22 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const A
 }
 
 template<typename T>
-inline bool AxisAlignedBox<T>::approxEquals(const AxisAlignedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool AxisAlignedBox<T>::approxEquals(const AxisAlignedBox<T>& box) const noexcept
 {
 	return minimum.approxEquals(box.minimum) && maximum.approxEquals(box.maximum);
 }
 
 template<typename T>
-inline bool AxisAlignedBox<T>::approxEquals(const AxisAlignedBox<T>& box, T tolerance) const
+	requires std::floating_point<T>
+inline bool AxisAlignedBox<T>::approxEquals(const AxisAlignedBox<T>& box, T tolerance) const noexcept
 {
 	return minimum.approxEquals(box.minimum, tolerance) && maximum.approxEquals(box.maximum, tolerance);
 }
 
 template<typename T>
-inline void AxisAlignedBox<T>::setDimensions(const Vector3<T>& dimensions)
+	requires std::floating_point<T>
+inline void AxisAlignedBox<T>::setDimensions(const Vector3<T>& dimensions) noexcept
 {
 	Vector3<T> center = (minimum + maximum)*T(0.5);
 	Vector3<T> halfDims = T(0.5)*dimensions;
@@ -183,7 +188,8 @@ inline void AxisAlignedBox<T>::setDimensions(const Vector3<T>& dimensions)
 }
 
 template<typename T>
-inline void AxisAlignedBox<T>::setHalfDimensions(const Vector3<T>& halfDims)
+	requires std::floating_point<T>
+inline void AxisAlignedBox<T>::setHalfDimensions(const Vector3<T>& halfDims) noexcept
 {
 	Vector3<T> center = (minimum + maximum)*T(0.5);
 	minimum = center - halfDims;
@@ -191,7 +197,8 @@ inline void AxisAlignedBox<T>::setHalfDimensions(const Vector3<T>& halfDims)
 }
 
 template<typename T>
-inline void AxisAlignedBox<T>::setCenter(const Vector3<T>& center)
+	requires std::floating_point<T>
+inline void AxisAlignedBox<T>::setCenter(const Vector3<T>& center) noexcept
 {
 	Vector3<T> diff = center - (minimum + maximum)*T(0.5);
 	minimum += diff;
@@ -199,20 +206,23 @@ inline void AxisAlignedBox<T>::setCenter(const Vector3<T>& center)
 }
 
 template<typename T>
-inline T AxisAlignedBox<T>::getSurfaceArea() const
+	requires std::floating_point<T>
+inline T AxisAlignedBox<T>::getSurfaceArea() const noexcept
 {
 	Vector3<T> dim = maximum - minimum;
 	return T(2)*(dim.x*dim.y + dim.y*dim.z + dim.z*dim.x); // T(2)*dot(dim, dim.yzx())
 }
 
 template<typename T>
-inline T AxisAlignedBox<T>::getVolume() const
+	requires std::floating_point<T>
+inline T AxisAlignedBox<T>::getVolume() const noexcept
 {
 	Vector3<T> dim = maximum - minimum;
 	return dim.x*dim.y*dim.z;
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::output_iterator<Vector3<T>> O> 
 inline O AxisAlignedBox<T>::copyVertices(O target) const
 {
@@ -228,6 +238,7 @@ inline O AxisAlignedBox<T>::copyVertices(O target) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::vector<Vector3<T>> AxisAlignedBox<T>::getVertices() const
 {
 	return { minimum, Vector3<T>(maximum.x, minimum.y, minimum.z), Vector3<T>(minimum.x, maximum.y, minimum.z),
@@ -236,8 +247,9 @@ inline std::vector<Vector3<T>> AxisAlignedBox<T>::getVertices() const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::integral U> 
-std::pair<const U*, const U*> AxisAlignedBox<T>::getPrimitives(int nVerticesPerPrimitive) const
+std::pair<const U*, const U*> AxisAlignedBox<T>::getPrimitives(int nVerticesPerPrimitive) const noexcept
 {
 	static const U edges[24] = { 0, 2, 2, 3, 3, 1, 1, 0, 3, 7, 5, 1, 6, 2, 0, 4, 5, 7, 7, 6, 6, 4, 4, 5 };
 	static const U triangles[36] = { 0, 2, 1, 3, 1, 2, 1, 3, 5, 7, 5, 3, 5, 7, 4, 6, 4, 7, 4, 6, 0, 2, 0, 6, 2, 6, 3, 7, 3, 6, 4, 0, 5, 1, 5, 0 };
@@ -257,7 +269,8 @@ std::pair<const U*, const U*> AxisAlignedBox<T>::getPrimitives(int nVerticesPerP
 }
 
 template<typename T>
-inline std::size_t AxisAlignedBox<T>::getPrimitiveCount(int nVerticesPerPrimitive) const
+	requires std::floating_point<T>
+inline std::size_t AxisAlignedBox<T>::getPrimitiveCount(int nVerticesPerPrimitive) const noexcept
 {
 	switch (nVerticesPerPrimitive)
 	{
@@ -273,6 +286,7 @@ inline std::size_t AxisAlignedBox<T>::getPrimitiveCount(int nVerticesPerPrimitiv
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::output_iterator<HalfSpace<T>> O>
 inline O AxisAlignedBox<T>::copyHalfSpaces(O target) const
 {
@@ -286,6 +300,7 @@ inline O AxisAlignedBox<T>::copyHalfSpaces(O target) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::vector<HalfSpace<T>> AxisAlignedBox<T>::getHalfSpaces() const
 {
 	return { HalfSpace<T>(Vector3<T>::MINUS_UNIT_X, Vector3<T>(minimum.x, T(0), T(0))),
@@ -297,7 +312,8 @@ inline std::vector<HalfSpace<T>> AxisAlignedBox<T>::getHalfSpaces() const
 }
 
 template<typename T>
-inline AxisAlignedBox<T>& AxisAlignedBox<T>::scaleAroundCenter(T factor)
+	requires std::floating_point<T>
+inline AxisAlignedBox<T>& AxisAlignedBox<T>::scaleAroundCenter(T factor) noexcept
 {
 	Vector3<T> center = (minimum + maximum)*T(0.5);
 	minimum = (minimum - center)*factor + center;
@@ -306,7 +322,8 @@ inline AxisAlignedBox<T>& AxisAlignedBox<T>::scaleAroundCenter(T factor)
 }
 
 template<typename T>
-inline AxisAlignedBox<T>& AxisAlignedBox<T>::setUnion(const AxisAlignedBox<T>& a, const AxisAlignedBox<T>& b)
+	requires std::floating_point<T>
+inline AxisAlignedBox<T>& AxisAlignedBox<T>::setUnion(const AxisAlignedBox<T>& a, const AxisAlignedBox<T>& b) noexcept
 {
 	minimum.setMinimum(a.minimum, b.minimum);
 	maximum.setMaximum(a.maximum, b.maximum);
@@ -314,7 +331,8 @@ inline AxisAlignedBox<T>& AxisAlignedBox<T>::setUnion(const AxisAlignedBox<T>& a
 }
 
 template<typename T>
-inline AxisAlignedBox<T>& AxisAlignedBox<T>::setIntersection(const AxisAlignedBox<T>& a, const AxisAlignedBox<T>& b)
+	requires std::floating_point<T>
+inline AxisAlignedBox<T>& AxisAlignedBox<T>::setIntersection(const AxisAlignedBox<T>& a, const AxisAlignedBox<T>& b) noexcept
 {
 	minimum.setMaximum(a.minimum, b.minimum);
 	maximum.setMinimum(a.maximum, b.maximum);
@@ -322,7 +340,8 @@ inline AxisAlignedBox<T>& AxisAlignedBox<T>::setIntersection(const AxisAlignedBo
 }
 
 template<typename T>
-inline AxisAlignedBox<T>& AxisAlignedBox<T>::extendBy(const Vector3<T>& point)
+	requires std::floating_point<T>
+inline AxisAlignedBox<T>& AxisAlignedBox<T>::extendBy(const Vector3<T>& point) noexcept
 {
 	minimum.setMinimum(minimum, point);
 	maximum.setMaximum(maximum, point);
@@ -330,19 +349,22 @@ inline AxisAlignedBox<T>& AxisAlignedBox<T>::extendBy(const Vector3<T>& point)
 }
 
 template<typename T>
-inline bool AxisAlignedBox<T>::contains(const Vector3<T>& point) const
+	requires std::floating_point<T>
+inline bool AxisAlignedBox<T>::contains(const Vector3<T>& point) const noexcept
 {
 	return minimum.allLessThanEqual(point) && maximum.allGreaterThanEqual(point);
 }
 
 template<typename T>
-inline bool AxisAlignedBox<T>::contains(const AxisAlignedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool AxisAlignedBox<T>::contains(const AxisAlignedBox<T>& box) const noexcept
 {
 	return minimum.allLessThanEqual(box.minimum) && maximum.allGreaterThanEqual(box.maximum);
 }
 
 template<typename T>
-inline bool AxisAlignedBox<T>::intersects(const AxisAlignedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool AxisAlignedBox<T>::intersects(const AxisAlignedBox<T>& box) const noexcept
 {
 	return minimum.allLessThanEqual(box.maximum) && maximum.allGreaterThanEqual(box.minimum);
 }
@@ -362,9 +384,6 @@ using AxisAlignedBoxResult = templates::AxisAlignedBox<float>::ConstResult;
 } // namespace mathematics
 
 namespace std {
-
-template<typename T>
-struct hash;
 
 template<typename T>
 struct hash<::mathematics::templates::AxisAlignedBox<T>>
@@ -389,7 +408,8 @@ struct hash<::mathematics::templates::AxisAlignedBox<T>>
 namespace mathematics::templates {
 
 template<typename T>
-inline AxisAlignedBox<T>::AxisAlignedBox(const OrientedBox<T>& box)
+	requires std::floating_point<T>
+inline AxisAlignedBox<T>::AxisAlignedBox(const OrientedBox<T>& box) noexcept
 {
 	Vector3<T> halfDims = abs(box.halfDims.x*box.basis[0]) + abs(box.halfDims.y*box.basis[1]) + abs(box.halfDims.z*box.basis[2]);
 	minimum = box.center - halfDims;
@@ -397,28 +417,32 @@ inline AxisAlignedBox<T>::AxisAlignedBox(const OrientedBox<T>& box)
 }
 
 template<typename T>
-inline Sphere<T> AxisAlignedBox<T>::getCircumscribedSphere() const
+	requires std::floating_point<T>
+inline Sphere<T> AxisAlignedBox<T>::getCircumscribedSphere() const noexcept
 {
 	Vector3<T> center = (minimum + maximum)*T(0.5);
 	return { center, distance(center, maximum) };
 }
 
 template<typename T>
-inline AxisAlignedBox<T>& AxisAlignedBox<T>::transform(const Matrix3<T>& matrix, bool orthogonal)
+	requires std::floating_point<T>
+inline AxisAlignedBox<T>& AxisAlignedBox<T>::transform(const Matrix3<T>& matrix, bool orthogonal) noexcept
 {
 	*this = AxisAlignedBox<T>(OrientedBox<T>(*this, matrix, orthogonal));
 	return *this;
 }
 
 template<typename T>
-inline AxisAlignedBox<T>& AxisAlignedBox<T>::transform(const AffineTransform<T>& transformation, bool orthogonal)
+	requires std::floating_point<T>
+inline AxisAlignedBox<T>& AxisAlignedBox<T>::transform(const AffineTransform<T>& transformation, bool orthogonal) noexcept
 {
 	*this = AxisAlignedBox<T>(OrientedBox<T>(*this, transformation, orthogonal));
 	return *this;
 }
 
 template<typename T>
-inline AxisAlignedBox<T>& AxisAlignedBox<T>::extendBy(const Sphere<T>& sphere)
+	requires std::floating_point<T>
+inline AxisAlignedBox<T>& AxisAlignedBox<T>::extendBy(const Sphere<T>& sphere) noexcept
 {
 	Vector3<T> radius(sphere.radius);
 	setUnion(*this, AxisAlignedBox<T>(sphere.center - radius, sphere.center + radius));
@@ -426,57 +450,66 @@ inline AxisAlignedBox<T>& AxisAlignedBox<T>::extendBy(const Sphere<T>& sphere)
 }
 
 template<typename T>
-inline bool AxisAlignedBox<T>::contains(const Sphere<T>& sphere) const
+	requires std::floating_point<T>
+inline bool AxisAlignedBox<T>::contains(const Sphere<T>& sphere) const noexcept
 {
 	Vector3<T> radius(sphere.radius);
 	return minimum.allLessThanEqual(sphere.center - radius) && maximum.allGreaterThanEqual(sphere.center + radius);
 }
 
 template<typename T>
-inline int AxisAlignedBox<T>::classify(const HalfSpace<T>& halfSpace) const
+	requires std::floating_point<T>
+inline int AxisAlignedBox<T>::classify(const HalfSpace<T>& halfSpace) const noexcept
 {
 	return intersections::classifyAxisAlignedBoxHalfSpace(getCenter(), getHalfDimensions(), halfSpace.getNormal(), halfSpace.d);
 }
 
 template<typename T>
-inline bool AxisAlignedBox<T>::intersects(const HalfSpace<T>& halfSpace) const
+	requires std::floating_point<T>
+inline bool AxisAlignedBox<T>::intersects(const HalfSpace<T>& halfSpace) const noexcept
 {
 	return intersections::testAxisAlignedBoxHalfSpace(getCenter(), getHalfDimensions(), halfSpace.getNormal(), halfSpace.d);
 }
 
 template<typename T>
-inline bool AxisAlignedBox<T>::intersects(const Plane<T>& plane) const
+	requires std::floating_point<T>
+inline bool AxisAlignedBox<T>::intersects(const Plane<T>& plane) const noexcept
 {
 	return intersections::testAxisAlignedBoxPlane(getCenter(), getHalfDimensions(), plane.getNormal(), plane.d);
 }
 
 template<typename T>
-inline bool AxisAlignedBox<T>::intersects(const Triangle3<T>& triangle) const
+	requires std::floating_point<T>
+inline bool AxisAlignedBox<T>::intersects(const Triangle3<T>& triangle) const noexcept
 {
 	return intersections::testAxisAlignedBoxTriangle(getCenter(), getHalfDimensions(), triangle.vertices[0], triangle.vertices[1], 
 		triangle.vertices[2]);
 }
 
 template<typename T>
-inline bool AxisAlignedBox<T>::intersects(const OrientedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool AxisAlignedBox<T>::intersects(const OrientedBox<T>& box) const noexcept
 {
 	return intersections::testOrientedBoxAxisAlignedBox(box.center, box.basis, box.halfDims, getCenter(), getHalfDimensions());
 }
 
 template<typename T>
-inline bool AxisAlignedBox<T>::intersects(const Sphere<T>& sphere) const
+	requires std::floating_point<T>
+inline bool AxisAlignedBox<T>::intersects(const Sphere<T>& sphere) const noexcept
 {
 	return intersections::testAxisAlignedBoxSphere(minimum, maximum, sphere.center, sphere.radius);
 }
 
 template<typename T>
-inline bool AxisAlignedBox<T>::intersects(const SymmetricFrustum<T>& frustum) const
+	requires std::floating_point<T>
+inline bool AxisAlignedBox<T>::intersects(const SymmetricFrustum<T>& frustum) const noexcept
 {
 	return frustum.intersects(*this);
 }
 
 template<typename T>
-inline bool AxisAlignedBox<T>::intersects(const ConvexPolyhedron<T>* polyhedron) const
+	requires std::floating_point<T>
+inline bool AxisAlignedBox<T>::intersects(const ConvexPolyhedron<T>* polyhedron) const noexcept
 {
 	return polyhedron && polyhedron->intersects(*this);
 }

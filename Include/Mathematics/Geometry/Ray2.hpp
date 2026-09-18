@@ -120,18 +120,21 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const R
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Ray2<T>::approxEquals(const Ray2<T>& ray) const
 {
 	return origin.approxEquals(ray.origin) && direction.approxEquals(ray.direction);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Ray2<T>::approxEquals(const Ray2<T>& ray, T tolerance) const
 {
 	return origin.approxEquals(ray.origin, tolerance) && direction.approxEquals(ray.direction, tolerance);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Ray2<T>& Ray2<T>::transform(const Matrix2<T>& matrix)
 {
 	origin *= matrix;
@@ -140,12 +143,14 @@ inline Ray2<T>& Ray2<T>::transform(const Matrix2<T>& matrix)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Vector2<T> Ray2<T>::getClosestPoint(const Vector2<T>& point) const
 {
 	return std::max(dot(point - origin, direction), T(0))*direction + origin;
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<Normalization U>
 inline Vector2<T> Ray2<T>::getClosestPoint(const Vector2<T>& point) const
 {
@@ -156,6 +161,7 @@ inline Vector2<T> Ray2<T>::getClosestPoint(const Vector2<T>& point) const
 }
 
 //template<typename T>
+//	requires std::floating_point<T>
 //template<ScalarOrVector2<T> U>
 //inline std::optional<U> Ray2<T>::findIntersection(const Line2<T>& line) const
 //{
@@ -200,9 +206,6 @@ using Ray2Result = templates::Ray2<float>::ConstResult;
 namespace std {
 
 template<typename T>
-struct hash;
-
-template<typename T>
 struct hash<::mathematics::templates::Ray2<T>>
 {
 	size_t operator()(const ::mathematics::templates::Ray2<T>& ray) const noexcept
@@ -223,12 +226,14 @@ struct hash<::mathematics::templates::Ray2<T>>
 namespace mathematics::templates {
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<T> Ray2<T>::findIntersection(const Line2<T>& line) const
 {
 	return intersections::findLineRay<std::optional<T>>(line.origin, line.direction, origin, direction);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<Interval<T>> Ray2<T>::findIntersection(const AxisAlignedRectangle<T>& rectangle) const
 {
 	std::optional<Interval<T>> result = intersections::findLineAxisAlignedRectangle<std::optional<Interval<T>>>(origin, direction, 
@@ -249,6 +254,7 @@ inline std::optional<Interval<T>> Ray2<T>::findIntersection(const AxisAlignedRec
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<Interval<T>> Ray2<T>::findIntersection(const Circle2<T>& circle) const
 {
 	std::optional<Interval<T>> result = intersections::findLineNSphere<std::optional<Interval<T>>>(origin, direction, circle.center, circle.radius); 
@@ -268,6 +274,7 @@ inline std::optional<Interval<T>> Ray2<T>::findIntersection(const Circle2<T>& ci
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<Normalization U>
 inline std::optional<Interval<T>> Ray2<T>::findIntersection(const Circle2<T>& circle) const
 {

@@ -85,7 +85,8 @@ struct Ellipsoid
 };
 
 template<typename T>
-inline Ellipsoid<T>::Ellipsoid(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& radii) : 
+	requires std::floating_point<T>
+inline Ellipsoid<T>::Ellipsoid(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& radii) noexcept : 
 	center(center), 
 	basis(basis), 
 	radii(radii) 
@@ -93,9 +94,10 @@ inline Ellipsoid<T>::Ellipsoid(const Vector3<T>& center, const Matrix3<T>& basis
 }
 
 template<typename T>
-inline Ellipsoid<T>::Ellipsoid(const Sphere<T>& sphere, const Matrix3<T>& orientation, bool orthogonal) :
+	requires std::floating_point<T>
+inline Ellipsoid<T>::Ellipsoid(const Sphere<T>& sphere, const Matrix3<T>& orientation, bool orthogonal) noexcept :
 	center(sphere.center*orientation),
-	basis(transformation.getBasis()),
+	basis(orientation),
 	radii(sphere.radius)
 {
 	if (!orthogonal)
@@ -103,7 +105,8 @@ inline Ellipsoid<T>::Ellipsoid(const Sphere<T>& sphere, const Matrix3<T>& orient
 }
 
 template<typename T>
-inline Ellipsoid<T>::Ellipsoid(const Sphere<T>& sphere, const AffineTransform<T>& transformation, bool orthogonal) :
+	requires std::floating_point<T>
+inline Ellipsoid<T>::Ellipsoid(const Sphere<T>& sphere, const AffineTransform<T>& transformation, bool orthogonal) noexcept :
 	center(transform(sphere.center, transformation)),
 	basis(transformation.getBasis()),
 	radii(sphere.radius)
@@ -113,7 +116,8 @@ inline Ellipsoid<T>::Ellipsoid(const Sphere<T>& sphere, const AffineTransform<T>
 }
 
 template<typename T>
-inline bool Ellipsoid<T>::operator==(const Ellipsoid<T>& ellipsoid) const
+	requires std::floating_point<T>
+inline bool Ellipsoid<T>::operator==(const Ellipsoid<T>& ellipsoid) const noexcept
 { 
 	return (center == ellipsoid.center) && (basis == ellipsoid.basis) && (radii == ellipsoid.radii);
 }
@@ -134,20 +138,23 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const E
 }
 
 template<typename T>
-inline bool Ellipsoid<T>::approxEquals(const Ellipsoid<T>& ellipsoid) const
+	requires std::floating_point<T>
+inline bool Ellipsoid<T>::approxEquals(const Ellipsoid<T>& ellipsoid) const noexcept
 {
 	return center.approxEquals(ellipsoid.center) && basis.approxEquals(ellipsoid.basis) && radii.approxEquals(ellipsoid.radii);
 }
 
 template<typename T>
-inline bool Ellipsoid<T>::approxEquals(const Ellipsoid<T>& ellipsoid, T tolerance) const
+	requires std::floating_point<T>
+inline bool Ellipsoid<T>::approxEquals(const Ellipsoid<T>& ellipsoid, T tolerance) const noexcept
 {
 	return center.approxEquals(ellipsoid.center, tolerance) && basis.approxEquals(ellipsoid.basis, tolerance) && 
 		radii.approxEquals(ellipsoid.radii, tolerance);
 }
 
 template<typename T>
-inline Ellipsoid<T>& Ellipsoid<T>::set(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& radii) 
+	requires std::floating_point<T>
+inline Ellipsoid<T>& Ellipsoid<T>::set(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& radii) noexcept
 { 
 	this->center = center; 
 	this->basis = basis; 
@@ -156,7 +163,8 @@ inline Ellipsoid<T>& Ellipsoid<T>::set(const Vector3<T>& center, const Matrix3<T
 }
 
 template<typename T>
-inline T Ellipsoid<T>::evaluate(const Vector3<T>& point) const
+	requires std::floating_point<T>
+inline T Ellipsoid<T>::evaluate(const Vector3<T>& point) const noexcept
 {
 	Vector3<T> diff = point - center;
 	T ratio0 = dot(basis[0], diff)/radii[0];
@@ -166,25 +174,28 @@ inline T Ellipsoid<T>::evaluate(const Vector3<T>& point) const
 }
 
 template<typename T>
-inline Matrix3<T> Ellipsoid<T>::getMatrix() const
+	requires std::floating_point<T>
+inline Matrix3<T> Ellipsoid<T>::getMatrix() const noexcept
 {
-	Vector3<T> ratio0 = ellipsoid.basis[0]/ellipsoid.radii[0];
-	Vector3<T> ratio1 = ellipsoid.basis[1]/ellipsoid.radii[1];
-	Vector3<T> ratio2 = ellipsoid.basis[2]/ellipsoid.radii[2];
+	Vector3<T> ratio0 = basis[0]/radii[0];
+	Vector3<T> ratio1 = basis[1]/radii[1];
+	Vector3<T> ratio2 = basis[2]/radii[2];
 	return tensor(ratio0, ratio0) + tensor(ratio1, ratio1) + tensor(ratio2, ratio2);
 }
 
 template<typename T>
-inline Matrix3<T> Ellipsoid<T>::getInverseMatrix() const
+	requires std::floating_point<T>
+inline Matrix3<T> Ellipsoid<T>::getInverseMatrix() const noexcept
 {
-	Vector3<T> ratio0 = ellipsoid.basis[0]*ellipsoid.radii[0];
-	Vector3<T> ratio1 = ellipsoid.basis[1]*ellipsoid.radii[1];
-	Vector3<T> ratio2 = ellipsoid.basis[2]*ellipsoid.radii[2];
+	Vector3<T> ratio0 = basis[0]*radii[0];
+	Vector3<T> ratio1 = basis[1]*radii[1];
+	Vector3<T> ratio2 = basis[2]*radii[2];
 	return tensor(ratio0, ratio0) + tensor(ratio1, ratio1) + tensor(ratio2, ratio2);
 }
 
 template<typename T>
-inline Ellipsoid<T> Ellipsoid<T>::transform(const Matrix3<T>& matrix, bool orthogonal)
+	requires std::floating_point<T>
+inline Ellipsoid<T>& Ellipsoid<T>::transform(const Matrix3<T>& matrix, bool orthogonal) noexcept
 {
 	basis *= matrix;
 	center *= matrix;
@@ -194,7 +205,8 @@ inline Ellipsoid<T> Ellipsoid<T>::transform(const Matrix3<T>& matrix, bool ortho
 }
 
 template<typename T>
-inline Ellipsoid<T> Ellipsoid<T>::transform(const AffineTransform<T>& transformation, bool orthogonal)
+	requires std::floating_point<T>
+inline Ellipsoid<T>& Ellipsoid<T>::transform(const AffineTransform<T>& transformation, bool orthogonal) noexcept
 {
 	basis *= transformation.getBasis();
 	center.transform(transformation);
@@ -204,7 +216,8 @@ inline Ellipsoid<T> Ellipsoid<T>::transform(const AffineTransform<T>& transforma
 }
 
 template<typename T>
-inline Ellipsoid<T> Ellipsoid<T>::orthonormalize()
+	requires std::floating_point<T>
+inline Ellipsoid<T>& Ellipsoid<T>::orthonormalize() noexcept
 {
 	radii *= Vector3<T>(basis[0].getMagnitude(), basis[1].getMagnitude(), basis[2].getMagnitude());
 	//radii.x *= basis[0].getMagnitude();
@@ -231,9 +244,6 @@ using EllipsoidResult = templates::Ellipsoid<float>::ConstResult;
 namespace std {
 
 template<typename T>
-struct hash;
-
-template<typename T>
 struct hash<::mathematics::templates::Ellipsoid<T>>
 {
 	size_t operator()(const ::mathematics::templates::Ellipsoid<T>& ellipsoid) const noexcept
@@ -253,7 +263,8 @@ struct hash<::mathematics::templates::Ellipsoid<T>>
 namespace mathematics::templates {
 
 template<typename T>
-inline bool Ellipsoid<T>::intersects(const Plane<T>& plane) const
+	requires std::floating_point<T>
+inline bool Ellipsoid<T>::intersects(const Plane<T>& plane) const noexcept
 {
 	return intersections::testEllipsoidPlane(center, getInverseMatrix(), plane.getNormal(), plane.d);
 }

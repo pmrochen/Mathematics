@@ -90,7 +90,8 @@ struct Cone
 };
 
 template<typename T>
-inline Cone<T>::Cone(const Vector3<T>& vertex, const Vector3<T>& axis, T height, T radius) : 
+	requires std::floating_point<T>
+inline Cone<T>::Cone(const Vector3<T>& vertex, const Vector3<T>& axis, T height, T radius) noexcept : 
 	vertex(vertex), 
 	axis(axis), 
 	height(height), 
@@ -99,7 +100,8 @@ inline Cone<T>::Cone(const Vector3<T>& vertex, const Vector3<T>& axis, T height,
 }
 
 //template<typename T>
-//inline Cone<T>::Cone(const Vector3<T>& vertex, Axis axis, T direction, T height, T radius) : 
+//	requires std::floating_point<T>
+//inline Cone<T>::Cone(const Vector3<T>& vertex, Axis axis, T direction, T height, T radius) noexcept : 
 //	vertex(vertex), 
 //	axis(Vector3<T>(axis)*direction),
 //	height(height), 
@@ -108,7 +110,8 @@ inline Cone<T>::Cone(const Vector3<T>& vertex, const Vector3<T>& axis, T height,
 //}
 
 template<typename T>
-inline Cone<T>::Cone(const Vector3<T>& vertex, const Vector3<T>& baseCenter, T radius) :
+	requires std::floating_point<T>
+inline Cone<T>::Cone(const Vector3<T>& vertex, const Vector3<T>& baseCenter, T radius) noexcept :
 	vertex(vertex),
 	axis(normalize(baseCenter - vertex)),
 	height(distance(vertex, baseCenter)),
@@ -117,7 +120,8 @@ inline Cone<T>::Cone(const Vector3<T>& vertex, const Vector3<T>& baseCenter, T r
 }
 
 template<typename T>
-inline bool Cone<T>::operator==(const Cone<T>& cone) const
+	requires std::floating_point<T>
+inline bool Cone<T>::operator==(const Cone<T>& cone) const noexcept
 { 
 	return (vertex == cone.vertex) && (axis == cone.axis) && (height == cone.height) && (radius == cone.radius);
 }
@@ -138,22 +142,25 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const C
 }
 
 template<typename T>
-inline bool Cone<T>::approxEquals(const Cone<T>& cone) const
+	requires std::floating_point<T>
+inline bool Cone<T>::approxEquals(const Cone<T>& cone) const noexcept
 {
 	return vertex.approxEquals(cone.vertex) && axis.approxEquals(cone.axis) && 
 		(std::fabs(cone.height - height) < Constants<T>::TOLERANCE) &&
-		(std::fabs(cone.radius - radius) < Constants<T>::TOLERANCE)
+		(std::fabs(cone.radius - radius) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
-inline bool Cone<T>::approxEquals(const Cone<T>& cone, T tolerance) const
+	requires std::floating_point<T>
+inline bool Cone<T>::approxEquals(const Cone<T>& cone, T tolerance) const noexcept
 {
 	return vertex.approxEquals(cone.vertex, tolerance) && axis.approxEquals(cone.axis, tolerance) &&
 		(std::fabs(cone.height - height) < tolerance) && (std::fabs(cone.radius - radius) < tolerance);
 }
 
 template<typename T>
-inline Cone<T>& Cone<T>::set(const Vector3<T>& vertex, const Vector3<T>& axis, T height, T radius)
+	requires std::floating_point<T>
+inline Cone<T>& Cone<T>::set(const Vector3<T>& vertex, const Vector3<T>& axis, T height, T radius) noexcept
 { 
 	this->vertex = vertex; 
 	this->axis = axis;
@@ -163,7 +170,8 @@ inline Cone<T>& Cone<T>::set(const Vector3<T>& vertex, const Vector3<T>& axis, T
 }
 
 //template<typename T>
-//inline Cone<T>& Cone<T>::set(const Vector3<T>& vertex, Axis axis, T height, T radius)
+//	requires std::floating_point<T>
+//inline Cone<T>& Cone<T>::set(const Vector3<T>& vertex, Axis axis, T height, T radius) noexcept
 //{
 //	this->vertex = vertex;
 //	this->axis = Vector3<T>(axis);
@@ -173,14 +181,16 @@ inline Cone<T>& Cone<T>::set(const Vector3<T>& vertex, const Vector3<T>& axis, T
 //}
 
 template<typename T>
-inline void Cone<T>::setBaseCenter(const Vector3<T>& baseCenter)
+	requires std::floating_point<T>
+inline void Cone<T>::setBaseCenter(const Vector3<T>& baseCenter) noexcept
 {
 	axis = normalize(baseCenter - vertex);
-	height = distance(verrex, baseCenter);
+	height = distance(vertex, baseCenter);
 }
 
 template<typename T>
-inline OrientedBox<T> Cone<T>::getCircumscribedBox() const
+	requires std::floating_point<T>
+inline OrientedBox<T> Cone<T>::getCircumscribedBox() const noexcept
 {
 	Matrix3<T> matrix(-axis);
 	Vector3<T> center = vertex + (height*T(0.5))*axis;
@@ -188,7 +198,8 @@ inline OrientedBox<T> Cone<T>::getCircumscribedBox() const
 }
 
 template<typename T>
-inline Sphere<T> Cone<T>::getCircumscribedSphere() const
+	requires std::floating_point<T>
+inline Sphere<T> Cone<T>::getCircumscribedSphere() const noexcept
 {
 	if (height > radius)
 	{
@@ -203,7 +214,8 @@ inline Sphere<T> Cone<T>::getCircumscribedSphere() const
 }
 
 template<typename T>
-inline Cone<T> Cone<T>::normalize()
+	requires std::floating_point<T>
+inline Cone<T>& Cone<T>::normalize() noexcept
 {
 	T m = axis.getMagnitude();
 	if (m > T(0))
@@ -232,9 +244,6 @@ using ConeResult = templates::Cone<float>::ConstResult;
 namespace std {
 
 template<typename T>
-struct hash;
-
-template<typename T>
 struct hash<::mathematics::templates::Cone<T>>
 {
 	size_t operator()(const ::mathematics::templates::Cone<T>& cone) const noexcept
@@ -257,13 +266,15 @@ struct hash<::mathematics::templates::Cone<T>>
 namespace mathematics::templates {
 
 template<typename T>
-inline bool Cone<T>::contains(const Vector3<T>& point) const
+	requires std::floating_point<T>
+inline bool Cone<T>::contains(const Vector3<T>& point) const noexcept
 {
 	return containment::testConePoint(vertex, axis, height, radius, point);
 }
 
 template<typename T>
-inline bool Cone<T>::intersects(const Sphere<T>& sphere) const
+	requires std::floating_point<T>
+inline bool Cone<T>::intersects(const Sphere<T>& sphere) const noexcept
 {
 	return intersections::testConeSphere(vertex, axis, height, radius, sphere.center, sphere.radius);
 }

@@ -118,40 +118,46 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const S
 }
 
 template<typename T>
-inline bool Sphere<T>::approxEquals(const Sphere<T>& sphere) const
+	requires std::floating_point<T>
+inline bool Sphere<T>::approxEquals(const Sphere<T>& sphere) const noexcept
 {
 	return center.approxEquals(sphere.center) && 
 		(std::fabs(sphere.radius - radius) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
-inline bool Sphere<T>::approxEquals(const Sphere<T>& sphere, T tolerance) const
+	requires std::floating_point<T>
+inline bool Sphere<T>::approxEquals(const Sphere<T>& sphere, T tolerance) const noexcept
 {
 	return center.approxEquals(sphere.center, tolerance) && 
 		(std::fabs(sphere.radius - radius) < tolerance);
 }
 
 template<typename T>
-inline AxisAlignedBox<T> Sphere<T>::getCircumscribedBox() const
+	requires std::floating_point<T>
+inline AxisAlignedBox<T> Sphere<T>::getCircumscribedBox() const noexcept
 {
 	Vector3<T> halfDims(radius);
 	return AxisAlignedBox<T>(center - halfDims, center + halfDims);
 }
 
 template<typename T>
-inline bool Sphere<T>::intersects(const HalfSpace<T>& halfSpace) const
+	requires std::floating_point<T>
+inline bool Sphere<T>::intersects(const HalfSpace<T>& halfSpace) const noexcept
 {
 	return ((dot(halfSpace.getNormal(), center) + halfSpace.d) <= radius);
 }
 
 template<typename T>
-inline bool Sphere<T>::intersects(const Plane<T>& plane) const
+	requires std::floating_point<T>
+inline bool Sphere<T>::intersects(const Plane<T>& plane) const noexcept
 {
 	return (std::fabs(dot(plane.getNormal(), center) + plane.d) <= radius);
 }
 
 template<typename T>
-inline bool Sphere<T>::intersects(const Sphere<T>& sphere) const
+	requires std::floating_point<T>
+inline bool Sphere<T>::intersects(const Sphere<T>& sphere) const noexcept
 {
 	T d = sphere.radius + radius;
 	return (distanceSquared(sphere.center, center) <= d*d);
@@ -172,9 +178,6 @@ using SphereResult = templates::Sphere<float>::ConstResult;
 } // namespace mathematics
 
 namespace std {
-
-template<typename T>
-struct hash;
 
 template<typename T>
 struct hash<::mathematics::templates::Sphere<T>>
@@ -198,14 +201,16 @@ struct hash<::mathematics::templates::Sphere<T>>
 namespace mathematics::templates {
 
 template<typename T>
-inline Sphere<T>::Sphere(const Ellipsoid<T>& ellipsoid) :
+	requires std::floating_point<T>
+inline Sphere<T>::Sphere(const Ellipsoid<T>& ellipsoid) noexcept :
 	center(ellipsoid.center),
 	radius(ellipsoid.radii.getMaxComponent())
 {
 }
 
 template<typename T>
-inline Sphere<T>& Sphere<T>::transform(const Matrix3<T>& matrix, bool orthogonal)
+	requires std::floating_point<T>
+inline Sphere<T>& Sphere<T>::transform(const Matrix3<T>& matrix, bool orthogonal) noexcept
 {
 	if (!orthogonal)
 		*this = Sphere<T>(Ellipsoid<T>(*this, matrix, orthogonal));
@@ -213,7 +218,8 @@ inline Sphere<T>& Sphere<T>::transform(const Matrix3<T>& matrix, bool orthogonal
 }
 
 template<typename T>
-inline Sphere<T>& Sphere<T>::transform(const AffineTransform<T>& transformation, bool orthogonal)
+	requires std::floating_point<T>
+inline Sphere<T>& Sphere<T>::transform(const AffineTransform<T>& transformation, bool orthogonal) noexcept
 {
 	if (orthogonal)
 		center.transform(transformation);
@@ -223,37 +229,43 @@ inline Sphere<T>& Sphere<T>::transform(const AffineTransform<T>& transformation,
 }
 
 template<typename T>
-inline bool Sphere<T>::intersects(const Triangle3<T>& triangle) const
+	requires std::floating_point<T>
+inline bool Sphere<T>::intersects(const Triangle3<T>& triangle) const noexcept
 {
 	return triangle.intersects(*this);
 }
 
 template<typename T>
-inline bool Sphere<T>::intersects(const AxisAlignedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool Sphere<T>::intersects(const AxisAlignedBox<T>& box) const noexcept
 {
 	return intersections::testAxisAlignedBoxSphere(box.minimum, box.maximum, center, radius);
 }
 
 template<typename T>
-inline bool Sphere<T>::intersects(const OrientedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool Sphere<T>::intersects(const OrientedBox<T>& box) const noexcept
 {
 	return intersections::testOrientedBoxSphere(box.center, box.basis, box.halfDims, center, radius);
 }
 
 template<typename T>
-inline bool Sphere<T>::intersects(const Cone<T>& cone) const
+	requires std::floating_point<T>
+inline bool Sphere<T>::intersects(const Cone<T>& cone) const noexcept
 {
 	return intersections::testConeSphere(cone.vertex, cone.axis, cone.height, cone.radius, center, radius);
 }
 
 template<typename T>
-inline bool Sphere<T>::intersects(const SymmetricFrustum<T>& frustum) const
+	requires std::floating_point<T>
+inline bool Sphere<T>::intersects(const SymmetricFrustum<T>& frustum) const noexcept
 {
 	return frustum.intersects(*this);
 }
 
 template<typename T>
-inline bool Sphere<T>::intersects(const ConvexPolyhedron<T>* polyhedron) const
+	requires std::floating_point<T>
+inline bool Sphere<T>::intersects(const ConvexPolyhedron<T>* polyhedron) const noexcept
 {
 	return polyhedron && polyhedron->intersects(*this);
 }

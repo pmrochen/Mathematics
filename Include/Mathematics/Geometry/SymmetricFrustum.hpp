@@ -21,6 +21,7 @@
 #include "../Algebra/Vector3.hpp"
 #include "../Algebra/Matrix3.hpp"
 #include "../Transform/AffineTransform.hpp"
+#include "../Interval.hpp"
 #include "HalfSpace.hpp"
 #include "AxisAlignedBox.hpp"
 #include "OrientedBox.hpp"
@@ -85,7 +86,7 @@ struct SymmetricFrustum
 	// Half spaces
 	template<std::output_iterator<HalfSpace<T>> O> O copyHalfSpaces(O target) const;	// 0-left, 1-right, 2-bottom, 3-top, 4-near, 5-far
 	std::vector<HalfSpace<T>> getHalfSpaces() const;									// normals point outwards
-	template<typename F> bool enumerateHalfSpaces(F&& f) const noexcept;
+	template<typename F> bool enumerateHalfSpaces(F&& f) const;
 
 	// Circumscribed box, sphere, cone
 	OrientedBox<T> getCircumscribedBox() const noexcept;
@@ -113,8 +114,9 @@ struct SymmetricFrustum
 };
 
 template<typename T>
+	requires std::floating_point<T>
 inline SymmetricFrustum<T>::SymmetricFrustum(const Vector3<T>& origin, const Matrix3<T>& basis, const Vector3<T>& halfDims, 
-	const Interval<T>& depthRange) : 
+	const Interval<T>& depthRange) noexcept : 
 	origin(origin), 
 	basis(basis), 
 	halfDims(halfDims),
@@ -123,8 +125,9 @@ inline SymmetricFrustum<T>::SymmetricFrustum(const Vector3<T>& origin, const Mat
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline SymmetricFrustum<T>::SymmetricFrustum(const Vector3<T>& origin, const Matrix3<T>& basis, const Vector3<T>& halfDims, 
-	T depthMin, T depthMax) : 
+	T depthMin, T depthMax) noexcept : 
 	origin(origin), 
 	basis(basis), 
 	halfDims(halfDims),
@@ -133,7 +136,8 @@ inline SymmetricFrustum<T>::SymmetricFrustum(const Vector3<T>& origin, const Mat
 }
 
 template<typename T>
-inline bool SymmetricFrustum<T>::operator==(const SymmetricFrustum<T>& frustum) const
+	requires std::floating_point<T>
+inline bool SymmetricFrustum<T>::operator==(const SymmetricFrustum<T>& frustum) const noexcept
 { 
 	return (origin == frustum.origin) && (basis == frustum.basis) && (halfDims == frustum.halfDims) &&
 		(depthRange == frustum.depthRange);
@@ -155,22 +159,25 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const S
 }
 
 template<typename T>
-inline bool SymmetricFrustum<T>::approxEquals(const SymmetricFrustum<T>& frustum) const
+	requires std::floating_point<T>
+inline bool SymmetricFrustum<T>::approxEquals(const SymmetricFrustum<T>& frustum) const noexcept
 {
 	return origin.approxEquals(frustum.origin) && basis.approxEquals(frustum.basis) && halfDims.approxEquals(frustum.halfDims) &&
 		depthRange.approxEquals(frustum.depthRange);
 }
 
 template<typename T>
-inline bool SymmetricFrustum<T>::approxEquals(const SymmetricFrustum<T>& frustum, T tolerance) const
+	requires std::floating_point<T>
+inline bool SymmetricFrustum<T>::approxEquals(const SymmetricFrustum<T>& frustum, T tolerance) const noexcept
 {
 	return origin.approxEquals(frustum.origin, tolerance) && basis.approxEquals(frustum.basis, tolerance) && 
 		halfDims.approxEquals(frustum.halfDims, tolerance) && depthRange.approxEquals(frustum.depthRange, tolerance);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline SymmetricFrustum<T>& SymmetricFrustum<T>::set(const Vector3<T>& origin, const Matrix3<T>& basis, const Vector3<T>& halfDims,
-	const Interval<T>& depthRange) 
+	const Interval<T>& depthRange) noexcept
 { 
 	this->origin = origin; 
 	this->basis = basis; 
@@ -180,6 +187,7 @@ inline SymmetricFrustum<T>& SymmetricFrustum<T>::set(const Vector3<T>& origin, c
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::output_iterator<Vector3<T>> O>
 inline O SymmetricFrustum<T>::copyVertices(O target) const
 {
@@ -197,6 +205,7 @@ inline O SymmetricFrustum<T>::copyVertices(O target) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::vector<Vector3<T>> SymmetricFrustum<T>::getVertices() const
 {
 	AffineTransform<T> m(basis, origin);
@@ -212,8 +221,9 @@ inline std::vector<Vector3<T>> SymmetricFrustum<T>::getVertices() const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::integral U>
-std::pair<const U*, const U*> SymmetricFrustum<T>::getPrimitives(int nVerticesPerPrimitive) const
+std::pair<const U*, const U*> SymmetricFrustum<T>::getPrimitives(int nVerticesPerPrimitive) const noexcept
 {
 	static const U edges[24] = { 0, 2, 2, 3, 3, 1, 1, 0, 3, 7, 5, 1, 6, 2, 0, 4, 5, 7, 7, 6, 6, 4, 4, 5 };
 	static const U triangles[36] = { 0, 2, 1, 3, 1, 2, 1, 3, 5, 7, 5, 3, 5, 7, 4, 6, 4, 7, 4, 6, 0, 2, 0, 6, 2, 6, 3, 7, 3, 6, 4, 0, 5, 1, 5, 0 };
@@ -233,7 +243,8 @@ std::pair<const U*, const U*> SymmetricFrustum<T>::getPrimitives(int nVerticesPe
 }
 
 template<typename T>
-inline std::size_t SymmetricFrustum<T>::getPrimitiveCount(int nVerticesPerPrimitive) const
+	requires std::floating_point<T>
+inline std::size_t SymmetricFrustum<T>::getPrimitiveCount(int nVerticesPerPrimitive) const noexcept
 {
 	switch (nVerticesPerPrimitive)
 	{
@@ -249,6 +260,7 @@ inline std::size_t SymmetricFrustum<T>::getPrimitiveCount(int nVerticesPerPrimit
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::output_iterator<HalfSpace<T>> O>
 inline O SymmetricFrustum<T>::copyHalfSpaces(O target) const
 {
@@ -271,6 +283,7 @@ inline O SymmetricFrustum<T>::copyHalfSpaces(O target) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::vector<HalfSpace<T>> SymmetricFrustum<T>::getHalfSpaces() const
 {
 	AffineTransform<T> m(basis, origin);
@@ -300,6 +313,7 @@ inline std::vector<HalfSpace<T>> SymmetricFrustum<T>::getHalfSpaces() const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<typename F> 
 inline bool SymmetricFrustum<T>::enumerateHalfSpaces(F&& f) const
 {
@@ -327,7 +341,8 @@ inline bool SymmetricFrustum<T>::enumerateHalfSpaces(F&& f) const
 }
 
 template<typename T>
-inline OrientedBox<T> SymmetricFrustum<T>::getCircumscribedBox() const
+	requires std::floating_point<T>
+inline OrientedBox<T> SymmetricFrustum<T>::getCircumscribedBox() const noexcept
 {
 	Vector2<T> baseHalfDims = halfDims*(depthRange.maximum/depthRange.minimum);
 	return OrientedBox<T>(origin + ((depthRange.minimum + depthRange.maximum)*T(0.5))*basis[2], basis, 
@@ -335,7 +350,8 @@ inline OrientedBox<T> SymmetricFrustum<T>::getCircumscribedBox() const
 }
 
 template<typename T>
-inline Sphere<T> SymmetricFrustum<T>::getCircumscribedSphere() const
+	requires std::floating_point<T>
+inline Sphere<T> SymmetricFrustum<T>::getCircumscribedSphere() const noexcept
 {
 	Vector2<T> baseHalfDims = halfDims*(depthRange.maximum/depthRange.minimum);
 	T coneRadiusSq = baseHalfDims.getMagnitudeSquared();
@@ -352,14 +368,16 @@ inline Sphere<T> SymmetricFrustum<T>::getCircumscribedSphere() const
 }
 
 template<typename T>
-inline Cone<T> SymmetricFrustum<T>::getCircumscribedCone() const
+	requires std::floating_point<T>
+inline Cone<T> SymmetricFrustum<T>::getCircumscribedCone() const noexcept
 {
 	Vector2<T> baseHalfDims = halfDims*(depthRange.maximum/depthRange.minimum);
 	return Cone<T>(origin, basis[2], depthRange.maximum, baseHalfDims.getMagnitude());
 }
 
 template<typename T>
-inline SymmetricFrustum<T> SymmetricFrustum<T>::orthonormalize()
+	requires std::floating_point<T>
+inline SymmetricFrustum<T>& SymmetricFrustum<T>::orthonormalize() noexcept
 {
 	halfDims *= Vector2<T>(basis[0].getMagnitude(), basis[1].getMagnitude());
 	//halfDims.x *= basis[0].getMagnitude();
@@ -370,7 +388,8 @@ inline SymmetricFrustum<T> SymmetricFrustum<T>::orthonormalize()
 }
 
 template<typename T>
-inline bool SymmetricFrustum<T>::contains(const Vector3<T>& point) const
+	requires std::floating_point<T>
+inline bool SymmetricFrustum<T>::contains(const Vector3<T>& point) const noexcept
 {
 	return enumerateHalfSpaces([&point](const HalfSpace<T>& h) { return h.contains(point); });
 }
@@ -390,9 +409,6 @@ using SymmetricFrustumResult = templates::SymmetricFrustum<float>::ConstResult;
 } // namespace mathematics
 
 namespace std {
-
-template<typename T>
-struct hash;
 
 template<typename T>
 struct hash<::mathematics::templates::SymmetricFrustum<T>>
@@ -415,35 +431,40 @@ struct hash<::mathematics::templates::SymmetricFrustum<T>>
 namespace mathematics::templates {
 
 template<typename T>
-inline Vector3<T> SymmetricFrustum<T>::getClosestPoint(const Vector3<T>& point) const
+	requires std::floating_point<T>
+inline Vector3<T> SymmetricFrustum<T>::getClosestPoint(const Vector3<T>& point) const noexcept
 {
-	Vector3<T> closestPoint(Uninitialized());
+	Vector3<T> closestPoint{ Uninitialized() };
 	distances::getPointSymmetricFrustumSquared(point, origin, basis, halfDims, depthRange.minimum, depthRange.maximum, &closestPoint);
 	return closestPoint;
 }
 
 template<typename T>
-inline T SymmetricFrustum<T>::getDistanceTo(const Vector3<T>& point) const
+	requires std::floating_point<T>
+inline T SymmetricFrustum<T>::getDistanceTo(const Vector3<T>& point) const noexcept
 {
 	return distances::getPointSymmetricFrustum(point, origin, basis, halfDims, depthRange.minimum, depthRange.maximum);
 }
 
 template<typename T>
-inline bool SymmetricFrustum<T>::intersects(const AxisAlignedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool SymmetricFrustum<T>::intersects(const AxisAlignedBox<T>& box) const noexcept
 {
 	return intersections::testAxisAlignedBoxSymmetricFrustum(box.getCenter(), box.getHalfDimensions(), origin, basis, halfDims, 
 		depthRange.minimum, depthRange.maximum);
 }
 
 template<typename T>
-inline bool SymmetricFrustum<T>::intersects(const OrientedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool SymmetricFrustum<T>::intersects(const OrientedBox<T>& box) const noexcept
 {
 	return intersections::testOrientedBoxSymmetricFrustum(box.origin, box.basis, box.halfDims, origin, basis, halfDims, 
 		depthRange.minimum, depthRange.maximum);
 }
 
 template<typename T>
-inline bool SymmetricFrustum<T>::intersects(const Sphere<T>& sphere) const
+	requires std::floating_point<T>
+inline bool SymmetricFrustum<T>::intersects(const Sphere<T>& sphere) const noexcept
 {
 	return (distances::getPointSymmetricFrustumSquared(sphere.center, origin, basis, halfDims, 
 		depthRange.minimum, depthRange.maximum) <= sphere.radius*sphere.radius);

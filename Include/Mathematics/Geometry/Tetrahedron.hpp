@@ -80,18 +80,21 @@ struct Tetrahedron
 };
 
 template<typename T>
+	requires std::floating_point<T>
 inline Tetrahedron<T>::Tetrahedron(Uninitialized) :
 	vertices{ { Uninitialized() }, { Uninitialized() }, { Uninitialized() }, { Uninitialized() } }
 {
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Tetrahedron<T>::Tetrahedron(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3) :
 	vertices{ v0, v1, v2, v3 }
 {
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Tetrahedron<T>::operator==(const Tetrahedron<T>& tetrahedron) const
 { 
 	return (vertices[0] == tetrahedron.vertices[0]) && (vertices[1] == tetrahedron.vertices[1]) && (vertices[2] == tetrahedron.vertices[2]) &&
@@ -114,12 +117,14 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const T
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Tetrahedron<T>::isApproxZero() const
 {
 	return vertices[0].isApproxZero() && vertices[1].isApproxZero() && vertices[2].isApproxZero() && vertices[3].isApproxZero();
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Tetrahedron<T>::approxEquals(const Tetrahedron<T>& tetrahedron) const
 {
 	return vertices[0].approxEquals(tetrahedron.vertices[0]) &&
@@ -129,6 +134,7 @@ inline bool Tetrahedron<T>::approxEquals(const Tetrahedron<T>& tetrahedron) cons
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Tetrahedron<T>::approxEquals(const Tetrahedron<T>& tetrahedron, T tolerance) const
 {
 	return vertices[0].approxEquals(tetrahedron.vertices[0], tolerance) &&
@@ -138,12 +144,14 @@ inline bool Tetrahedron<T>::approxEquals(const Tetrahedron<T>& tetrahedron, T to
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Tetrahedron<T>::isFinite() const
 { 
 	return vertices[0].isFinite() && vertices[1].isFinite() && vertices[2].isFinite() && vertices[3].isFinite();
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Tetrahedron<T>& Tetrahedron<T>::setZero()
 {
 	vertices[0].setZero();
@@ -154,6 +162,7 @@ inline Tetrahedron<T>& Tetrahedron<T>::setZero()
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Tetrahedron<T>& Tetrahedron<T>::set(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3)
 {
 	vertices[0] = v0;
@@ -164,18 +173,21 @@ inline Tetrahedron<T>& Tetrahedron<T>::set(const Vector3<T>& v0, const Vector3<T
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Vector3<T> Tetrahedron<T>::getCentroid() const
 {
 	return (vertices[0] + vertices[1] + vertices[2] + vertices[3])*T(0.25);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline T Tetrahedron<T>::getVolume() const
 {
 	return std::fabs(dot(vertices[0] - vertices[3], cross(vertices[1] - vertices[3], vertices[2] - vertices[3])))/T(6);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline void Tetrahedron<T>::setVertex(int index, const Vector3<T>& vertex)
 {
 	if ((unsigned int)index >= 3u)
@@ -184,6 +196,7 @@ inline void Tetrahedron<T>::setVertex(int index, const Vector3<T>& vertex)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::output_iterator<Vector3<T>> O>
 inline O Tetrahedron<T>::copyVertices(O target) const
 {
@@ -195,12 +208,14 @@ inline O Tetrahedron<T>::copyVertices(O target) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline typename Tetrahedron<T>::TupleType Tetrahedron<T>::getVertices() const
 {
 	return { vertices[0], vertices[1], vertices[2], vertices[3] };
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Tetrahedron<T>& Tetrahedron<T>::translate(const Vector3<T>& offset)
 {
 	vertices[0] += offset;
@@ -211,6 +226,7 @@ inline Tetrahedron<T>& Tetrahedron<T>::translate(const Vector3<T>& offset)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Tetrahedron<T>& Tetrahedron<T>::transform(const Matrix3<T>& matrix)
 {
 	vertices[0] *= matrix;
@@ -221,6 +237,7 @@ inline Tetrahedron<T>& Tetrahedron<T>::transform(const Matrix3<T>& matrix)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Tetrahedron<T>& Tetrahedron<T>::transform(const AffineTransform<T>& transformation)
 {
 	vertices[0].transform(transformation);
@@ -247,9 +264,6 @@ using TetrahedronResult = templates::Tetrahedron<float>::ConstResult;
 namespace std {
 
 template<typename T>
-struct hash;
-
-template<typename T>
 struct hash<::mathematics::templates::Tetrahedron<T>>
 {
 	size_t operator()(const ::mathematics::templates::Tetrahedron<T>& tetrahedron) const noexcept
@@ -270,6 +284,7 @@ struct hash<::mathematics::templates::Tetrahedron<T>>
 namespace mathematics::templates {
 
 template<typename T>
+	requires std::floating_point<T>
 inline AxisAlignedBox<T> Tetrahedron<T>::getCircumscribedBox() const
 {
 	return { min(min(min(vertex0_, vertex1_), vertex2_), vertex3_), max(max(max(vertex0_, vertex1_), vertex2_), vertex3_) };

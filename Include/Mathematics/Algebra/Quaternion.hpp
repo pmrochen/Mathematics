@@ -21,6 +21,7 @@
 #endif
 //#include <Tuples/Tuple4.hpp>
 #include "../Constants.hpp"
+#include "../Transform/EulerOrder.hpp"
 #include "Vector3.hpp"
 #include "Matrix2.hpp"
 #include "Matrix3.hpp"
@@ -45,7 +46,7 @@ struct Quaternion
 	using ConstArg = const Quaternion&;
 	using ConstResult = const Quaternion&;
 	using TupleType = std::tuple<T, T, T, T>;
-	template<Arithmetic U> OtherTupleType = std::tuple<U, U, U, U>;
+	template<Arithmetic U> using OtherTupleType = std::tuple<U, U, U, U>;
 
 	static constexpr int NUM_COMPONENTS = 4;
 
@@ -132,17 +133,17 @@ struct Quaternion
 	T x, y, z, w;
 };
 
-template<typename T> const Quaternion<T> Quaternion<T>::ZERO{};
-template<typename T> const Quaternion<T> Quaternion<T>::IDENTITY{ T(0), T(0), T(0), T(1) };
-template<typename T> const Quaternion<T> Quaternion<T>::TOLERANCE{ Constants<T>::TOLERANCE, Constants<T>::TOLERANCE, Constants<T>::TOLERANCE, Constants<T>::TOLERANCE };
+template<typename T> requires std::floating_point<T> const Quaternion<T> Quaternion<T>::ZERO{};
+template<typename T> requires std::floating_point<T> const Quaternion<T> Quaternion<T>::IDENTITY{ T(0), T(0), T(0), T(1) };
+template<typename T> requires std::floating_point<T> const Quaternion<T> Quaternion<T>::TOLERANCE{ Constants<T>::TOLERANCE, Constants<T>::TOLERANCE, Constants<T>::TOLERANCE, Constants<T>::TOLERANCE };
 
 #if SIMD_HAS_FLOAT4
 
-template<>
-struct YawPitchRoll<float>;
+// template<>
+// struct YawPitchRoll<float>;
 
-template<>
-struct Euler<float>;
+// template<>
+// struct Euler<float>;
 
 template<>
 struct alignas(16) Quaternion<float>
@@ -152,7 +153,7 @@ struct alignas(16) Quaternion<float>
 	using ConstArg = const Quaternion;
 	using ConstResult = const Quaternion;
 	using TupleType = std::tuple<float, float, float, float>;
-	template<Arithmetic U> OtherTupleType = std::tuple<U, U, U, U>;
+	template<Arithmetic U> using OtherTupleType = std::tuple<U, U, U, U>;
 	using SimdType = simd::float4;
 
 	static constexpr int NUM_COMPONENTS = 4;
@@ -263,7 +264,8 @@ const Quaternion<float> Quaternion<float>::TOLERANCE{ Constants<float>::TOLERANC
 #endif /* SIMD_HAS_FLOAT4 */
 
 template<typename T>
-inline Quaternion<T>::Quaternion(const Matrix3<T>& m)
+	requires std::floating_point<T>
+inline Quaternion<T>::Quaternion(const Matrix3<T>& m) noexcept
 {
 	T tr = m[0][0] + m[1][1] + m[2][2];
 	if (tr > T(0))
@@ -295,7 +297,8 @@ inline Quaternion<T>::Quaternion(const Matrix3<T>& m)
 }
 
 template<typename T>
-inline Quaternion<T>& Quaternion<T>::operator*=(const Quaternion<T>& q)
+	requires std::floating_point<T>
+inline Quaternion<T>& Quaternion<T>::operator*=(const Quaternion<T>& q) noexcept
 {
 	set(w*q.x + x*q.w + y*q.z - z*q.y, w*q.y - x*q.z + y*q.w + z*q.x,
 		w*q.z + x*q.y - y*q.x + z*q.w, w*q.w - x*q.x - y*q.y - z*q.z);
@@ -303,13 +306,15 @@ inline Quaternion<T>& Quaternion<T>::operator*=(const Quaternion<T>& q)
 }
 
 template<typename T>
-inline Quaternion<T>& Quaternion<T>::operator*=(const Vector3<T>& v)
+	requires std::floating_point<T>
+inline Quaternion<T>& Quaternion<T>::operator*=(const Vector3<T>& v) noexcept
 {
 	set(w*v.x + y*v.z - z*v.y, w*v.y + z*v.x - x*v.z, w*v.z + x*v.y - y*v.x, -(x*v.x + y*v.y + z*v.z));
 	return *this;
 }
 
 //template<typename T>
+//	requires std::floating_point<T>
 //inline Quaternion<T>& Quaternion<T>::operator/=(const Quaternion<T>& q)
 //{ 
 //	*this = (*this)*inverse(q);
@@ -406,8 +411,9 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const Q
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::size_t I>
-inline T& Quaternion<T>::get()
+inline T& Quaternion<T>::get() noexcept
 {
 	if constexpr (I == 0)
 		return x;
@@ -421,8 +427,9 @@ inline T& Quaternion<T>::get()
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::size_t I>
-inline const T& Quaternion<T>::get() const
+inline const T& Quaternion<T>::get() const noexcept
 {
 	if constexpr (I == 0)
 		return x;
@@ -436,7 +443,8 @@ inline const T& Quaternion<T>::get() const
 }
 
 template<typename T>
-inline Quaternion<T> Quaternion<T>::fromAxisAngle(const Vector3<T>& axis, T angle)
+	requires std::floating_point<T>
+inline Quaternion<T> Quaternion<T>::fromAxisAngle(const Vector3<T>& axis, T angle) noexcept
 {
 	T m = axis.getMagnitude();
 	if ((m > T(0)) && (angle != T(0)))
@@ -450,35 +458,40 @@ inline Quaternion<T> Quaternion<T>::fromAxisAngle(const Vector3<T>& axis, T angl
 }
 
 template<typename T>
-inline bool Quaternion<T>::isApproxZero() const
+	requires std::floating_point<T>
+inline bool Quaternion<T>::isApproxZero() const noexcept
 {
 	return (std::fabs(x) < Constants<T>::TOLERANCE) && (std::fabs(y) < Constants<T>::TOLERANCE) &&
 		(std::fabs(z) < Constants<T>::TOLERANCE) && (std::fabs(w) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
-inline bool Quaternion<T>::isApproxIdentity() const
+	requires std::floating_point<T>
+inline bool Quaternion<T>::isApproxIdentity() const noexcept
 {
 	return (std::fabs(x) < Constants<T>::TOLERANCE) && (std::fabs(y) < Constants<T>::TOLERANCE) &&
 		(std::fabs(z) < Constants<T>::TOLERANCE) && (std::fabs(w - T(1)) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
-inline bool Quaternion<T>::approxEquals(const Quaternion<T>& q) const
+	requires std::floating_point<T>
+inline bool Quaternion<T>::approxEquals(const Quaternion<T>& q) const noexcept
 {
 	return (std::fabs(q.x - x) < Constants<T>::TOLERANCE) && (std::fabs(q.y - y) < Constants<T>::TOLERANCE) &&
 		(std::fabs(q.z - z) < Constants<T>::TOLERANCE) && (std::fabs(q.w - w) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
-inline bool Quaternion<T>::approxEquals(const Quaternion<T>& q, T tolerance) const
+	requires std::floating_point<T>
+inline bool Quaternion<T>::approxEquals(const Quaternion<T>& q, T tolerance) const noexcept
 {
 	return (std::fabs(q.x - x) < tolerance) && (std::fabs(q.y - y) < tolerance) &&
 		(std::fabs(q.z - z) < tolerance) && (std::fabs(q.w - w) < tolerance);
 }
 
 template<typename T>
-inline Vector3<T> Quaternion<T>::getAxis() const
+	requires std::floating_point<T>
+inline Vector3<T> Quaternion<T>::getAxis() const noexcept
 {
 	T cosine = T(1) - w*w;
 	if (cosine <= T(0))
@@ -512,6 +525,7 @@ inline Vector3<T> Quaternion<T>::getAxis() const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline T Quaternion<T>::getAngle() const
 {
 	//T invAbs = getInverseAbsoluteValue();
@@ -526,7 +540,8 @@ inline T Quaternion<T>::getAngle() const
 }
 
 template<typename T>
-inline Quaternion<T>& Quaternion<T>::setInverse(const Quaternion<T>& q)
+	requires std::floating_point<T>
+inline Quaternion<T>& Quaternion<T>::setInverse(const Quaternion<T>& q) noexcept
 { 
 	T f = T(1)/(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
 	x = -q.x*f;
@@ -537,7 +552,8 @@ inline Quaternion<T>& Quaternion<T>::setInverse(const Quaternion<T>& q)
 }
 
 template<typename T>
-inline Quaternion<T>& Quaternion<T>::invert()
+	requires std::floating_point<T>
+inline Quaternion<T>& Quaternion<T>::invert() noexcept
 { 
 	T f = T(1)/(x*x + y*y + z*z + w*w);
 	x = -x*f;
@@ -548,21 +564,24 @@ inline Quaternion<T>& Quaternion<T>::invert()
 }
 
 template<typename T>
-inline Quaternion<T>& Quaternion<T>::rotate(const Quaternion<T>& q)
+	requires std::floating_point<T>
+inline Quaternion<T>& Quaternion<T>::rotate(const Quaternion<T>& q) noexcept
 { 
 	*this = q*(*this)*Quaternion<T>(-q.x, -q.y, -q.z, q.w); // #TODO expand
 	return *this; 
 }
 
 template<typename T>
-inline Quaternion<T>& Quaternion<T>::concatenate(const Quaternion<T>& q)
+	requires std::floating_point<T>
+inline Quaternion<T>& Quaternion<T>::concatenate(const Quaternion<T>& q) noexcept
 { 
 	*this = q*(*this); 
 	return *this; 
 }
 
 template<typename T>
-inline Quaternion<T>& Quaternion<T>::normalize()
+	requires std::floating_point<T>
+inline Quaternion<T>& Quaternion<T>::normalize() noexcept
 {
 	//#if MATHEMATICS_FAST_NORMALIZE
 	//	if costexpr(std::is_same_v<T, float>)
@@ -583,7 +602,7 @@ inline Quaternion<T>& Quaternion<T>::normalize()
 
 #if SIMD_HAS_FLOAT4
 
-inline Quaternion<float>::Quaternion(const Matrix3<float>& m)
+inline Quaternion<float>::Quaternion(const Matrix3<float>& m) noexcept
 {
 	float tr = m[0][0] + m[1][1] + m[2][2];
 	if (tr > 0.f)
@@ -614,7 +633,7 @@ inline Quaternion<float>::Quaternion(const Matrix3<float>& m)
 	}
 }
 
-inline Quaternion<float>& Quaternion<float>::operator*=(const Quaternion<float>& q)
+inline Quaternion<float>& Quaternion<float>::operator*=(const Quaternion<float>& q) noexcept
 {
 	auto t0 = simd::broadcast<3>(xyzw);
 	auto t1 = simd::swizzle<1, 0, 3, 2>(q.xyzw);
@@ -637,13 +656,13 @@ inline Quaternion<float>& Quaternion<float>::operator*=(const Quaternion<float>&
 	return *this;
 }
 
-inline Quaternion<float>& Quaternion<float>::operator*=(const Vector3<float>& v) // #TODO SIMD
+inline Quaternion<float>& Quaternion<float>::operator*=(const Vector3<float>& v) noexcept // #TODO SIMD
 {
 	set(w*v.x + y*v.z - z*v.y, w*v.y + z*v.x - x*v.z, w*v.z + x*v.y - y*v.x, -(x*v.x + y*v.y + z*v.z));
 	return *this;
 }
 
-//inline Quaternion<float>& Quaternion<float>::operator/=(const Quaternion<float>& q)
+//inline Quaternion<float>& Quaternion<float>::operator/=(const Quaternion<float>& q) noexcept
 //{ 
 //	*this = (*this)*inverse(q);
 //	return *this; 
@@ -747,7 +766,7 @@ inline void Quaternion<float>::load(A& ar)
 }
 
 template<std::size_t I>
-inline float& Quaternion<float>::get()
+inline float& Quaternion<float>::get() noexcept
 {
 	if constexpr (I == 0)
 		return x;
@@ -761,7 +780,7 @@ inline float& Quaternion<float>::get()
 }
 
 template<std::size_t I>
-inline const float& Quaternion<float>::get() const
+inline const float& Quaternion<float>::get() const noexcept
 {
 	if constexpr (I == 0)
 		return x;
@@ -774,7 +793,7 @@ inline const float& Quaternion<float>::get() const
 	static_assert(false);
 }
 
-inline Quaternion<float> Quaternion<float>::fromAxisAngle(const Vector3<float>& axis, float angle)
+inline Quaternion<float> Quaternion<float>::fromAxisAngle(const Vector3<float>& axis, float angle) noexcept
 {
 	float m = axis.getMagnitude();
 	if ((m > 0.f) && (angle != 0.f))
@@ -787,7 +806,7 @@ inline Quaternion<float> Quaternion<float>::fromAxisAngle(const Vector3<float>& 
 	return IDENTITY;
 }
 
-inline Vector3<float> Quaternion<float>::getAxis() const
+inline Vector3<float> Quaternion<float>::getAxis() const noexcept
 {
 	float cosine = 1.f - w*w;
 	if (cosine <= 0.f)
@@ -827,33 +846,33 @@ inline float Quaternion<float>::getAngle() const
 	//return 2.f*std::acos(std::clamp(std::fabs(w), -1.f, 1.f));	// <0, PI>
 }
 
-inline Quaternion<float>& Quaternion<float>::setInverse(const Quaternion<float>& q)
+inline Quaternion<float>& Quaternion<float>::setInverse(const Quaternion<float>& q) noexcept
 {
 	auto f = simd::dot4(q, q); // #TODO simd::dot4<XYZW>
 	xyzw = simd::div4(simd::neg3(q), simd::broadcast<0>(f));
 	return *this; 
 }
 
-inline Quaternion<float>& Quaternion<float>::invert()
+inline Quaternion<float>& Quaternion<float>::invert() noexcept
 {
 	auto f = simd::dot4(xyzw, xyzw); // #TODO simd::dot4<XYZW>
 	xyzw = simd::div4(simd::neg3(xyzw), simd::broadcast<0>(f));
 	return *this; 
 }
 
-inline Quaternion<float>& Quaternion<float>::rotate(const Quaternion<float>& q)
+inline Quaternion<float>& Quaternion<float>::rotate(const Quaternion<float>& q) noexcept
 { 
 	*this = q*(*this)*Quaternion<float>(simd::neg3(q)); // #TODO expand
 	return *this; 
 }
 
-inline Quaternion<float>& Quaternion<float>::concatenate(const Quaternion<float>& q)
+inline Quaternion<float>& Quaternion<float>::concatenate(const Quaternion<float>& q) noexcept
 { 
 	*this = q*(*this); 
 	return *this; 
 }
 
-inline Quaternion<float>& Quaternion<float>::normalize()
+inline Quaternion<float>& Quaternion<float>::normalize() noexcept
 {
 #if MATHEMATICS_FAST_NORMALIZE
 	float m = simd::toFloat(simd::rcpSqrtApprox1(simd::dot4(xyzw, xyzw)));
@@ -1230,24 +1249,15 @@ using QuaternionResult = templates::Quaternion<float>::ConstResult;
 namespace std {
 
 template<size_t I, typename T>
-struct tuple_element;
-
-template<size_t I, typename T>
 struct tuple_element<I, ::mathematics::templates::Quaternion<T>>
 {
 	using type = T;
 };
 
 template<typename T>
-struct tuple_size;
-
-template<typename T>
-struct tuple_size<::mathematics::templates::Quaternion<T>> : integral_constant<size_t, 4> 
+struct tuple_size<::mathematics::templates::Quaternion<T>> : public integral_constant<size_t, 4> 
 {
 };
-
-template<typename T>
-struct hash;
 
 template<typename T>
 struct hash<::mathematics::templates::Quaternion<T>>
@@ -1284,7 +1294,8 @@ struct hash<::mathematics::templates::Quaternion<float>>
 namespace mathematics::templates {
 
 template<typename T>
-inline Quaternion<T>::Quaternion(const YawPitchRoll<T>& r)
+	requires std::floating_point<T>
+inline Quaternion<T>::Quaternion(const YawPitchRoll<T>& r) noexcept
 {
 	if (!r.isZero())
 	{
@@ -1301,7 +1312,8 @@ inline Quaternion<T>::Quaternion(const YawPitchRoll<T>& r)
 }
 
 template<typename T>
-inline Quaternion<T>::Quaternion(const Euler<T>& e)
+	requires std::floating_point<T>
+inline Quaternion<T>::Quaternion(const Euler<T>& e) noexcept
 {
 	if (!e.isZero() && (e.order != EulerOrder::UNSPECIFIED))
 	{
@@ -1355,7 +1367,7 @@ inline Quaternion<T>::Quaternion(const Euler<T>& e)
 
 #if SIMD_HAS_FLOAT4
 
-inline Quaternion<float>::Quaternion(const YawPitchRoll<float>& r)
+inline Quaternion<float>::Quaternion(const YawPitchRoll<float>& r) noexcept
 {
 	if (!r.isZero())
 	{
@@ -1371,7 +1383,7 @@ inline Quaternion<float>::Quaternion(const YawPitchRoll<float>& r)
 		setIdentity();
 }
 
-inline Quaternion<float>::Quaternion(const Euler<float>& e)
+inline Quaternion<float>::Quaternion(const Euler<float>& e) noexcept
 {
 	if (!e.isZero() && (e.order != EulerOrder::UNSPECIFIED))
 	{

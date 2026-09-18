@@ -76,6 +76,7 @@ struct Torus
 };
 
 template<typename T>
+	requires std::floating_point<T>
 inline Torus<T>::Torus(const Vector3<T>& center, const Vector3<T>& axis, T majorRadius, T minorRadius) : 
 	center(center), 
 	axis(axis), 
@@ -85,6 +86,7 @@ inline Torus<T>::Torus(const Vector3<T>& center, const Vector3<T>& axis, T major
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Torus<T>::Torus(const Vector3<T>& center, Axis axis, T majorRadius, T minorRadius) : 
 	center(center), 
 	axis(axis), 
@@ -94,6 +96,7 @@ inline Torus<T>::Torus(const Vector3<T>& center, Axis axis, T majorRadius, T min
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Torus<T>::operator==(const Torus<T>& torus) const
 { 
 	return (center == torus.center) && (axis == torus.axis) && (majorRadius == torus.majorRadius) && (minorRadius == torus.minorRadius);
@@ -115,6 +118,7 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const T
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Torus<T>::approxEquals(const Torus<T>& torus) const
 {
 	return center.approxEquals(torus.center) && axis.approxEquals(torus.axis) && 
@@ -123,6 +127,7 @@ inline bool Torus<T>::approxEquals(const Torus<T>& torus) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Torus<T>::approxEquals(const Torus<T>& torus, T tolerance) const
 {
 	return center.approxEquals(torus.center, tolerance) && axis.approxEquals(torus.axis, tolerance) &&
@@ -130,6 +135,7 @@ inline bool Torus<T>::approxEquals(const Torus<T>& torus, T tolerance) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Torus<T>& Torus<T>::set(const Vector3<T>& center, const Vector3<T>& axis, T majorRadius, T minorRadius)
 { 
 	this->center = center; 
@@ -140,6 +146,7 @@ inline Torus<T>& Torus<T>::set(const Vector3<T>& center, const Vector3<T>& axis,
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Torus<T>& Torus<T>::set(const Vector3<T>& center, Axis axis, T majorRadius, T minorRadius)
 {
 	this->center = center;
@@ -150,6 +157,7 @@ inline Torus<T>& Torus<T>::set(const Vector3<T>& center, Axis axis, T majorRadiu
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline OrientedBox<T> Torus<T>::getCircumscribedBox() const
 {
 	Matrix3<T> matrix(axis);
@@ -172,9 +180,6 @@ using TorusResult = templates::Torus<float>::ConstResult;
 } // namespace mathematics
 
 namespace std {
-
-template<typename T>
-struct hash;
 
 template<typename T>
 struct hash<::mathematics::templates::Torus<T>>

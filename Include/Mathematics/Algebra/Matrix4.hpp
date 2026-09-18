@@ -21,11 +21,12 @@
 #endif
 #include "../Constants.hpp"
 #include "../Geometry/Axis.hpp"
+#include "../Transform/EulerOrder.hpp"
 #include "Vector3.hpp"
 #include "Vector4.hpp"
 #include "Matrix2.hpp"
 #include "Matrix3.hpp"
-#include "AffineTransform.hpp"
+#include "../Transform/AffineTransform.hpp"
 
 namespace mathematics {
 namespace templates {
@@ -178,19 +179,19 @@ struct Matrix4
 	T m30, m31, m32, m33;
 };
 
-template<typename T> const Matrix4<T> Matrix4<T>::ZERO{};
-template<typename T> const Matrix4<T> Matrix4<T>::IDENTITY{ T(1), T(0), T(0), T(0), T(0), T(1), T(0), T(0), T(0), T(0), T(1), T(0), T(0), T(0), T(0), T(1) };
+template<typename T> requires std::floating_point<T> const Matrix4<T> Matrix4<T>::ZERO{};
+template<typename T> requires std::floating_point<T> const Matrix4<T> Matrix4<T>::IDENTITY{ T(1), T(0), T(0), T(0), T(0), T(1), T(0), T(0), T(0), T(0), T(1), T(0), T(0), T(0), T(0), T(1) };
 
 #if SIMD_HAS_FLOAT4
 
 template<>
 struct Quaternion<float>;
 
-template<>
-struct YawPitchRoll<float>;
+// template<>
+// struct YawPitchRoll<float>;
 
-template<>
-struct Euler<float>;
+// template<>
+// struct Euler<float>;
 
 template<>
 struct Plane<float>;
@@ -326,7 +327,7 @@ struct alignas(16) Matrix4<float>
 	Matrix4& scale(const Vector3<float>& v) noexcept;
 	Matrix4& negate() noexcept;
 	Matrix4& transpose() noexcept;
-	Matrix4& invert() noexcept { setInverse(*this); }
+	Matrix4& invert() noexcept { return setInverse(*this); }
 
 	static const Matrix4 ZERO;
 	static const Matrix4 IDENTITY;
@@ -362,55 +363,63 @@ const Matrix4<float> Matrix4<float>::IDENTITY{ 1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f
 #endif /* SIMD_HAS_FLOAT4 */
 
 template<typename T>
-inline Matrix4<T>::Matrix4(T m00, T m01, T m02, T m03, T m10, T m11, T m12, T m13, T m20, T m21, T m22, T m23, T m30, T m31, T m32, T m33) :
+	requires std::floating_point<T>
+inline constexpr Matrix4<T>::Matrix4(T m00, T m01, T m02, T m03, T m10, T m11, T m12, T m13, T m20, T m21, T m22, T m23, T m30, T m31, T m32, T m33) noexcept :
 	m00(m00), m01(m01), m02(m02), m03(m03), m10(m10), m11(m11), m12(m12), m13(m13), m20(m20), m21(m21), m22(m22), m23(m23), 
 	m30(m30), m31(m31), m32(m32), m33(m33) 
 {
 }
 
 template<typename T>
-inline Matrix4<T>::Matrix4(const Vector4<T>& row0, const Vector4<T>& row1, const Vector4<T>& row2, const Vector4<T>& row3) :
+	requires std::floating_point<T>
+inline constexpr Matrix4<T>::Matrix4(const Vector4<T>& row0, const Vector4<T>& row1, const Vector4<T>& row2, const Vector4<T>& row3) noexcept :
 	m00(row0.x), m01(row0.y), m02(row0.z), m03(row0.w), m10(row1.x), m11(row1.y), m12(row1.z), m13(row1.w),
 	m20(row2.x), m21(row2.y), m22(row2.z), m23(row2.w), m30(row3.x), m31(row3.y), m32(row3.z), m33(row3.w) 
 {
 }
 
 template<typename T>
-inline Matrix4<T>::Matrix4(const typename Matrix4<T>::TupleType& t) :
+	requires std::floating_point<T>
+inline constexpr Matrix4<T>::Matrix4(const typename Matrix4<T>::TupleType& t) noexcept :
 	Matrix4(std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t))
 {
 }
 
 template<typename T>
-inline Matrix4<T>::Matrix4(const Matrix2<T>& m) : 
+	requires std::floating_point<T>
+inline constexpr Matrix4<T>::Matrix4(const Matrix2<T>& m) noexcept : 
 	m00(m.m00), m01(m.m01), m02(), m03(), m10(m.m10), m11(m.m11), m12(), m13(), m20(), m21(), m22(1), m23(), 
 	m30(), m31(), m32(), m33(1) 
 {
 }
 
 template<typename T>
-inline Matrix4<T>::Matrix4(const Matrix3<T>& m) : 
+	requires std::floating_point<T>
+inline constexpr Matrix4<T>::Matrix4(const Matrix3<T>& m) noexcept : 
 	m00(m.m00), m01(m.m01), m02(m.m02), m03(), m10(m.m10), m11(m.m11), m12(m.m12), m13(), m20(m.m20), m21(m.m21), m22(m.m22), m23(), 
 	m30(), m31(), m32(), m33(1) 
 {
 }
 
 template<typename T>
-inline Matrix4<T>::Matrix4(const AffineTransform<T>& m) : 
+	requires std::floating_point<T>
+inline constexpr Matrix4<T>::Matrix4(const AffineTransform<T>& m) noexcept : 
 	m00(m.m00), m01(m.m01), m02(m.m02), m03(), m10(m.m10), m11(m.m11), m12(m.m12), m13(),
 	m20(m.m20), m21(m.m21), m22(m.m22), m23(), m30(m.x), m31(m.y), m32(m.z), m33(1) 
 {
 }
 
 template<typename T>
-inline Matrix4<T>::Matrix4(const T* m) :
+	requires std::floating_point<T>
+inline Matrix4<T>::Matrix4(const T* m) noexcept :
 	m00(m[0]), m01(m[1]), m02(m[2]), m03(m[3]), m10(m[4]), m11(m[5]), m12(m[6]), m13(m[7]), 
 	m20(m[8]), m21(m[9]), m22(m[10]), m23(m[11]), m30(m[12]), m31(m[13]), m32(m[14]), m33(m[15])
 {
 }
 
 template<typename T>
-inline Matrix4<T> Matrix4<T>::operator-() const
+	requires std::floating_point<T>
+inline Matrix4<T> Matrix4<T>::operator-() const noexcept
 {
 	return Matrix4<T>(-m00, -m01, -m02, -m03,
 		-m10, -m11, -m12, -m13,
@@ -419,7 +428,8 @@ inline Matrix4<T> Matrix4<T>::operator-() const
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::operator+=(const Matrix4<T>& m)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::operator+=(const Matrix4<T>& m) noexcept
 {
 	m00 += m.m00; m01 += m.m01; m02 += m.m02; m03 += m.m03;
 	m10 += m.m10; m11 += m.m11; m12 += m.m12; m13 += m.m13;
@@ -429,7 +439,8 @@ inline Matrix4<T>& Matrix4<T>::operator+=(const Matrix4<T>& m)
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::operator-=(const Matrix4<T>& m)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::operator-=(const Matrix4<T>& m) noexcept
 {
 	m00 -= m.m00; m01 -= m.m01; m02 -= m.m02; m03 -= m.m03;
 	m10 -= m.m10; m11 -= m.m11; m12 -= m.m12; m13 -= m.m13;
@@ -439,7 +450,8 @@ inline Matrix4<T>& Matrix4<T>::operator-=(const Matrix4<T>& m)
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::operator*=(T f)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::operator*=(T f) noexcept
 {
 	m00 *= f; m01 *= f; m02 *= f; m03 *= f;
 	m10 *= f; m11 *= f; m12 *= f; m13 *= f;
@@ -449,7 +461,8 @@ inline Matrix4<T>& Matrix4<T>::operator*=(T f)
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::operator*=(const Matrix4<T>& m)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::operator*=(const Matrix4<T>& m) noexcept
 {
 	set(m00*m.m00 + m01*m.m10 + m02*m.m20 + m03*m.m30,
 		m00*m.m01 + m01*m.m11 + m02*m.m21 + m03*m.m31,
@@ -540,7 +553,8 @@ inline Matrix4<T> operator/(const Matrix4<T>& m, T f) noexcept
 }
 
 template<typename T>
-inline bool Matrix4<T>::operator==(const Matrix4<T>& m) const
+	requires std::floating_point<T>
+inline bool Matrix4<T>::operator==(const Matrix4<T>& m) const noexcept
 {
 	return (m00 == m.m00) && (m01 == m.m01) && (m02 == m.m02) && (m03 == m.m03) &&
 		(m10 == m.m10) && (m11 == m.m11) && (m12 == m.m12) && (m13 == m.m13) &&
@@ -570,7 +584,8 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const M
 }
 
 template<typename T>
-inline bool Matrix4<T>::isZero() const
+	requires std::floating_point<T>
+inline bool Matrix4<T>::isZero() const noexcept
 {
 	return (m00 == T()) && (m01 == T()) && (m02 == T()) && (m03 == T()) &&
 		(m10 == T()) && (m11 == T()) && (m12 == T()) && (m13 == T()) &&
@@ -579,7 +594,8 @@ inline bool Matrix4<T>::isZero() const
 }
 
 template<typename T>
-inline bool Matrix4<T>::isApproxZero() const
+	requires std::floating_point<T>
+inline bool Matrix4<T>::isApproxZero() const noexcept
 {
 	return (std::fabs(m00) < Constants<T>::TOLERANCE) &&
 		(std::fabs(m01) < Constants<T>::TOLERANCE) &&
@@ -600,7 +616,8 @@ inline bool Matrix4<T>::isApproxZero() const
 }
 
 template<typename T>
-inline bool Matrix4<T>::isIdentity() const
+	requires std::floating_point<T>
+inline bool Matrix4<T>::isIdentity() const noexcept
 {
 	return (m00 == T(1)) && (m01 == T()) && (m02 == T()) && (m03 == T()) &&
 		(m10 == T()) && (m11 == T(1)) && (m12 == T()) && (m13 == T()) &&
@@ -609,7 +626,8 @@ inline bool Matrix4<T>::isIdentity() const
 }
 
 template<typename T>
-inline bool Matrix4<T>::isApproxIdentity() const
+	requires std::floating_point<T>
+inline bool Matrix4<T>::isApproxIdentity() const noexcept
 {
 	return (std::fabs(T(1) - m00) < Constants<T>::TOLERANCE) &&
 		(std::fabs(m01) < Constants<T>::TOLERANCE) &&
@@ -630,7 +648,8 @@ inline bool Matrix4<T>::isApproxIdentity() const
 }
 
 template<typename T>
-inline bool Matrix4<T>::approxEquals(const Matrix4<T>& m) const
+	requires std::floating_point<T>
+inline bool Matrix4<T>::approxEquals(const Matrix4<T>& m) const noexcept
 {
 	return (std::fabs(m.m00 - m00) < Constants<T>::TOLERANCE) &&
 		(std::fabs(m.m01 - m01) < Constants<T>::TOLERANCE) &&
@@ -651,7 +670,8 @@ inline bool Matrix4<T>::approxEquals(const Matrix4<T>& m) const
 }
 
 template<typename T>
-inline bool Matrix4<T>::approxEquals(const Matrix4<T>& m, T tolerance) const
+	requires std::floating_point<T>
+inline bool Matrix4<T>::approxEquals(const Matrix4<T>& m, T tolerance) const noexcept
 {
 	return (std::fabs(m.m00 - m00) < tolerance) &&
 		(std::fabs(m.m01 - m01) < tolerance) &&
@@ -672,7 +692,8 @@ inline bool Matrix4<T>::approxEquals(const Matrix4<T>& m, T tolerance) const
 }
 
 template<typename T>
-inline bool Matrix4<T>::isFinite() const
+	requires std::floating_point<T>
+inline bool Matrix4<T>::isFinite() const noexcept
 {
 	return std::isfinite(m00) && std::isfinite(m01) && std::isfinite(m02) && std::isfinite(m03) &&
 		std::isfinite(m10) && std::isfinite(m11) && std::isfinite(m12) && std::isfinite(m13) &&
@@ -681,7 +702,8 @@ inline bool Matrix4<T>::isFinite() const
 }
 
 template<typename T>
-inline T Matrix4<T>::getDeterminant() const
+	requires std::floating_point<T>
+inline T Matrix4<T>::getDeterminant() const noexcept
 {
 	auto det3 = [](T m00, T m01, T m02, T m10, T m11, T m12, T m20, T m21, T m22) -> T
 		{
@@ -696,7 +718,8 @@ inline T Matrix4<T>::getDeterminant() const
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setZero()
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setZero() noexcept
 {
 	m00 = T(); m01 = T(); m02 = T(); m03 = T();
 	m10 = T(); m11 = T(); m12 = T(); m13 = T();
@@ -706,7 +729,8 @@ inline Matrix4<T>& Matrix4<T>::setZero()
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setIdentity()
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setIdentity() noexcept
 {
 	m00 = T(1); m01 = T(); m02 = T(); m03 = T();
 	m10 = T(); m11 = T(1); m12 = T(); m13 = T();
@@ -716,7 +740,8 @@ inline Matrix4<T>& Matrix4<T>::setIdentity()
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::set(const Vector4<T>& row0, const Vector4<T>& row1, const Vector4<T>& row2, const Vector4<T>& row3)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::set(const Vector4<T>& row0, const Vector4<T>& row1, const Vector4<T>& row2, const Vector4<T>& row3) noexcept
 {
 	m00 = row0.x; m01 = row0.y; m02 = row0.z; m03 = row0.w; 
 	m10 = row1.x; m11 = row1.y; m12 = row1.z; m13 = row1.w; 
@@ -726,8 +751,9 @@ inline Matrix4<T>& Matrix4<T>::set(const Vector4<T>& row0, const Vector4<T>& row
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Matrix4<T>& Matrix4<T>::set(T m00, T m01, T m02, T m03, T m10, T m11, T m12, T m13, T m20, T m21, T m22, T m23, 
-	T m30, T m31, T m32, T m33)
+	T m30, T m31, T m32, T m33) noexcept
 {
 	this->m00 = m00; this->m01 = m01; this->m02 = m02; this->m03 = m03;
 	this->m10 = m10; this->m11 = m11; this->m12 = m12; this->m13 = m13; 
@@ -737,7 +763,8 @@ inline Matrix4<T>& Matrix4<T>::set(T m00, T m01, T m02, T m03, T m10, T m11, T m
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setTranslation(const Vector3<T>& v)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setTranslation(const Vector3<T>& v) noexcept
 {
 	m00 = T(1); m01 = T(); m02 = T(); m03 = T();
 	m10 = T(); m11 = T(1); m12 = T(); m13 = T();
@@ -747,7 +774,8 @@ inline Matrix4<T>& Matrix4<T>::setTranslation(const Vector3<T>& v)
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setScaling(const Vector3<T>& v)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setScaling(const Vector3<T>& v) noexcept
 {
 	m00 = v.x; m01 = T(); m02 = T(); m03 = T();
 	m10 = T(); m11 = v.y; m12 = T(); m13 = T();
@@ -757,7 +785,8 @@ inline Matrix4<T>& Matrix4<T>::setScaling(const Vector3<T>& v)
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setRotation(Axis axis, T angle)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setRotation(Axis axis, T angle) noexcept
 {
 	if (angle != T(0))
 	{
@@ -781,7 +810,8 @@ inline Matrix4<T>& Matrix4<T>::setRotation(Axis axis, T angle)
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setRotation(const Vector3<T>& axis, T angle)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setRotation(const Vector3<T>& axis, T angle) noexcept
 {
 	T m = axis.getMagnitude();
 	if ((m > T(0)) && (angle != T(0)))
@@ -804,7 +834,8 @@ inline Matrix4<T>& Matrix4<T>::setRotation(const Vector3<T>& axis, T angle)
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setRotationTranslation(Axis axis, T angle, const Vector3<T>& t)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setRotationTranslation(Axis axis, T angle, const Vector3<T>& t) noexcept
 {
 	setRotation(axis, angle);
 	m30 = t.x; m31 = t.y; m32 = t.z;
@@ -812,7 +843,8 @@ inline Matrix4<T>& Matrix4<T>::setRotationTranslation(Axis axis, T angle, const 
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setRotationTranslation(const Vector3<T>& axis, T angle, const Vector3<T>& t)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setRotationTranslation(const Vector3<T>& axis, T angle, const Vector3<T>& t) noexcept
 {
 	setRotation(axis, angle);
 	m30 = t.x; m31 = t.y; m32 = t.z;
@@ -820,7 +852,8 @@ inline Matrix4<T>& Matrix4<T>::setRotationTranslation(const Vector3<T>& axis, T 
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setScalingRotation(const Vector3<T>& s, Axis axis, T angle)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setScalingRotation(const Vector3<T>& s, Axis axis, T angle) noexcept
 {
 	setRotation(axis, angle);
 	m00 *= s.x; m01 *= s.x; m02 *= s.x;
@@ -830,7 +863,8 @@ inline Matrix4<T>& Matrix4<T>::setScalingRotation(const Vector3<T>& s, Axis axis
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setScalingRotation(const Vector3<T>& s, const Vector3<T>& axis, T angle)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setScalingRotation(const Vector3<T>& s, const Vector3<T>& axis, T angle) noexcept
 {
 	setRotation(axis, angle);
 	m00 *= s.x; m01 *= s.x; m02 *= s.x;
@@ -840,7 +874,8 @@ inline Matrix4<T>& Matrix4<T>::setScalingRotation(const Vector3<T>& s, const Vec
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setScalingTranslation(const Vector3<T>& s, const Vector3<T>& t)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setScalingTranslation(const Vector3<T>& s, const Vector3<T>& t) noexcept
 {
 	m00 = s.x; m01 = T(); m02 = T(); m03 = T();
 	m10 = T(); m11 = s.y; m12 = T(); m13 = T();
@@ -850,7 +885,8 @@ inline Matrix4<T>& Matrix4<T>::setScalingTranslation(const Vector3<T>& s, const 
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setScalingRotationTranslation(const Vector3<T>& s, Axis axis, T angle, const Vector3<T>& t)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setScalingRotationTranslation(const Vector3<T>& s, Axis axis, T angle, const Vector3<T>& t) noexcept
 {
 	setRotation(axis, angle);
 	m00 *= s.x; m01 *= s.x; m02 *= s.x;
@@ -861,7 +897,8 @@ inline Matrix4<T>& Matrix4<T>::setScalingRotationTranslation(const Vector3<T>& s
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setScalingRotationTranslation(const Vector3<T>& s, const Vector3<T>& axis, T angle, const Vector3<T>& t)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setScalingRotationTranslation(const Vector3<T>& s, const Vector3<T>& axis, T angle, const Vector3<T>& t) noexcept
 {
 	setRotation(axis, angle);
 	m00 *= s.x; m01 *= s.x; m02 *= s.x;
@@ -872,7 +909,8 @@ inline Matrix4<T>& Matrix4<T>::setScalingRotationTranslation(const Vector3<T>& s
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setShearing(T xy, T xz, T yx, T yz, T zx, T zy)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setShearing(T xy, T xz, T yx, T yz, T zx, T zy) noexcept
 {
 	m00 = T(1); m01 = xy; m02 = xz; m03 = T();
 	m10 = yx; m11 = T(1); m12 = yz; m13 = T();
@@ -882,7 +920,8 @@ inline Matrix4<T>& Matrix4<T>::setShearing(T xy, T xz, T yx, T yz, T zx, T zy)
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setTranspose(const Matrix4<T>& m)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setTranspose(const Matrix4<T>& m) noexcept
 {
 	m00 = m.m00; m01 = m.m10; m02 = m.m20; m03 = m.m30;
 	m10 = m.m01; m11 = m.m11; m12 = m.m21; m13 = m.m31;
@@ -892,7 +931,8 @@ inline Matrix4<T>& Matrix4<T>::setTranspose(const Matrix4<T>& m)
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setInverse(const Matrix4<T>& m)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setInverse(const Matrix4<T>& m) noexcept
 {
 	T di = m.m00;
 	T d = T(1)/di;
@@ -977,7 +1017,8 @@ inline Matrix4<T>& Matrix4<T>::setInverse(const Matrix4<T>& m)
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::preConcatenate(const Matrix4<T>& m)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::preConcatenate(const Matrix4<T>& m) noexcept
 {
 	set(m.m00*m00 + m.m01*m10 + m.m02*m20 + m.m03*m30,
 		m.m00*m01 + m.m01*m11 + m.m02*m21 + m.m03*m31,
@@ -999,7 +1040,8 @@ inline Matrix4<T>& Matrix4<T>::preConcatenate(const Matrix4<T>& m)
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::preScale(const Vector3<T>& v)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::preScale(const Vector3<T>& v) noexcept
 {
 	m00 *= v.x; m01 *= v.x; m02 *= v.x; m03 *= v.x;
 	m10 *= v.y; m11 *= v.y; m12 *= v.y; m13 *= v.y;
@@ -1008,7 +1050,8 @@ inline Matrix4<T>& Matrix4<T>::preScale(const Vector3<T>& v)
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::scale(const Vector3<T>& v)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::scale(const Vector3<T>& v) noexcept
 {
 	m00 *= v.x; m01 *= v.y; m02 *= v.z;
 	m10 *= v.x; m11 *= v.y; m12 *= v.z;
@@ -1018,7 +1061,8 @@ inline Matrix4<T>& Matrix4<T>::scale(const Vector3<T>& v)
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::negate()
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::negate() noexcept
 {
 	m00 = -m00; m01 = -m01; m02 = -m02; m03 = -m03;
 	m10 = -m10; m11 = -m11; m12 = -m12; m13 = -m13;
@@ -1028,7 +1072,8 @@ inline Matrix4<T>& Matrix4<T>::negate()
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::transpose()
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::transpose() noexcept
 {
 	T t = m01; m01 = m10; m10 = t;
 	t = m02; m02 = m20; m20 = t;
@@ -1041,7 +1086,7 @@ inline Matrix4<T>& Matrix4<T>::transpose()
 
 #if SIMD_HAS_FLOAT4
 
-inline Matrix4<float>::Matrix4() : 
+inline Matrix4<float>::Matrix4() noexcept : 
 	row0(simd::zero<simd::float4>()), 
 	row1(simd::zero<simd::float4>()), 
 	row2(simd::zero<simd::float4>()), 
@@ -1049,7 +1094,7 @@ inline Matrix4<float>::Matrix4() :
 {
 }
 
-inline Matrix4<float>::Matrix4(Identity) :
+inline Matrix4<float>::Matrix4(Identity) noexcept :
 	row0(Vector4<float>::UNIT_X),
 	row1(Vector4<float>::UNIT_Y),
 	row2(Vector4<float>::UNIT_Z),
@@ -1058,7 +1103,7 @@ inline Matrix4<float>::Matrix4(Identity) :
 }
 
 inline Matrix4<float>::Matrix4(float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13,
-	float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33) :
+	float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33) noexcept :
 	row0(simd::set4(m00, m01, m02, m03)),
 	row1(simd::set4(m10, m11, m12, m13)),
 	row2(simd::set4(m20, m21, m22, m23)),
@@ -1067,7 +1112,7 @@ inline Matrix4<float>::Matrix4(float m00, float m01, float m02, float m03, float
 }
 
 inline Matrix4<float>::Matrix4(const Vector4<float>& row0, const Vector4<float>& row1, const Vector4<float>& row2, 
-	const Vector4<float>& row3) :
+	const Vector4<float>& row3) noexcept :
 	row0(row0),
 	row1(row1),
 	row2(row2),
@@ -1075,12 +1120,12 @@ inline Matrix4<float>::Matrix4(const Vector4<float>& row0, const Vector4<float>&
 {
 }
 
-inline Matrix4<float>::Matrix4(const typename Matrix4<float>::TupleType& t) :
+inline Matrix4<float>::Matrix4(const typename Matrix4<float>::TupleType& t) noexcept :
 	Matrix4(std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t))
 {
 }
 
-inline Matrix4<float>::Matrix4(const Matrix2<float>& m) : 
+inline Matrix4<float>::Matrix4(const Matrix2<float>& m) noexcept : 
 	row0(simd::cutoff2(m.row0)),
 	row1(simd::cutoff2(m.row1)),
 	row2(Vector4<float>::UNIT_Z),
@@ -1088,7 +1133,7 @@ inline Matrix4<float>::Matrix4(const Matrix2<float>& m) :
 {
 }
 
-inline Matrix4<float>::Matrix4(const Matrix3<float>& m) :
+inline Matrix4<float>::Matrix4(const Matrix3<float>& m) noexcept :
 	row0(simd::cutoff3(m.row0)),
 	row1(simd::cutoff3(m.row1)),
 	row2(simd::cutoff3(m.row2)),
@@ -1096,7 +1141,7 @@ inline Matrix4<float>::Matrix4(const Matrix3<float>& m) :
 {
 }
 
-inline Matrix4<float>::Matrix4(const AffineTransform<float>& m) :
+inline Matrix4<float>::Matrix4(const AffineTransform<float>& m) noexcept :
 	row0(simd::cutoff3(m.row0)),
 	row1(simd::cutoff3(m.row1)),
 	row2(simd::cutoff3(m.row2)),
@@ -1104,7 +1149,7 @@ inline Matrix4<float>::Matrix4(const AffineTransform<float>& m) :
 {
 }
 
-inline Matrix4<float>::Matrix4(const float* m) : 
+inline Matrix4<float>::Matrix4(const float* m) noexcept : 
 	row0(simd::load4(m)),
 	row1(simd::load4(m + 4)),
 	row2(simd::load4(m + 8)),
@@ -1112,7 +1157,7 @@ inline Matrix4<float>::Matrix4(const float* m) :
 {
 }
 
-inline Matrix4<float>::Matrix4(simd::float4 row0, simd::float4 row1, simd::float4 row2, simd::float4 row3) :
+inline Matrix4<float>::Matrix4(simd::float4 row0, simd::float4 row1, simd::float4 row2, simd::float4 row3) noexcept :
 	row0(row0), 
 	row1(row1), 
 	row2(row2), 
@@ -1120,7 +1165,7 @@ inline Matrix4<float>::Matrix4(simd::float4 row0, simd::float4 row1, simd::float
 {
 }
 
-inline Matrix4<float>::Matrix4(const typename Matrix4<float>::SimdTupleType& t) :
+inline Matrix4<float>::Matrix4(const typename Matrix4<float>::SimdTupleType& t) noexcept :
 	row0(std::get<0>(t)), 
 	row1(std::get<1>(t)), 
 	row2(std::get<2>(t)), 
@@ -1128,12 +1173,12 @@ inline Matrix4<float>::Matrix4(const typename Matrix4<float>::SimdTupleType& t) 
 {
 }
 
-inline Matrix4<float> Matrix4<float>::operator-() const
+inline Matrix4<float> Matrix4<float>::operator-() const noexcept
 {
 	return Matrix4<float>(simd::neg4(row0), simd::neg4(row1), simd::neg4(row2), simd::neg4(row3));
 }
 
-inline Matrix4<float>& Matrix4<float>::operator+=(const Matrix4<float>& m)
+inline Matrix4<float>& Matrix4<float>::operator+=(const Matrix4<float>& m) noexcept
 {
 	row0 = simd::add4(row0, m.row0);
 	row1 = simd::add4(row1, m.row1);
@@ -1142,7 +1187,7 @@ inline Matrix4<float>& Matrix4<float>::operator+=(const Matrix4<float>& m)
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::operator-=(const Matrix4<float>& m)
+inline Matrix4<float>& Matrix4<float>::operator-=(const Matrix4<float>& m) noexcept
 {
 	row0 = simd::sub4(row0, m.row0);
 	row1 = simd::sub4(row1, m.row1);
@@ -1151,7 +1196,7 @@ inline Matrix4<float>& Matrix4<float>::operator-=(const Matrix4<float>& m)
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::operator*=(float f)
+inline Matrix4<float>& Matrix4<float>::operator*=(float f) noexcept
 {
 	auto t = simd::set4(f);
 	row0 = simd::mul4(row0, t);
@@ -1161,7 +1206,7 @@ inline Matrix4<float>& Matrix4<float>::operator*=(float f)
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::operator*=(const Matrix4<float>& m)
+inline Matrix4<float>& Matrix4<float>::operator*=(const Matrix4<float>& m) noexcept
 {
 	auto r0 = simd::mul4(simd::broadcast<0>(row0), m.row0);
 	r0 = simd::add4(r0, simd::mul4(simd::broadcast<1>(row0), m.row1));
@@ -1252,7 +1297,7 @@ inline Matrix4<float> operator/(const Matrix4<float>& m, float f) noexcept
 	return operator*(m, 1.f/f); 
 }
 
-inline bool Matrix4<float>::operator==(const Matrix4<float>& m) const
+inline bool Matrix4<float>::operator==(const Matrix4<float>& m) const noexcept
 {
 	return simd::all4(simd::equal(row0, m.row0)) &&
 		simd::all4(simd::equal(row1, m.row1)) &&
@@ -1286,7 +1331,7 @@ inline void Matrix4<float>::load(A& ar)
 	set(t00, t01, t02, t03, t10, t11, t12, t13, t20, t21, t22, t23, t30, t31, t32, t33);
 }
 
-inline bool Matrix4<float>::isZero() const
+inline bool Matrix4<float>::isZero() const noexcept
 {
 	const auto zero = simd::zero<simd::float4>();
 	return simd::all4(simd::equal(row0, zero)) && 
@@ -1295,7 +1340,7 @@ inline bool Matrix4<float>::isZero() const
 		simd::all4(simd::equal(row3, zero));
 }
 
-inline bool Matrix4<float>::isApproxZero() const
+inline bool Matrix4<float>::isApproxZero() const noexcept
 {
 	return simd::all4(simd::lessThan(simd::abs4(row0), Vector4<float>::TOLERANCE)) &&
 		simd::all4(simd::lessThan(simd::abs4(row1), Vector4<float>::TOLERANCE)) &&
@@ -1303,7 +1348,7 @@ inline bool Matrix4<float>::isApproxZero() const
 		simd::all4(simd::lessThan(simd::abs4(row3), Vector4<float>::TOLERANCE));
 }
 
-inline bool Matrix4<float>::isIdentity() const
+inline bool Matrix4<float>::isIdentity() const noexcept
 {
 	return simd::all4(simd::equal(row0, Vector4<float>::UNIT_X)) && 
 		simd::all4(simd::equal(row1, Vector4<float>::UNIT_Y)) &&
@@ -1311,7 +1356,7 @@ inline bool Matrix4<float>::isIdentity() const
 		simd::all4(simd::equal(row3, Vector4<float>::UNIT_W));
 }
 
-inline bool Matrix4<float>::isApproxIdentity() const
+inline bool Matrix4<float>::isApproxIdentity() const noexcept
 {
 	return simd::all4(simd::lessThan(simd::abs4(simd::sub4(row0, Vector4<float>::UNIT_X)), Vector4<float>::TOLERANCE)) &&
 		simd::all4(simd::lessThan(simd::abs4(simd::sub4(row1, Vector4<float>::UNIT_Y)), Vector4<float>::TOLERANCE)) &&
@@ -1319,7 +1364,7 @@ inline bool Matrix4<float>::isApproxIdentity() const
 		simd::all4(simd::lessThan(simd::abs4(simd::sub4(row3, Vector4<float>::UNIT_W)), Vector4<float>::TOLERANCE));
 }
 
-inline bool Matrix4<float>::approxEquals(const Matrix4& m) const
+inline bool Matrix4<float>::approxEquals(const Matrix4& m) const noexcept
 {
 	return simd::all4(simd::lessThan(simd::abs4(simd::sub4(row0, m.row0)), Vector4<float>::TOLERANCE)) &&
 		simd::all4(simd::lessThan(simd::abs4(simd::sub4(row1, m.row1)), Vector4<float>::TOLERANCE)) &&
@@ -1327,7 +1372,7 @@ inline bool Matrix4<float>::approxEquals(const Matrix4& m) const
 		simd::all4(simd::lessThan(simd::abs4(simd::sub4(row3, m.row3)), Vector4<float>::TOLERANCE));
 }
 
-inline bool Matrix4<float>::approxEquals(const Matrix4& m, float tolerance) const
+inline bool Matrix4<float>::approxEquals(const Matrix4& m, float tolerance) const noexcept
 {
 	auto t = simd::set4(tolerance);
 	return simd::all4(simd::lessThan(simd::abs4(simd::sub4(row0, m.row0)), t)) &&
@@ -1336,7 +1381,7 @@ inline bool Matrix4<float>::approxEquals(const Matrix4& m, float tolerance) cons
 		simd::all4(simd::lessThan(simd::abs4(simd::sub4(row3, m.row3)), t));
 }
 
-inline bool Matrix4<float>::isFinite() const
+inline bool Matrix4<float>::isFinite() const noexcept
 {
 	return simd::all4(simd::isFinite(row0)) &&
 		simd::all4(simd::isFinite(row1)) &&
@@ -1344,7 +1389,7 @@ inline bool Matrix4<float>::isFinite() const
 		simd::all4(simd::isFinite(row3));
 }
 
-inline float Matrix4<float>::getDeterminant() const // #TODO SIMD
+inline float Matrix4<float>::getDeterminant() const noexcept // #TODO SIMD
 {
 	auto det3 = [](float m00, float m01, float m02, float m10, float m11, float m12, float m20, float m21, float m22) -> float
 		{
@@ -1358,7 +1403,7 @@ inline float Matrix4<float>::getDeterminant() const // #TODO SIMD
 	return (m00*q - m01*r + m02*s - m03*t);
 }
 
-inline Matrix4<float>& Matrix4<float>::setZero()
+inline Matrix4<float>& Matrix4<float>::setZero() noexcept
 {
 	row0 = simd::zero<simd::float4>();
 	row1 = simd::zero<simd::float4>();
@@ -1367,7 +1412,7 @@ inline Matrix4<float>& Matrix4<float>::setZero()
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::setIdentity()
+inline Matrix4<float>& Matrix4<float>::setIdentity() noexcept
 {
 	row0 = Vector4<float>::UNIT_X;
 	row1 = Vector4<float>::UNIT_Y;
@@ -1377,7 +1422,7 @@ inline Matrix4<float>& Matrix4<float>::setIdentity()
 }
 
 inline Matrix4<float>& Matrix4<float>::set(const Vector4<float>& row0, const Vector4<float>& row1, const Vector4<float>& row2,
-	const Vector4<float>& row3)
+	const Vector4<float>& row3) noexcept
 {
 	this->row0 = row0;
 	this->row1 = row1;
@@ -1386,7 +1431,7 @@ inline Matrix4<float>& Matrix4<float>::set(const Vector4<float>& row0, const Vec
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::set(simd::float4 row0, simd::float4 row1, simd::float4 row2, simd::float4 row3)
+inline Matrix4<float>& Matrix4<float>::set(simd::float4 row0, simd::float4 row1, simd::float4 row2, simd::float4 row3) noexcept
 {
 	this->row0 = row0;
 	this->row1 = row1;
@@ -1396,7 +1441,7 @@ inline Matrix4<float>& Matrix4<float>::set(simd::float4 row0, simd::float4 row1,
 }
 
 inline Matrix4<float>& Matrix4<float>::set(float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13,
-	float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33)
+	float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33) noexcept
 {
 	row0 = simd::set4(m00, m01, m02, m03);
 	row1 = simd::set4(m10, m11, m12, m13);
@@ -1405,7 +1450,7 @@ inline Matrix4<float>& Matrix4<float>::set(float m00, float m01, float m02, floa
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::setTranslation(const Vector3<float>& v)
+inline Matrix4<float>& Matrix4<float>::setTranslation(const Vector3<float>& v) noexcept
 {
 	row0 = Vector4<float>::UNIT_X;
 	row1 = Vector4<float>::UNIT_Y;
@@ -1414,7 +1459,7 @@ inline Matrix4<float>& Matrix4<float>::setTranslation(const Vector3<float>& v)
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::setScaling(const Vector3<float>& v)
+inline Matrix4<float>& Matrix4<float>::setScaling(const Vector3<float>& v) noexcept
 {
 	row0 = simd::cutoff1(v);
 	row1 = simd::and4(v, simd::constant4i<simd::float4, 0, -1, 0, 0>());
@@ -1423,7 +1468,7 @@ inline Matrix4<float>& Matrix4<float>::setScaling(const Vector3<float>& v)
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::setRotation(Axis axis, float angle)
+inline Matrix4<float>& Matrix4<float>::setRotation(Axis axis, float angle) noexcept
 {
 	if (angle != 0.f)
 	{
@@ -1446,7 +1491,7 @@ inline Matrix4<float>& Matrix4<float>::setRotation(Axis axis, float angle)
 	return setIdentity();
 }
 
-inline Matrix4<float>& Matrix4<float>::setRotation(const Vector3<float>& axis, float angle)
+inline Matrix4<float>& Matrix4<float>::setRotation(const Vector3<float>& axis, float angle) noexcept
 {
 	float m = axis.getMagnitude();
 	if ((m > 0.f) && (angle != 0.f))
@@ -1468,21 +1513,21 @@ inline Matrix4<float>& Matrix4<float>::setRotation(const Vector3<float>& axis, f
 	return setIdentity();
 }
 
-inline Matrix4<float>& Matrix4<float>::setRotationTranslation(Axis axis, float angle, const Vector3<float>& t)
+inline Matrix4<float>& Matrix4<float>::setRotationTranslation(Axis axis, float angle, const Vector3<float>& t) noexcept
 {
 	setRotation(axis, angle);
 	row3 = simd::insert3(t, Vector4<float>::UNIT_W);
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::setRotationTranslation(const Vector3<float>& axis, float angle, const Vector3<float>& t)
+inline Matrix4<float>& Matrix4<float>::setRotationTranslation(const Vector3<float>& axis, float angle, const Vector3<float>& t) noexcept
 {
 	setRotation(axis, angle);
 	row3 = simd::insert3(t, Vector4<float>::UNIT_W);
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::setScalingTranslation(const Vector3<float>& s, const Vector3<float>& t)
+inline Matrix4<float>& Matrix4<float>::setScalingTranslation(const Vector3<float>& s, const Vector3<float>& t) noexcept
 {
 	row0 = simd::cutoff1(s);
 	row1 = simd::and4(s, simd::constant4i<simd::float4, 0, -1, 0, 0>());
@@ -1492,7 +1537,7 @@ inline Matrix4<float>& Matrix4<float>::setScalingTranslation(const Vector3<float
 }
 
 inline Matrix4<float>& Matrix4<float>::setScalingRotationTranslation(const Vector3<float>& s, Axis axis, float angle,
-	const Vector3<float>& t)
+	const Vector3<float>& t) noexcept
 {
 	setRotation(axis, angle);
 	preScale(s);
@@ -1501,7 +1546,7 @@ inline Matrix4<float>& Matrix4<float>::setScalingRotationTranslation(const Vecto
 }
 
 inline Matrix4<float>& Matrix4<float>::setScalingRotationTranslation(const Vector3<float>& s, const Vector3<float>& axis, float angle,
-	const Vector3<float>& t)
+	const Vector3<float>& t) noexcept
 {
 	setRotation(axis, angle);
 	preScale(s);
@@ -1509,7 +1554,7 @@ inline Matrix4<float>& Matrix4<float>::setScalingRotationTranslation(const Vecto
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::setShearing(float xy, float xz, float yx, float yz, float zx, float zy)
+inline Matrix4<float>& Matrix4<float>::setShearing(float xy, float xz, float yx, float yz, float zx, float zy) noexcept
 {
 	row0 = simd::set3(1.f, xy, xz);
 	row1 = simd::set3(yx, 1.f, yz);
@@ -1518,14 +1563,14 @@ inline Matrix4<float>& Matrix4<float>::setShearing(float xy, float xz, float yx,
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::setTranspose(const Matrix4<float>& m)
+inline Matrix4<float>& Matrix4<float>::setTranspose(const Matrix4<float>& m) noexcept
 {
 	//simd::transpose4x4(m.row0, m.row1, m.row2, m.row3, row0, row1, row2, row3);
 	std::tie(row0, row1, row2, row3) = simd::transpose4x4(m.row0, m.row1, m.row2, m.row3);
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::setInverse(const Matrix4<float>& m)
+inline Matrix4<float>& Matrix4<float>::setInverse(const Matrix4<float>& m) noexcept
 {
 	auto r2 = m.row2;
 	auto t = simd::mul4(r2, m.row3);
@@ -1586,7 +1631,7 @@ inline Matrix4<float>& Matrix4<float>::setInverse(const Matrix4<float>& m)
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::preConcatenate(const Matrix4<float>& m)
+inline Matrix4<float>& Matrix4<float>::preConcatenate(const Matrix4<float>& m) noexcept
 {
 	auto r0 = simd::mul4(simd::broadcast<0>(m.row0), row0);
 	r0 = simd::add4(r0, simd::mul4(simd::broadcast<1>(m.row0), row1));
@@ -1611,7 +1656,7 @@ inline Matrix4<float>& Matrix4<float>::preConcatenate(const Matrix4<float>& m)
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::preScale(const Vector3<float>& v)
+inline Matrix4<float>& Matrix4<float>::preScale(const Vector3<float>& v) noexcept
 {
 	row0 = simd::mul4(row0, simd::xxxx(v));
 	row1 = simd::mul4(row1, simd::yyyy(v));
@@ -1619,7 +1664,7 @@ inline Matrix4<float>& Matrix4<float>::preScale(const Vector3<float>& v)
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::scale(const Vector3<float>& v)
+inline Matrix4<float>& Matrix4<float>::scale(const Vector3<float>& v) noexcept
 {
 	auto t = simd::insert3(v, Vector4<float>::UNIT_W);
 	row0 = simd::mul4(row0, t);
@@ -1629,7 +1674,7 @@ inline Matrix4<float>& Matrix4<float>::scale(const Vector3<float>& v)
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::negate()
+inline Matrix4<float>& Matrix4<float>::negate() noexcept
 {
 	row0 = simd::neg4(row0);
 	row1 = simd::neg4(row1);
@@ -1638,7 +1683,7 @@ inline Matrix4<float>& Matrix4<float>::negate()
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::transpose()
+inline Matrix4<float>& Matrix4<float>::transpose() noexcept
 {
 	//simd::transpose4x4(row0, row1, row2, row3, row0, row1, row2, row3);
 	std::tie(row0, row1, row2, row3) = simd::transpose4x4(row0, row1, row2, row3);
@@ -1749,7 +1794,7 @@ inline Matrix4<T> adjoint(const Matrix4<T>& m) noexcept
 template<>
 inline Matrix4<float> transpose(const Matrix4<float>& m) noexcept
 {
-	Matrix4<float> n(Uninitialized());
+	Matrix4<float> n{ Uninitialized() };
 	//simd::transpose4x4(m.row0, m.row1, m.row2, m.row3, n.row0, n.row1, n.row2, n.row3);
 	std::tie(n.row0, n.row1, n.row2, n.row3) = simd::transpose4x4(m.row0, m.row1, m.row2, m.row3);
 	return n;
@@ -1786,9 +1831,6 @@ using Matrix4Result = templates::Matrix4<float>::ConstResult;
 } // namespace mathematics
 
 namespace std {
-
-template<typename T>
-struct hash;
 
 template<typename T>
 struct hash<::mathematics::templates::Matrix4<T>>
@@ -1844,7 +1886,8 @@ struct hash<::mathematics::templates::Matrix4<float>>
 namespace mathematics::templates {
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setRotation(const YawPitchRoll<T>& r)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setRotation(const YawPitchRoll<T>& r) noexcept
 {
 	if (!r.isZero())
 	{
@@ -1863,7 +1906,8 @@ inline Matrix4<T>& Matrix4<T>::setRotation(const YawPitchRoll<T>& r)
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setRotation(const Euler<T>& e)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setRotation(const Euler<T>& e) noexcept
 {
 	if (!e.isZero() && (e.order != EulerOrder::UNSPECIFIED))
 	{
@@ -1923,7 +1967,8 @@ inline Matrix4<T>& Matrix4<T>::setRotation(const Euler<T>& e)
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setRotation(const Quaternion<T>& q)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setRotation(const Quaternion<T>& q) noexcept
 {
 	if (!q.isIdentity())
 	{
@@ -1944,7 +1989,8 @@ inline Matrix4<T>& Matrix4<T>::setRotation(const Quaternion<T>& q)
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setRotationTranslation(const YawPitchRoll<T>& r, const Vector3<T>& t)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setRotationTranslation(const YawPitchRoll<T>& r, const Vector3<T>& t) noexcept
 {
 	setRotation(r);
 	m30 = t.x; m31 = t.y; m32 = t.z;
@@ -1952,7 +1998,8 @@ inline Matrix4<T>& Matrix4<T>::setRotationTranslation(const YawPitchRoll<T>& r, 
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setRotationTranslation(const Euler<T>& e, const Vector3<T>& t)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setRotationTranslation(const Euler<T>& e, const Vector3<T>& t) noexcept
 {
 	setRotation(e);
 	m30 = t.x; m31 = t.y; m32 = t.z;
@@ -1960,7 +2007,8 @@ inline Matrix4<T>& Matrix4<T>::setRotationTranslation(const Euler<T>& e, const V
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setRotationTranslation(const Quaternion<T>& q, const Vector3<T>& t)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setRotationTranslation(const Quaternion<T>& q, const Vector3<T>& t) noexcept
 {
 	setRotation(q);
 	m30 = t.x; m31 = t.y; m32 = t.z;
@@ -1968,7 +2016,8 @@ inline Matrix4<T>& Matrix4<T>::setRotationTranslation(const Quaternion<T>& q, co
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setScalingRotation(const Vector3<T>& s, const YawPitchRoll<T>& r)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setScalingRotation(const Vector3<T>& s, const YawPitchRoll<T>& r) noexcept
 {
 	setRotation(r);
 	m00 *= s.x; m01 *= s.x; m02 *= s.x;
@@ -1978,7 +2027,8 @@ inline Matrix4<T>& Matrix4<T>::setScalingRotation(const Vector3<T>& s, const Yaw
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setScalingRotation(const Vector3<T>& s, const Euler<T>& e)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setScalingRotation(const Vector3<T>& s, const Euler<T>& e) noexcept
 {
 	setRotation(e);
 	m00 *= s.x; m01 *= s.x; m02 *= s.x;
@@ -1988,7 +2038,8 @@ inline Matrix4<T>& Matrix4<T>::setScalingRotation(const Vector3<T>& s, const Eul
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setScalingRotation(const Vector3<T>& s, const Quaternion<T>& q)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setScalingRotation(const Vector3<T>& s, const Quaternion<T>& q) noexcept
 {
 	setRotation(q);
 	m00 *= s.x; m01 *= s.x; m02 *= s.x;
@@ -1998,7 +2049,8 @@ inline Matrix4<T>& Matrix4<T>::setScalingRotation(const Vector3<T>& s, const Qua
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setScalingRotationTranslation(const Vector3<T>& s, const YawPitchRoll<T>& r, const Vector3<T>& t)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setScalingRotationTranslation(const Vector3<T>& s, const YawPitchRoll<T>& r, const Vector3<T>& t) noexcept
 {
 	setRotation(r);
 	m00 *= s.x; m01 *= s.x; m02 *= s.x;
@@ -2009,7 +2061,8 @@ inline Matrix4<T>& Matrix4<T>::setScalingRotationTranslation(const Vector3<T>& s
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setScalingRotationTranslation(const Vector3<T>& s, const Euler<T>& e, const Vector3<T>& t)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setScalingRotationTranslation(const Vector3<T>& s, const Euler<T>& e, const Vector3<T>& t) noexcept
 {
 	setRotation(e);
 	m00 *= s.x; m01 *= s.x; m02 *= s.x;
@@ -2020,7 +2073,8 @@ inline Matrix4<T>& Matrix4<T>::setScalingRotationTranslation(const Vector3<T>& s
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setScalingRotationTranslation(const Vector3<T>& s, const Quaternion<T>& q, const Vector3<T>& t)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setScalingRotationTranslation(const Vector3<T>& s, const Quaternion<T>& q, const Vector3<T>& t) noexcept
 {
 	setRotation(q);
 	m00 *= s.x; m01 *= s.x; m02 *= s.x;
@@ -2031,7 +2085,8 @@ inline Matrix4<T>& Matrix4<T>::setScalingRotationTranslation(const Vector3<T>& s
 }
 
 template<typename T>
-inline Matrix4<T>& Matrix4<T>::setReflection(const Plane<T>& plane)
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::setReflection(const Plane<T>& plane) noexcept
 {
 	Plane<T> p(plane);
 	p.normalize();
@@ -2044,7 +2099,7 @@ inline Matrix4<T>& Matrix4<T>::setReflection(const Plane<T>& plane)
 
 #if SIMD_HAS_FLOAT4
 
-inline Matrix4<float>& Matrix4<float>::setRotation(const YawPitchRoll<float>& r)
+inline Matrix4<float>& Matrix4<float>::setRotation(const YawPitchRoll<float>& r) noexcept
 {
 	if (!r.isZero())
 	{
@@ -2062,7 +2117,7 @@ inline Matrix4<float>& Matrix4<float>::setRotation(const YawPitchRoll<float>& r)
 	return setIdentity();
 }
 
-inline Matrix4<float>& Matrix4<float>::setRotation(const Euler<float>& e)
+inline Matrix4<float>& Matrix4<float>::setRotation(const Euler<float>& e) noexcept
 {
 	if (!e.isZero() && (e.order != EulerOrder::UNSPECIFIED))
 	{
@@ -2121,7 +2176,7 @@ inline Matrix4<float>& Matrix4<float>::setRotation(const Euler<float>& e)
 	return setIdentity();
 }
 
-inline Matrix4<float>& Matrix4<float>::setRotation(const Quaternion<float>& q)
+inline Matrix4<float>& Matrix4<float>::setRotation(const Quaternion<float>& q) noexcept
 {
 	if (!q.isIdentity())
 	{
@@ -2141,21 +2196,21 @@ inline Matrix4<float>& Matrix4<float>::setRotation(const Quaternion<float>& q)
 	return setIdentity();
 }
 
-inline Matrix4<float>& Matrix4<float>::setRotationTranslation(const YawPitchRoll<float>& r, const Vector3<float>& t)
+inline Matrix4<float>& Matrix4<float>::setRotationTranslation(const YawPitchRoll<float>& r, const Vector3<float>& t) noexcept
 {
 	setRotation(r);
 	row3 = simd::insert3(t, Vector4<float>::UNIT_W);
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::setRotationTranslation(const Euler<float>& e, const Vector3<float>& t)
+inline Matrix4<float>& Matrix4<float>::setRotationTranslation(const Euler<float>& e, const Vector3<float>& t) noexcept
 {
 	setRotation(e);
 	row3 = simd::insert3(t, Vector4<float>::UNIT_W);
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::setRotationTranslation(const Quaternion<float>& q, const Vector3<float>& t)
+inline Matrix4<float>& Matrix4<float>::setRotationTranslation(const Quaternion<float>& q, const Vector3<float>& t) noexcept
 {
 	setRotation(q);
 	row3 = simd::insert3(t, Vector4<float>::UNIT_W);
@@ -2163,7 +2218,7 @@ inline Matrix4<float>& Matrix4<float>::setRotationTranslation(const Quaternion<f
 }
 
 inline Matrix4<float>& Matrix4<float>::setScalingRotationTranslation(const Vector3<float>& s, const YawPitchRoll<float>& r, 
-	const Vector3<float>& t)
+	const Vector3<float>& t) noexcept
 {
 	setRotation(r);
 	preScale(s);
@@ -2172,7 +2227,7 @@ inline Matrix4<float>& Matrix4<float>::setScalingRotationTranslation(const Vecto
 }
 
 inline Matrix4<float>& Matrix4<float>::setScalingRotationTranslation(const Vector3<float>& s, const Euler<float>& e, 
-	const Vector3<float>& t)
+	const Vector3<float>& t) noexcept
 {
 	setRotation(e);
 	preScale(s);
@@ -2181,7 +2236,7 @@ inline Matrix4<float>& Matrix4<float>::setScalingRotationTranslation(const Vecto
 }
 
 inline Matrix4<float>& Matrix4<float>::setScalingRotationTranslation(const Vector3<float>& s, const Quaternion<float>& q, 
-	const Vector3<float>& t)
+	const Vector3<float>& t) noexcept
 {
 	setRotation(q);
 	preScale(s);
@@ -2189,7 +2244,7 @@ inline Matrix4<float>& Matrix4<float>::setScalingRotationTranslation(const Vecto
 	return *this;
 }
 
-inline Matrix4<float>& Matrix4<float>::setReflection(const Plane<float>& plane)
+inline Matrix4<float>& Matrix4<float>::setReflection(const Plane<float>& plane) noexcept
 {
 	Plane<float> p(plane);
 	p.normalize();

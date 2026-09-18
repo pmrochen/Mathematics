@@ -120,7 +120,8 @@ struct OrientedBox
 };
 
 template<typename T>
-inline OrientedBox<T>::OrientedBox(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& halfDims) : 
+	requires std::floating_point<T>
+inline OrientedBox<T>::OrientedBox(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& halfDims) noexcept : 
 	center(center), 
 	basis(basis), 
 	halfDims(halfDims) 
@@ -128,9 +129,10 @@ inline OrientedBox<T>::OrientedBox(const Vector3<T>& center, const Matrix3<T>& b
 }
 
 template<typename T>
-inline OrientedBox<T>::OrientedBox(const AxisAlignedBox<T>& box, const Matrix3<T>& orientation, bool orthogonal) :
+	requires std::floating_point<T>
+inline OrientedBox<T>::OrientedBox(const AxisAlignedBox<T>& box, const Matrix3<T>& orientation, bool orthogonal) noexcept :
 	center(box.getCenter()*orientation),
-	basis(transformation.getBasis()),
+	basis(orientation),
 	halfDims(box.getHalfDimensions())
 {
 	if (!orthogonal)
@@ -138,7 +140,8 @@ inline OrientedBox<T>::OrientedBox(const AxisAlignedBox<T>& box, const Matrix3<T
 }
 
 template<typename T>
-inline OrientedBox<T>::OrientedBox(const AxisAlignedBox<T>& box, const AffineTransform<T>& transformation, bool orthogonal) :
+	requires std::floating_point<T>
+inline OrientedBox<T>::OrientedBox(const AxisAlignedBox<T>& box, const AffineTransform<T>& transformation, bool orthogonal) noexcept :
 	center(transform(box.getCenter(), transformation)),
 	basis(transformation.getBasis()),
 	halfDims(box.getHalfDimensions())
@@ -148,7 +151,8 @@ inline OrientedBox<T>::OrientedBox(const AxisAlignedBox<T>& box, const AffineTra
 }
 
 template<typename T>
-inline bool OrientedBox<T>::operator==(const OrientedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool OrientedBox<T>::operator==(const OrientedBox<T>& box) const noexcept
 { 
 	return (center == box.center) && (basis == box.basis) && (halfDims == box.halfDims);
 }
@@ -169,20 +173,23 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const O
 }
 
 template<typename T>
-inline bool OrientedBox<T>::approxEquals(const OrientedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool OrientedBox<T>::approxEquals(const OrientedBox<T>& box) const noexcept
 {
 	return center.approxEquals(box.center) && basis.approxEquals(box.basis) && halfDims.approxEquals(box.halfDims);
 }
 
 template<typename T>
-inline bool OrientedBox<T>::approxEquals(const OrientedBox<T>& box, T tolerance) const
+	requires std::floating_point<T>
+inline bool OrientedBox<T>::approxEquals(const OrientedBox<T>& box, T tolerance) const noexcept
 {
 	return center.approxEquals(box.center, tolerance) && basis.approxEquals(box.basis, tolerance) && 
 		halfDims.approxEquals(box.halfDims, tolerance);
 }
 
 template<typename T>
-inline OrientedBox<T>& OrientedBox<T>::set(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& halfDims) 
+	requires std::floating_point<T>
+inline OrientedBox<T>& OrientedBox<T>::set(const Vector3<T>& center, const Matrix3<T>& basis, const Vector3<T>& halfDims) noexcept
 { 
 	this->center = center; 
 	this->basis = basis; 
@@ -191,20 +198,23 @@ inline OrientedBox<T>& OrientedBox<T>::set(const Vector3<T>& center, const Matri
 }
 
 template<typename T>
-inline T OrientedBox<T>::getSurfaceArea() const
+	requires std::floating_point<T>
+inline T OrientedBox<T>::getSurfaceArea() const noexcept
 {
 	Vector3<T> dim = halfDims*T(2);
 	return T(2)*(dim.x*dim.y + dim.y*dim.z + dim.z*dim.x); // T(2)*dot(dim, dim.yzx())
 }
 
 template<typename T>
-inline T OrientedBox<T>::getVolume() const
+	requires std::floating_point<T>
+inline T OrientedBox<T>::getVolume() const noexcept
 {
 	Vector3<T> dim = halfDims*T(2);
 	return dim.x*dim.y*dim.z;
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::output_iterator<Vector3<T>> O>
 inline O OrientedBox<T>::copyVertices(O target) const
 {
@@ -221,6 +231,7 @@ inline O OrientedBox<T>::copyVertices(O target) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::vector<Vector3<T>> OrientedBox<T>::getVertices() const
 {
 	AffineTransform<T> m(basis, center);
@@ -231,8 +242,9 @@ inline std::vector<Vector3<T>> OrientedBox<T>::getVertices() const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::integral U>
-std::pair<const U*, const U*> OrientedBox<T>::getPrimitives(int nVerticesPerPrimitive) const
+std::pair<const U*, const U*> OrientedBox<T>::getPrimitives(int nVerticesPerPrimitive) const noexcept
 {
 	static const U edges[24] = { 0, 2, 2, 3, 3, 1, 1, 0, 3, 7, 5, 1, 6, 2, 0, 4, 5, 7, 7, 6, 6, 4, 4, 5 };
 	static const U triangles[36] = { 0, 2, 1, 3, 1, 2, 1, 3, 5, 7, 5, 3, 5, 7, 4, 6, 4, 7, 4, 6, 0, 2, 0, 6, 2, 6, 3, 7, 3, 6, 4, 0, 5, 1, 5, 0 };
@@ -252,7 +264,8 @@ std::pair<const U*, const U*> OrientedBox<T>::getPrimitives(int nVerticesPerPrim
 }
 
 template<typename T>
-inline std::size_t OrientedBox<T>::getPrimitiveCount(int nVerticesPerPrimitive) const
+	requires std::floating_point<T>
+inline std::size_t OrientedBox<T>::getPrimitiveCount(int nVerticesPerPrimitive) const noexcept
 {
 	switch (nVerticesPerPrimitive)
 	{
@@ -268,6 +281,7 @@ inline std::size_t OrientedBox<T>::getPrimitiveCount(int nVerticesPerPrimitive) 
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::output_iterator<HalfSpace<T>> O>
 inline O OrientedBox<T>::copyHalfSpaces(O target) const
 {
@@ -281,6 +295,7 @@ inline O OrientedBox<T>::copyHalfSpaces(O target) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::vector<HalfSpace<T>> OrientedBox<T>::getHalfSpaces() const
 {
 	return { HalfSpace<T>(-basis[0], -halfDims.x*basis[0] + center),
@@ -292,14 +307,16 @@ inline std::vector<HalfSpace<T>> OrientedBox<T>::getHalfSpaces() const
 }
 
 template<typename T>
-inline AxisAlignedBox<T> OrientedBox<T>::getCircumscribedBox() const
+	requires std::floating_point<T>
+inline AxisAlignedBox<T> OrientedBox<T>::getCircumscribedBox() const noexcept
 {
 	Vector3<T> halfDims = abs(halfDims.x*basis[0]) + abs(halfDims.y*basis[1]) + abs(halfDims.z*basis[2]);
 	return { center - halfDims, center + halfDims };
 }
 
 template<typename T>
-inline OrientedBox<T> OrientedBox<T>::transform(const Matrix3<T>& matrix, bool orthogonal)
+	requires std::floating_point<T>
+inline OrientedBox<T>& OrientedBox<T>::transform(const Matrix3<T>& matrix, bool orthogonal) noexcept
 {
 	basis *= matrix;
 	center *= matrix;
@@ -309,7 +326,8 @@ inline OrientedBox<T> OrientedBox<T>::transform(const Matrix3<T>& matrix, bool o
 }
 
 template<typename T>
-inline OrientedBox<T> OrientedBox<T>::transform(const AffineTransform<T>& transformation, bool orthogonal)
+	requires std::floating_point<T>
+inline OrientedBox<T>& OrientedBox<T>::transform(const AffineTransform<T>& transformation, bool orthogonal) noexcept
 {
 	basis *= transformation.getBasis();
 	center.transform(transformation);
@@ -319,7 +337,8 @@ inline OrientedBox<T> OrientedBox<T>::transform(const AffineTransform<T>& transf
 }
 
 template<typename T>
-inline OrientedBox<T> OrientedBox<T>::orthonormalize()
+	requires std::floating_point<T>
+inline OrientedBox<T>& OrientedBox<T>::orthonormalize() noexcept
 {
 	halfDims *= Vector3<T>(basis[0].getMagnitude(), basis[1].getMagnitude(), basis[2].getMagnitude());
 	//halfDims.x *= basis[0].getMagnitude();
@@ -330,7 +349,8 @@ inline OrientedBox<T> OrientedBox<T>::orthonormalize()
 }
 
 template<typename T>
-inline Vector3 OrientedBox<T>::getClosestPoint(const Vector3<T>& point) const
+	requires std::floating_point<T>
+inline Vector3<T> OrientedBox<T>::getClosestPoint(const Vector3<T>& point) const noexcept
 {
 	//Vector3<T> ptLocal = (point - center)*transpose(basis);
 	Vector3<T> ptLocal = basis*(point - center);
@@ -338,7 +358,8 @@ inline Vector3 OrientedBox<T>::getClosestPoint(const Vector3<T>& point) const
 }
 
 template<typename T>
-inline bool OrientedBox<T>::contains(const Vector3<T>& point) const
+	requires std::floating_point<T>
+inline bool OrientedBox<T>::contains(const Vector3<T>& point) const noexcept
 {
 	//Vector3<T> ptLocal = (point - center)*transpose(basis);
 	Vector3<T> ptLocal = basis*(point - center);
@@ -360,9 +381,6 @@ using OrientedBoxResult = templates::OrientedBox<float>::ConstResult;
 } // namespace mathematics
 
 namespace std {
-
-template<typename T>
-struct hash;
 
 template<typename T>
 struct hash<::mathematics::templates::OrientedBox<T>>
@@ -387,56 +405,65 @@ struct hash<::mathematics::templates::OrientedBox<T>>
 namespace mathematics::templates {
 
 template<typename T>
-inline int OrientedBox<T>::classify(const HalfSpace<T>& halfSpace) const
+	requires std::floating_point<T>
+inline int OrientedBox<T>::classify(const HalfSpace<T>& halfSpace) const noexcept
 {
 	return intersections::classifyOrientedBoxHalfSpace(center, basis, halfDims, halfSpace.getNormal(), halfSpace.d);
 }
 
 template<typename T>
-inline bool OrientedBox<T>::intersects(const HalfSpace<T>& halfSpace) const
+	requires std::floating_point<T>
+inline bool OrientedBox<T>::intersects(const HalfSpace<T>& halfSpace) const noexcept
 {
 	return intersections::testOrientedBoxHalfSpace(center, basis, halfDims, halfSpace.getNormal(), halfSpace.d);
 }
 
 template<typename T>
-inline bool OrientedBox<T>::intersects(const Plane<T>& plane) const
+	requires std::floating_point<T>
+inline bool OrientedBox<T>::intersects(const Plane<T>& plane) const noexcept
 {
 	return intersections::testOrientedBoxPlane(center, basis, halfDims, plane.getNormal(), plane.d);
 }
 
 template<typename T>
-inline bool OrientedBox<T>::intersects(const Triangle3<T>& triangle) const
+	requires std::floating_point<T>
+inline bool OrientedBox<T>::intersects(const Triangle3<T>& triangle) const noexcept
 {
 	return intersections::testOrientedBoxTriangle(center, basis, halfDims, triangle.vertices[0], triangle.vertices[1], 
 		triangle.vertices[2]);
 }
 
 template<typename T>
-inline bool OrientedBox<T>::intersects(const AxisAlignedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool OrientedBox<T>::intersects(const AxisAlignedBox<T>& box) const noexcept
 {
 	return intersections::testOrientedBoxAxisAlignedBox(center, basis, halfDims, box.getCenter(), box.getHalfDimensions());
 }
 
 template<typename T>
-inline bool OrientedBox<T>::intersects(const OrientedBox<T>& box) const
+	requires std::floating_point<T>
+inline bool OrientedBox<T>::intersects(const OrientedBox<T>& box) const noexcept
 {
 	return intersections::testOrientedBoxOrientedBox(center, basis, halfDims, box.center, box.basis, box.halfDims);
 }
 
 template<typename T>
-inline bool OrientedBox<T>::intersects(const Sphere<T>& sphere) const
+	requires std::floating_point<T>
+inline bool OrientedBox<T>::intersects(const Sphere<T>& sphere) const noexcept
 {
 	return intersections::testOrientedBoxSphere(center, basis, halfDims, sphere.center, sphere.radius);
 }
 
 template<typename T>
-inline bool OrientedBox<T>::intersects(const SymmetricFrustum<T>& frustum) const
+	requires std::floating_point<T>
+inline bool OrientedBox<T>::intersects(const SymmetricFrustum<T>& frustum) const noexcept
 {
 	return frustum.intersects(*this);
 }
 
 template<typename T>
-inline bool OrientedBox<T>::intersects(const ConvexPolyhedron<T>* polyhedron) const
+	requires std::floating_point<T>
+inline bool OrientedBox<T>::intersects(const ConvexPolyhedron<T>* polyhedron) const noexcept
 {
 	return polyhedron && polyhedron->intersects(*this);
 }

@@ -23,6 +23,12 @@
 #include "Distances.inl"
 
 namespace mathematics::intersections {
+
+using templates::Vector2;
+using templates::Vector3;
+using templates::Vector4;
+using templates::Matrix3;
+
 namespace detail {
 
 //template <template <typename...> class, template<typename...> class>
@@ -342,7 +348,7 @@ inline O findLineLineSegment(const Vector2<T>& origin, const Vector2<T>& directi
 	}
 
 	T t = cross(diff, direction)/d2CrossD1;
-	if ((t >= T(0)) && (t <= T(1))
+	if ((t >= T(0)) && (t <= T(1)))
 		return { t };
 	return detail::infinity<O, T>();
 }
@@ -394,7 +400,7 @@ inline O findLinePlane(const Vector3<T>& origin, const Vector3<T>& direction, co
 	T nDotD = dot(normal, direction);
 	if (std::fabs(nDotD) < Constants<T>::TOLERANCE)
 		return detail::infinity<O, T>();
-	return { (-plane.d - dot(normal, origin))/nDotD };
+	return { (-constant - dot(normal, origin))/nDotD };
 }
 
 template<typename O, typename T>
@@ -639,7 +645,7 @@ inline O findLineOrientedBox(const Vector3<T>& origin, const Vector3<T>& directi
 {
 	//Matrix3<T> basisTranspose(transpose(basis));
 	return findLineAxisAlignedBox<O, T>(basis*(origin - center)/*(origin - center)*basisTranspose*/,
-		basis*direction/*direction*basisTranspose*/, -box.halfDims, box.halfDims);
+		basis*direction/*direction*basisTranspose*/, -halfDims, halfDims);
 }
 
 template<typename T, typename V>
@@ -667,10 +673,10 @@ template<typename O, typename T, typename V>
 	requires std::floating_point<T> // #TODO Add vector (V) constraints
 inline O findLineNSphere(const V& origin, const V& direction, const V& center, T radius) noexcept
 {
-	V diff = origin - sphere.center;
+	V diff = origin - center;
 	T a = dot(direction, direction);
 	T b = T(2)*dot(direction, diff);
-	T c = dot(diff, diff) - sphere.radius*sphere.radius;
+	T c = dot(diff, diff) - radius*radius;
 	T delta = b*b - T(4)*a*c;
 
 	if (delta < T(0))
@@ -693,9 +699,9 @@ template<typename O, typename T, typename V>
 	requires std::floating_point<T> // #TODO Add vector (V) constraints
 inline O findNormalizedLineNSphere(const V& origin, const V& direction, const V& center, T radius) noexcept
 {
-	V diff = origin - sphere.center;
+	V diff = origin - center;
 	T halfB = dot(direction, diff);
-	T c = dot(diff, diff) - sphere.radius*sphere.radius;
+	T c = dot(diff, diff) - radius*radius;
 	T delta = halfB*halfB - c;
 
 	if (delta < T(0))
@@ -892,7 +898,7 @@ inline O findLineSegmentEllipsoid(const Vector3<T>& start, const Vector3<T>& end
 		T t0 = (-a1 - root)*inv;
 		T t1 = (-a1 + root)*inv;
 
-		auto intersection = Interval<T>(t0, t1).findIntersection(Interval<T>(-e, e));
+		auto intersection = Interval<T>(t0, t1).findIntersection(Interval<T>(-E, E));
 		if (intersection.has_value())
 			return detail::interval<O>(intersection.value().minimum + E, intersection.value().maximum + E);
 		else
@@ -1144,9 +1150,9 @@ inline bool testOrientedBoxTriangle(const Vector3<T>& center, const Matrix3<T>& 
 	const Vector3<T>& vertex0, const Vector3<T>& vertex1, const Vector3<T>& vertex2) noexcept
 {
 	//Matrix3 basisTranspose = transpose(basis);
-	//return detail::testAxisAlignedBoxTriangle(/*Vector3<T>::ZERO,*/ halfDims, (vertex0 - center)*basisTranspose, 
+	//return testAxisAlignedBoxTriangle(/*Vector3<T>::ZERO,*/ halfDims, (vertex0 - center)*basisTranspose, 
 	//	(vertex1 - center)*basisTranspose, (vertex2 - center)*basisTranspose);
-	return detail::testAxisAlignedBoxTriangle(/*Vector3<T>::ZERO,*/ halfDims, basis*(vertex0 - center),
+	return testAxisAlignedBoxTriangle(/*Vector3<T>::ZERO,*/ halfDims, basis*(vertex0 - center),
 		basis*(vertex1 - center), basis*(vertex2 - center));
 }
 
@@ -1594,8 +1600,8 @@ inline bool testConeSphere(const Vector3<T>& vertex, const Vector3<T>& axis, T h
 	T cosAngle = height/slantHeight;
 	T invSin = slantHeight/radius; // T(1)/sinAngle;
 	T cosSqr = cosAngle*cosAngle;
-	Vector3<T> cmV = sphere.center - vertex;
-	Vector3<T> d = cmV + (sphere.radius*invSin)*axis;
+	Vector3<T> cmV = center - vertex;
+	Vector3<T> d = cmV + (radius*invSin)*axis;
 	T dSqrLen = d.getMagnitudeSquared();
 	T e = dot(d, axis);
 
@@ -1604,7 +1610,7 @@ inline bool testConeSphere(const Vector3<T>& vertex, const Vector3<T>& axis, T h
 		T sinSqr = sinAngle*sinAngle;
 		dSqrLen = cmV.getMagnitudeSquared();
 		e = -dot(cmV, axis);
-		if ((e > T(0)) && (e*e >= dSqrLen*sinSqr) && (dSqrLen > sphere.radius*sphere.radius))
+		if ((e > T(0)) && (e*e >= dSqrLen*sinSqr) && (dSqrLen > radius*radius))
 			return false;
 		if (/*(height < std::numeric_limits<T>::max()) &&*/ !((dot(axis, center) - dot(axis, vertex + height*axis)) <= radius))
 			return false;

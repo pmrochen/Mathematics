@@ -163,18 +163,21 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const L
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Line3<T>::approxEquals(const Line3<T>& line) const
 {
 	return origin.approxEquals(line.origin) && direction.approxEquals(line.direction);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Line3<T>::approxEquals(const Line3<T>& line, T tolerance) const
 {
 	return origin.approxEquals(line.origin, tolerance) && direction.approxEquals(line.direction, tolerance);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Line3<T>& Line3<T>::transform(const Matrix3<T>& matrix)
 {
 	origin *= matrix;
@@ -183,6 +186,7 @@ inline Line3<T>& Line3<T>::transform(const Matrix3<T>& matrix)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Line3<T>& Line3<T>::transform(const AffineTransform<T>& transformation)
 {
 	origin.transform(transformation);
@@ -191,12 +195,14 @@ inline Line3<T>& Line3<T>::transform(const AffineTransform<T>& transformation)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Vector3<T> Line3<T>::getClosestPoint(const Vector3<T>& point) const
 {
 	return dot(point - origin, direction)*direction + origin;
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<Normalization U>
 inline Vector3<T> Line3<T>::getClosestPoint(const Vector3<T>& point) const
 {
@@ -240,9 +246,6 @@ using Line3Result = templates::Line3<float>::ConstResult;
 namespace std {
 
 template<typename T>
-struct hash;
-
-template<typename T>
 struct hash<::mathematics::templates::Line3<T>>
 {
 	size_t operator()(const ::mathematics::templates::Line3<T>& line) const noexcept
@@ -269,29 +272,34 @@ struct hash<::mathematics::templates::Line3<T>>
 namespace mathematics::templates {
 
 template<typename T>
+	requires std::floating_point<T>
 inline Line3<T>::Line3(const Ray3<T>& ray) : origin(ray.origin), direction(ray.direction)
 {
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline const Ray3<T>& Line3<T>::asRay() const
 { 
 	return reinterpret_cast<const Ray3<T>&>(*this);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Line3<T>::intersects(const Plane<T>& plane) const
 {
 	return intersections::testLinePlane(direction, plane.getNormal());
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Line3<T>::intersects(const Sphere<T>& sphere) const
 {
 	return intersections::testLineNSphere(origin, direction, sphere.center, sphere.radius);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<Normalization U>
 inline bool Line3<T>::intersects(const Sphere<T>& sphere) const
 {
@@ -302,12 +310,14 @@ inline bool Line3<T>::intersects(const Sphere<T>& sphere) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool Line3<T>::intersects(const Ellipsoid<T>& ellipsoid) const
 {
 	return intersections::testLineEllipsoid(origin, direction, ellipsoid.center, ellipsoid.getMatrix());
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::integral U> 
 bool Line3<T>::intersects(const TriangleMesh<T, U>* mesh) const
 {
@@ -352,12 +362,14 @@ bool Line3<T>::intersects(const TriangleMesh<T, U>* mesh) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<T> Line3<T>::findIntersection(const Plane<T>& plane) const
 {
 	return intersections::findLinePlane<std::optional<T>>(origin, direction, plane.getNormal(), plane.d);
 }
 
 //template<typename T>
+//	requires std::floating_point<T>
 //template<ScalarOrVector3<T> U>
 //inline std::optional<U> Line3<T>::findIntersection(const Plane<T>& plane) const
 //{
@@ -369,6 +381,7 @@ inline std::optional<T> Line3<T>::findIntersection(const Plane<T>& plane) const
 //}
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<T> Line3<T>::findIntersection(const Triangle3<T>& triangle) const
 {
 	return intersections::findLineTriangle<std::optional<T>>(origin, direction, triangle.vertices[0], triangle.vertices[1],
@@ -376,24 +389,28 @@ inline std::optional<T> Line3<T>::findIntersection(const Triangle3<T>& triangle)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<Interval<T>> Line3<T>::findIntersection(const AxisAlignedBox& box) const
 {
 	return intersections::findLineAxisAlignedBox<std::optional<Interval<T>>>(origin, direction, box.minimum, box.maximum);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<Interval<T>> Line3<T>::findIntersection(const OrientedBox& box) const
 {
 	return intersections::findLineOrientedBox<std::optional<Interval<T>>>(origin, direction, box.center, box.basis, box.halfDims);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<Interval<T>> Line3<T>::findIntersection(const Sphere<T>& sphere) const
 {
 	return intersections::findLineNSphere<std::optional<Interval<T>>>(origin, direction, sphere.center, sphere.radius);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<Normalization U>
 inline std::optional<Interval<T>> Line3<T>::findIntersection(const Sphere<T>& sphere) const
 {
@@ -404,12 +421,14 @@ inline std::optional<Interval<T>> Line3<T>::findIntersection(const Sphere<T>& sp
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<Interval<T>> Line3<T>::findIntersection(const Ellipsoid<T>& ellipsoid) const
 {
 	return intersections::findLineEllipsoid<std::optional<Interval<T>>>(origin, direction, ellipsoid.center, ellipsoid.getMatrix());
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::integral U> 
 std::vector<T> Line3<T>::findIntersections(const TriangleMesh<T, U>* mesh) const
 {

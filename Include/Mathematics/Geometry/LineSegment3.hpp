@@ -167,18 +167,21 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const L
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool LineSegment3<T>::approxEquals(const LineSegment3<T>& segment) const
 {
 	return start.approxEquals(segment.start) && end.approxEquals(segment.end);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool LineSegment3<T>::approxEquals(const LineSegment3<T>& segment, T tolerance) const
 {
 	return start.approxEquals(segment.start, tolerance) && end.approxEquals(segment.end, tolerance);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::output_iterator<Vector2<T>> O>
 inline O LineSegment3<T>::copyEndpoints(O target) const
 {
@@ -188,6 +191,7 @@ inline O LineSegment3<T>::copyEndpoints(O target) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline LineSegment3<T>& LineSegment3<T>::transform(const Matrix3<T>& matrix)
 {
 	start *= matrix;
@@ -196,6 +200,7 @@ inline LineSegment3<T>& LineSegment3<T>::transform(const Matrix3<T>& matrix)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline LineSegment3<T>& LineSegment3<T>::transform(const AffineTransform<T>& transformation)
 {
 	start.transform(transformation);
@@ -204,6 +209,7 @@ inline LineSegment3<T>& LineSegment3<T>::transform(const AffineTransform<T>& tra
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Vector3<T> LineSegment3<T>::getClosestPoint(const Vector3<T>& point) const
 {
 	Vector3<T> direction = end - start;
@@ -225,9 +231,6 @@ using LineSegment3Result = templates::LineSegment3<float>::ConstResult;
 } // namespace mathematics
 
 namespace std {
-
-template<typename T>
-struct hash;
 
 template<typename T>
 struct hash<::mathematics::templates::LineSegment3<T>>
@@ -256,18 +259,21 @@ struct hash<::mathematics::templates::LineSegment3<T>>
 namespace mathematics::templates {
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool LineSegment3<T>::intersects(const HalfSpace<T>& halfSpace) const
 {
 	return halfSpace.contains(start) || halfSpace.contains(end);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool LineSegment3<T>::intersects(const Ellipsoid<T>& ellipsoid) const
 {
 	return intersections::testLineSegmentEllipsoid(start, end, ellipsoid.center, ellipsoid.getMatrix());
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::integral U> 
 bool LineSegment3<T>::intersects(const TriangleMesh<T, U>* mesh) const
 {
@@ -314,6 +320,7 @@ bool LineSegment3<T>::intersects(const TriangleMesh<T, U>* mesh) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<T> LineSegment3<T>::findIntersection(const Plane<T>& plane) const
 {
 	auto result = intersections::findLinePlane<std::optional<T>>(start, end - start, plane.getNormal(), plane.d);
@@ -321,6 +328,7 @@ inline std::optional<T> LineSegment3<T>::findIntersection(const Plane<T>& plane)
 }
 
 //template<typename T>
+//	requires std::floating_point<T>
 //template<ScalarOrVector3<T> U>
 //inline std::optional<U> LineSegment3<T>::findIntersection(const Plane<T>& plane) const
 //{
@@ -332,6 +340,7 @@ inline std::optional<T> LineSegment3<T>::findIntersection(const Plane<T>& plane)
 //}
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<T> LineSegment3<T>::findIntersection(const Triangle3<T>& triangle) const
 {
 	//return intersections::findLineSegmentTriangle<std::optional<T>>(start, end, triangle.vertices[0], triangle.vertices[1],
@@ -342,6 +351,7 @@ inline std::optional<T> LineSegment3<T>::findIntersection(const Triangle3<T>& tr
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const AxisAlignedBox<T>& box) const
 {
 	auto result = intersections::findLineAxisAlignedBox<std::optional<Interval<T>>>(start, end - start, box.minimum, box.maximum);
@@ -361,6 +371,7 @@ inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const AxisAl
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const OrientedBox<T>& box) const
 {
 	auto result = intersections::findLineOrientedBox<std::optional<Interval<T>>>(start, end - start, box.center, box.basis, box.halfDims);
@@ -380,6 +391,7 @@ inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const Orient
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const Sphere<T>& sphere) const
 {
 	auto result = intersections::findLineNSphere<std::optional<Interval<T>>>(start, end - start, sphere.center, sphere.radius);
@@ -399,12 +411,14 @@ inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const Sphere
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const Ellipsoid<T>& ellipsoid) const
 {
 	return intersections::findLineSegmentEllipsoid<std::optional<Interval<T>>>(start, end, ellipsoid.center, ellipsoid.getMatrix());
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::integral U> 
 std::vector<T> LineSegment3<T>::findIntersections(const TriangleMesh<T, U>* mesh) const
 {

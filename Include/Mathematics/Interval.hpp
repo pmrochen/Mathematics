@@ -97,8 +97,13 @@ struct Interval
 	T maximum;
 };
 
-template<typename T> const Interval<T> Interval<T>::EMPTY{ std::numeric_limits<T>::infinity(), -std::numeric_limits<T>::infinity() };
-template<typename T> const Interval<T> Interval<T>::ZERO{ T(0), T(0) };
+template<typename T> 
+	requires std::floating_point<T>
+const Interval<T> Interval<T>::EMPTY{ std::numeric_limits<T>::infinity(), -std::numeric_limits<T>::infinity() };
+
+template<typename T> 
+	requires std::floating_point<T>
+const Interval<T> Interval<T>::ZERO{ T(0), T(0) };
 
 template<typename C, typename T, typename U>
 	requires std::floating_point<U>
@@ -116,28 +121,32 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const I
 }
 
 template<typename T>
-inline bool Interval<T>::isApproxZero() const
+	requires std::floating_point<T>
+inline bool Interval<T>::isApproxZero() const noexcept
 {
 	return (std::fabs(minimum) < Constants<T>::TOLERANCE) && 
 		(std::fabs(maximum) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
-inline bool Interval<T>::approxEquals(const Interval<T>& interval) const
+	requires std::floating_point<T>
+inline bool Interval<T>::approxEquals(const Interval<T>& interval) const noexcept
 {
 	return (std::fabs(interval.minimum - minimum) < Constants<T>::TOLERANCE) && 
 		(std::fabs(interval.maximum - maximum) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
-inline bool Interval<T>::approxEquals(const Interval<T>& interval, T tolerance) const
+	requires std::floating_point<T>
+inline bool Interval<T>::approxEquals(const Interval<T>& interval, T tolerance) const noexcept
 {
 	return (std::fabs(interval.minimum - minimum) < tolerance) && 
 		(std::fabs(interval.maximum - maximum) < tolerance);
 }
 
 template<typename T>
-inline void Interval<T>::setLength(T length)
+	requires std::floating_point<T>
+inline void Interval<T>::setLength(T length) noexcept
 {
 	T center = (minimum + maximum)*T(0.5);
 	T halfLength = T(0.5)*length;
@@ -146,7 +155,8 @@ inline void Interval<T>::setLength(T length)
 }
 
 template<typename T>
-inline void Interval<T>::setCenter(T center)
+	requires std::floating_point<T>
+inline void Interval<T>::setCenter(T center) noexcept
 {
 	T diff = center - (minimum + maximum)*T(0.5);
 	minimum += diff;
@@ -154,7 +164,8 @@ inline void Interval<T>::setCenter(T center)
 }
 
 template<typename T>
-inline Interval<T>& Interval<T>::translate(T offset)
+	requires std::floating_point<T>
+inline Interval<T>& Interval<T>::translate(T offset) noexcept
 {
 	minimum += offset;
 	maximum += offset;
@@ -162,7 +173,8 @@ inline Interval<T>& Interval<T>::translate(T offset)
 }
 
 template<typename T>
-inline Interval<T>& Interval<T>::scale(T factor)
+	requires std::floating_point<T>
+inline Interval<T>& Interval<T>::scale(T factor) noexcept
 {
 	minimum *= factor;
 	maximum *= factor;
@@ -170,7 +182,8 @@ inline Interval<T>& Interval<T>::scale(T factor)
 }
 
 template<typename T>
-inline Interval<T>& Interval<T>::scaleAroundCenter(T factor)
+	requires std::floating_point<T>
+inline Interval<T>& Interval<T>::scaleAroundCenter(T factor) noexcept
 {
 	T center = (minimum + maximum)*T(0.5);
 	minimum = (minimum - center)*factor + center;
@@ -179,7 +192,8 @@ inline Interval<T>& Interval<T>::scaleAroundCenter(T factor)
 }
 
 template<typename T>
-inline Interval<T>& Interval<T>::setUnion(const Interval<T>& a, const Interval<T>& b)
+	requires std::floating_point<T>
+inline Interval<T>& Interval<T>::setUnion(const Interval<T>& a, const Interval<T>& b) noexcept
 {
 	minimum = std::min(a.minimum, b.minimum);
 	maximum = std::max(a.maximum, b.maximum);
@@ -187,7 +201,8 @@ inline Interval<T>& Interval<T>::setUnion(const Interval<T>& a, const Interval<T
 }
 
 template<typename T>
-inline Interval<T>& Interval<T>::setIntersection(const Interval<T>& a, const Interval<T>& b)
+	requires std::floating_point<T>
+inline Interval<T>& Interval<T>::setIntersection(const Interval<T>& a, const Interval<T>& b) noexcept
 {
 	minimum = std::max(a.minimum, b.minimum);
 	maximum = std::min(a.maximum, b.maximum);
@@ -195,7 +210,8 @@ inline Interval<T>& Interval<T>::setIntersection(const Interval<T>& a, const Int
 }
 
 template<typename T>
-inline Interval<T>& Interval<T>::extendBy(T value)
+	requires std::floating_point<T>
+inline Interval<T>& Interval<T>::extendBy(T value) noexcept
 {
 	minimum = std::min(minimum, value);
 	maximum = std::max(maximum, value);
@@ -203,7 +219,8 @@ inline Interval<T>& Interval<T>::extendBy(T value)
 }
 
 template<typename T>
-inline std::optional<Interval<T>> Interval<T>::findIntersection(const Interval& interval) const
+	requires std::floating_point<T>
+inline std::optional<Interval<T>> Interval<T>::findIntersection(const Interval& interval) const noexcept
 {
 	if ((maximum < interval.minimum) || (minimum > interval.maximum))
 	{
@@ -214,16 +231,16 @@ inline std::optional<Interval<T>> Interval<T>::findIntersection(const Interval& 
 		if (minimum < interval.maximum)
 		{
 			return { std::in_place, (minimum < interval.minimum) ? interval.minimum : minimum,
-				(maximum > interval.maximum) ? interval.maximum : maximum; };
+				(maximum > interval.maximum) ? interval.maximum : maximum };
 		}
 		else
 		{
-			return { std::in_place, minimum; }
+			return { std::in_place, minimum };
 		}
 	}
 	else
 	{
-		return { std::in_place, maximum; }
+		return { std::in_place, maximum };
 	}
 }
 
@@ -242,9 +259,6 @@ using IntervalResult = templates::Interval<float>::ConstResult;
 } // namespace mathematics
 
 namespace std {
-
-template<typename T>
-struct hash;
 
 template<typename T>
 struct hash<::mathematics::templates::Interval<T>>

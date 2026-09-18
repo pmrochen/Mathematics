@@ -131,18 +131,21 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const L
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool LineSegment2<T>::approxEquals(const LineSegment2<T>& segment) const
 {
 	return start.approxEquals(segment.start) && end.approxEquals(segment.end);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline bool LineSegment2<T>::approxEquals(const LineSegment2<T>& segment, T tolerance) const
 {
 	return start.approxEquals(segment.start, tolerance) && end.approxEquals(segment.end, tolerance);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 template<std::output_iterator<Vector2<T>> O>
 inline O LineSegment2<T>::copyEndpoints(O target) const
 {
@@ -152,6 +155,7 @@ inline O LineSegment2<T>::copyEndpoints(O target) const
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline LineSegment2<T>& LineSegment2<T>::transform(const Matrix2<T>& matrix)
 {
 	start *= matrix;
@@ -160,6 +164,7 @@ inline LineSegment2<T>& LineSegment2<T>::transform(const Matrix2<T>& matrix)
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline Vector2<T> LineSegment2<T>::getClosestPoint(const Vector2<T>& point) const
 {
 	Vector2<T> direction = end - start;
@@ -167,6 +172,7 @@ inline Vector2<T> LineSegment2<T>::getClosestPoint(const Vector2<T>& point) cons
 }
 
 //template<typename T>
+//	requires std::floating_point<T>
 //template<ScalarOrVector2<T> U>
 //inline std::optional<U> LineSegment2<T>::findIntersection(const Line2<T>& line) const
 //{
@@ -178,6 +184,7 @@ inline Vector2<T> LineSegment2<T>::getClosestPoint(const Vector2<T>& point) cons
 //}
 //
 //template<typename T>
+//	requires std::floating_point<T>
 //template<ScalarOrVector2<T> U> 
 //inline std::optional<U> LineSegment2<T>::findIntersection(const LineSegment2& segment) const
 //{
@@ -205,9 +212,6 @@ using LineSegment2Result = templates::LineSegment2<float>::ConstResult;
 namespace std {
 
 template<typename T>
-struct hash;
-
-template<typename T>
 struct hash<::mathematics::templates::LineSegment2<T>>
 {
 	size_t operator()(const ::mathematics::templates::LineSegment2<T>& segment) const noexcept
@@ -228,6 +232,7 @@ struct hash<::mathematics::templates::LineSegment2<T>>
 namespace mathematics::templates {
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<T> LineSegment2<T>::findIntersection(const Line2<T>& line) const
 {
 	return intersections::findLineLineSegment<std::optional<T>>(line.origin, line.direction, start, end);
@@ -235,12 +240,14 @@ inline std::optional<T> LineSegment2<T>::findIntersection(const Line2<T>& line) 
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<T> LineSegment2<T>::findIntersection(const LineSegment2& segment) const
 {
 	return intersections::findLineSegmentLineSegment<std::optional<T>>(start, end, segment.start, segment.end);
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<Interval<T>> LineSegment2<T>::findIntersection(const AxisAlignedRectangle<T>& rectangle) const
 {
 	std::optional<Interval<T>> result = intersections::findLineAxisAlignedRectangle<std::optional<Interval<T>>>(start, end - start, 
@@ -261,6 +268,7 @@ inline std::optional<Interval<T>> LineSegment2<T>::findIntersection(const AxisAl
 }
 
 template<typename T>
+	requires std::floating_point<T>
 inline std::optional<Interval<T>> LineSegment2<T>::findIntersection(const Circle2<T>& circle) const
 {
 	std::optional<Interval<T>> result = intersections::findLineNSphere<std::optional<Interval<T>>>(start, end - start, circle.center, circle.radius);
