@@ -1,0 +1,497 @@
+﻿{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "cacheVariables": {
+        "MATHEMATICS_WITH_TESTS": "ON"
+      }
+    },
+    {
+      "name": "windows-msvc-base",
+      "description": "Target Windows with the Visual Studio Build Tools",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "windows-clang-base",
+      "description": "Target Windows (Clang) with the Visual Studio Build Tools",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "linux-gcc-base",
+      "description": "Target Linux (GCC)",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-clang-base",
+      "description": "Target Linux (Clang)",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "emscripten-base",
+      "description": "Target WebAssembly with Emscripten",
+      "hidden": true,
+      "inherits": "base",
+      "toolchainFile": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+    },
+    {
+      "name": "windows-msvc-x64-debug",
+      "displayName": "x64 Debug",
+      "description": "Target Windows (64-bit) with the Visual Studio Build Tools (Debug)",
+      "inherits": "windows-msvc-base",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "MATHEMATICS_ENABLE_AVX2": "ON"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-msvc-x64"
+        }
+      }
+    },
+    {
+      "name": "windows-msvc-x64-release",
+      "displayName": "x64 Release",
+      "description": "Target Windows (64-bit) with the Visual Studio Build Tools (Release)",
+      "inherits": "windows-msvc-x64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "windows-msvc-arm64-debug",
+      "displayName": "arm64 Debug",
+      "description": "Target Windows ARM (64-bit) with the Visual Studio Build Tools (Debug)",
+      "inherits": "windows-msvc-base",
+      "architecture": {
+        "value": "arm64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-msvc-arm64"
+        }
+      }
+    },
+    {
+      "name": "windows-msvc-arm64-release",
+      "displayName": "arm64 Release",
+      "description": "Target Windows ARM (64-bit) with the Visual Studio Build Tools (Release)",
+      "inherits": "windows-msvc-arm64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "windows-clang-x64-debug",
+      "displayName": "x64 Debug (Clang)",
+      "description": "Target Windows (Clang, 64-bit) with the Visual Studio Build Tools (Debug)",
+      "inherits": "windows-clang-base",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "MATHEMATICS_ENABLE_AVX2": "ON"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clangcl-x64"
+        }
+      }
+    },
+    {
+      "name": "windows-clang-x64-release",
+      "displayName": "x64 Release (Clang)",
+      "description": "Target Windows (Clang, 64-bit) with the Visual Studio Build Tools (Release)",
+      "inherits": "windows-clang-x64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "linux-gcc-x64-debug",
+      "displayName": "x64 Debug",
+      "description": "Target Linux (GCC, 64-bit, Debug)",
+      "inherits": "linux-gcc-base",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "MATHEMATICS_ENABLE_AVX2": "ON"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "linux-gcc-x64"
+        }
+      }
+    },
+    {
+      "name": "linux-gcc-x64-release",
+      "displayName": "x64 Release",
+      "description": "Target Linux (GCC, 64-bit, Release)",
+      "inherits": "linux-gcc-x64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "linux-gcc-arm64-debug",
+      "displayName": "arm64 Debug",
+      "description": "Target Linux ARM (GCC, 64-bit, Debug)",
+      "inherits": "linux-gcc-base",
+      "architecture": {
+        "value": "arm64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "linux-gcc-arm"
+        }
+      }
+    },
+    {
+      "name": "linux-gcc-arm64-release",
+      "displayName": "arm64 Release",
+      "description": "Target Linux ARM (GCC, 64-bit, Release)",
+      "inherits": "linux-gcc-arm64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "linux-clang-x64-debug",
+      "displayName": "x64 Debug (Clang)",
+      "description": "Target Linux (Clang, 64-bit, Debug)",
+      "inherits": "linux-clang-base",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "MATHEMATICS_ENABLE_AVX2": "ON"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "linux-clang-x64"
+        }
+      }
+    },
+    {
+      "name": "linux-clang-x64-release",
+      "displayName": "x64 Release (Clang)",
+      "description": "Target Linux (Clang, 64-bit, Release)",
+      "inherits": "linux-clang-x64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "linux-clang-arm64-debug",
+      "displayName": "arm64 Debug (Clang)",
+      "description": "Target Linux ARM (Clang, 64-bit, Debug)",
+      "inherits": "linux-clang-base",
+      "architecture": {
+        "value": "arm64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "linux-gcc-arm"
+        }
+      }
+    },
+    {
+      "name": "linux-clang-arm64-release",
+      "displayName": "arm64 Release (Clang)",
+      "description": "Target Linux ARM (Clang, 64-bit, Release)",
+      "inherits": "linux-clang-arm64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "emscripten-debug",
+      "displayName": "Emscripten Debug",
+      "description": "Target WebAssembly with Emscripten (Debug)",
+      "inherits": "emscripten-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "MATHEMATICS_ENABLE_AVX2": "ON"
+      }
+    },
+    {
+      "name": "emscripten-release",
+      "displayName": "Emscripten Release",
+      "description": "Target WebAssembly with Emscripten (Release)",
+      "inherits": "emscripten-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "windows-msvc-x64-debug",
+      "inherits": "base",
+      "configurePreset": "windows-msvc-x64-debug"
+    },
+    {
+      "name": "windows-msvc-x64-release",
+      "inherits": "base",
+      "configurePreset": "windows-msvc-x64-release"
+    },
+    {
+      "name": "windows-msvc-arm64-debug",
+      "inherits": "base",
+      "configurePreset": "windows-msvc-arm64-debug"
+    },
+    {
+      "name": "windows-msvc-arm64-release",
+      "inherits": "base",
+      "configurePreset": "windows-msvc-arm64-release"
+    },
+    {
+      "name": "windows-clang-x64-debug",
+      "inherits": "base",
+      "configurePreset": "windows-clang-x64-debug"
+    },
+    {
+      "name": "windows-clang-x64-release",
+      "inherits": "base",
+      "configurePreset": "windows-clang-x64-release"
+    },
+    {
+      "name": "linux-gcc-x64-debug",
+      "inherits": "base",
+      "configurePreset": "linux-gcc-x64-debug"
+    },
+    {
+      "name": "linux-gcc-x64-release",
+      "inherits": "base",
+      "configurePreset": "linux-gcc-x64-release"
+    },
+    {
+      "name": "linux-gcc-arm64-debug",
+      "inherits": "base",
+      "configurePreset": "linux-gcc-arm64-debug"
+    },
+    {
+      "name": "linux-gcc-arm64-release",
+      "inherits": "base",
+      "configurePreset": "linux-gcc-arm64-release"
+    },
+    {
+      "name": "linux-clang-x64-debug",
+      "inherits": "base",
+      "configurePreset": "linux-clang-x64-debug"
+    },
+    {
+      "name": "linux-clang-x64-release",
+      "inherits": "base",
+      "configurePreset": "linux-clang-x64-release"
+    },
+    {
+      "name": "linux-clang-arm64-debug",
+      "inherits": "base",
+      "configurePreset": "linux-clang-arm64-debug"
+    },
+    {
+      "name": "linux-clang-arm64-release",
+      "inherits": "base",
+      "configurePreset": "linux-clang-arm64-release"
+    },
+    {
+      "name": "emscripten-debug",
+      "inherits": "base",
+      "configurePreset": "emscripten-debug"
+    },
+    {
+      "name": "emscripten-release",
+      "inherits": "base",
+      "configurePreset": "emscripten-release"
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "windows-msvc-x64-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "windows-msvc-x64-release"
+        },
+        {
+          "type": "test",
+          "name": "windows-msvc-x64-release"
+        }
+      ]
+    },
+    {
+      "name": "windows-msvc-arm64-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "windows-msvc-arm64-release"
+        },
+        {
+          "type": "test",
+          "name": "windows-msvc-arm64-release"
+        }
+      ]
+    },
+    {
+      "name": "windows-clang-x64-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "windows-clang-x64-release"
+        },
+        {
+          "type": "test",
+          "name": "windows-clang-x64-release"
+        }
+      ]
+    },
+    {
+      "name": "linux-gcc-x64-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "linux-gcc-x64-release"
+        },
+        {
+          "type": "test",
+          "name": "linux-gcc-x64-release"
+        }
+      ]
+    },
+    {
+      "name": "linux-gcc-arm64-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "linux-gcc-arm64-release"
+        },
+        {
+          "type": "test",
+          "name": "linux-gcc-arm64-release"
+        }
+      ]
+    },
+    {
+      "name": "linux-clang-x64-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "linux-clang-x64-release"
+        },
+        {
+          "type": "test",
+          "name": "linux-clang-x64-release"
+        }
+      ]
+    },
+    {
+      "name": "linux-clang-arm64-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "linux-clang-arm64-release"
+        },
+        {
+          "type": "test",
+          "name": "linux-clang-arm64-release"
+        }
+      ]
+    },
+    {
+      "name": "emscripten-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "emscripten-release"
+        },
+        {
+          "type": "test",
+          "name": "emscripten-release"
+        }
+      ]
+    }
+  ]
+}

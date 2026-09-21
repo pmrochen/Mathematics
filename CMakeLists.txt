@@ -16,8 +16,11 @@ project(Mathematics
 
 set(MATHEMATICS_LIB_NAME Mathematics)
 
+option(MATHEMATICS_WITH_TESTS "Enable testing" ${PROJECT_IS_TOP_LEVEL})
 option(MATHEMATICS_DOUBLE_PRECISION "Use double precision by default" OFF)
 option(MATHEMATICS_ENABLE_SIMD "Enable SIMD support" ON)
+option(MATHEMATICS_ENABLE_AVX "Enable AVX instructions" OFF)
+option(MATHEMATICS_ENABLE_AVX2 "Enable AVX2 instructions" OFF)
 option(MATHEMATICS_ENABLE_QUICKHULL "Enable the Quickhull library" ON)
 
 if(!PROJECT_IS_TOP_LEVEL)
@@ -33,6 +36,27 @@ set(SIMD_TARGET "Core::Simd")
 set(SIMD_DIR "Simd")
 #set(SIMD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Simd")
 set(QUICKHULL_DIR "quickhull")
+
+if(MATHEMATICS_WITH_TESTS)
+	if(EMSCRIPTEN)
+		add_compile_options(-msimd128) # Enable SIMD for WebAssembly
+	endif()
+	if(MATHEMATICS_ENABLE_AVX2)
+		if(MSVC)
+			add_compile_options(/arch:AVX2)
+		elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+			add_compile_options(-mavx2)
+		endif()
+	elseif(MATHEMATICS_ENABLE_AVX)
+		if(MSVC)
+			add_compile_options(/arch:AVX)
+		elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+			add_compile_options(-mavx)
+		endif()
+	elseif(EMSCRIPTEN)
+		add_compile_options(-msse2)
+	endif()
+endif()
 
 #if(MATHEMATICS_ENABLE_SIMD)
 #    if(EXISTS "${SIMD_DIR}/CMakeLists.txt")
@@ -142,3 +166,8 @@ target_compile_definitions(${MATHEMATICS_LIB_NAME}
         MATHEMATICS_HAS_SIMD=$<BOOL:${MATHEMATICS_HAS_SIMD}>
         MATHEMATICS_HAS_QUICKHULL=$<BOOL:${MATHEMATICS_HAS_QUICKHULL}>
 )
+
+if (MATHEMATICS_WITH_TESTS)
+    enable_testing()
+    add_subdirectory(Tests)
+endif()
