@@ -23,7 +23,7 @@ set_target_properties(${MATHEMATICS_TESTS_NAME} PROPERTIES
 )
 
 target_include_directories(${MATHEMATICS_TESTS_NAME} PRIVATE
-	#${CMAKE_CURRENT_SOURCE_DIR}/../Include # Mathematics headers
+	${CMAKE_CURRENT_SOURCE_DIR}/../Include # Mathematics headers
 	${CMAKE_CURRENT_BINARY_DIR}/downloaded # doctest.h
 )
 
