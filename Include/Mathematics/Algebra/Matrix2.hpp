@@ -22,8 +22,8 @@
 #endif
 #include "../Constants.hpp"
 #include "Vector2.hpp"
-#include "Vector3.hpp"
-#include "Vector4.hpp"
+//#include "Vector3.hpp"
+//#include "Vector4.hpp"
 
 namespace mathematics {
 namespace templates {
@@ -741,7 +741,8 @@ inline bool Matrix2<float>::isZero() const noexcept
 
 inline bool Matrix2<float>::isApproxZero() const noexcept
 { 
-	return simd::all4(simd::lessThan(simd::abs4(simd::pack2x2(row0, row1)), Vector4<float>::TOLERANCE)); 
+	static const simd::float4 tolerance = simd::set4(Constants<float>::TOLERANCE);
+	return simd::all4(simd::lessThan(simd::abs4(simd::pack2x2(row0, row1)), tolerance/*Vector4<float>::TOLERANCE*/)); 
 }
 
 inline bool Matrix2<float>::isIdentity() const noexcept
@@ -751,14 +752,16 @@ inline bool Matrix2<float>::isIdentity() const noexcept
 
 inline bool Matrix2<float>::isApproxIdentity() const noexcept
 {
+	static const simd::float4 tolerance = simd::set4(Constants<float>::TOLERANCE);
 	return simd::all4(simd::lessThan(simd::abs4(simd::sub4(simd::pack2x2(row0, row1), simd::constant4<simd::float4, 1, 0, 0, 1>())), 
-		Vector4<float>::TOLERANCE));
+		tolerance/*Vector4<float>::TOLERANCE*/));
 }
 
 inline bool Matrix2<float>::approxEquals(const Matrix2& m) const noexcept
 {
+	static const simd::float4 tolerance = simd::set4(Constants<float>::TOLERANCE);
 	return simd::all4(simd::lessThan(simd::abs4(simd::sub4(simd::pack2x2(row0, row1), simd::pack2x2(m.row0, m.row1))), 
-		Vector4<float>::TOLERANCE));
+		tolerance/*Vector4<float>::TOLERANCE*/));
 }
 
 inline bool Matrix2<float>::approxEquals(const Matrix2& m, float tolerance) const noexcept
@@ -778,7 +781,8 @@ inline bool Matrix2<float>::hasApproxUniformScaling() const noexcept
 {
 	Matrix2<float> m(*this);
 	m *= Matrix2<float>(Uninitialized()).setTranspose(*this);
-	return simd::all3(simd::lessThan(simd::abs4(simd::set3(m.m01, m.m10, m.m11 - m.m00)), Vector3<float>::TOLERANCE));
+	static const simd::float4 tolerance = simd::set4(Constants<float>::TOLERANCE);
+	return simd::all3(simd::lessThan(simd::abs4(simd::set3(m.m01, m.m10, m.m11 - m.m00)), tolerance/*Vector3<float>::TOLERANCE*/));
 }
 
 inline Matrix2<float>& Matrix2<float>::set(const Vector2<float>& row0, const Vector2<float>& row1) noexcept

@@ -1160,7 +1160,8 @@ struct hash<::mathematics::templates::Vector2<float>>
 
 } // namespace std
 
-#include "Vector3.hpp"
+//#include "Vector3.hpp"
+//#include "Vector4.hpp"
 #include "Matrix2.hpp"
 
 namespace mathematics::templates {
