@@ -996,17 +996,24 @@ inline Matrix3<float>::Matrix3(const Vector3<float>& up, const Vector3<float>& f
 	}
 }
 
-#if MATHEMATICS_SIMD_EXPAND_LAST
-inline Matrix3<float>::Matrix3(const float* m) :
-	Matrix3(m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8])
-{
-}
-#else
 inline Matrix3<float>::Matrix3(const float* m) noexcept
 {
-	simd::unpack3x3(m, row0, row1, row2);
-}
+	auto t0 = simd::load4(&m[0]);
+	auto t1 = simd::load4(&m[4]);
+	auto t2 = simd::load1(&m[8]);
+	t2 = simd::or4(simd::and4(t1, simd::bits<simd::float4, 0, 0, -1, -1>()), t2);
+	t1 = simd::or4(simd::and4(t0, simd::bits<simd::float4, 0, 0, 0, -1>()),
+		simd::and4(t1, simd::bits<simd::float4, -1, -1, 0, 0>()));
+#if MATHEMATICS_SIMD_EXPAND_LAST
+	row0 = simd::swizzle<0, 1, 2, 2>(t0);
+	row1 = simd::swizzle<3, 0, 1, 1>(t1);
+	row2 = simd::swizzle<2, 3, 0, 0>(t2);
+#else
+	row0 = simd::and4(t0, simd::bits<simd::float4, -1, -1, -1, 0>());
+	row1 = simd::swizzle<3, 0, 1, 2>(t1);
+	row2 = simd::swizzle<2, 3, 0, 1>(t2);
 #endif
+}
 
 inline Matrix3<float>::Matrix3(const typename Matrix3<float>::SimdTupleType& t) noexcept :
 	row0(std::get<0>(t)), 
@@ -1273,11 +1280,11 @@ inline Matrix3<float>& Matrix3<float>::set(float m00, float m01, float m02, floa
 inline Matrix3<float>& Matrix3<float>::setScaling(const Vector3<float>& v) noexcept
 {
 	row0 = simd::cutoff1(v);
-	row1 = simd::and4(v, simd::constant4i<simd::float4, 0, -1, 0, 0>());
+	row1 = simd::and4(v, simd::bits<simd::float4, 0, -1, 0, 0>());
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	row2 = simd::and4(v, simd::constant4i<simd::float4, 0, 0, -1, -1>());
+	row2 = simd::and4(v, simd::bits<simd::float4, 0, 0, -1, -1>());
 #else
-	row2 = simd::and4(v, simd::constant4i<simd::float4, 0, 0, -1, 0>());
+	row2 = simd::and4(v, simd::bits<simd::float4, 0, 0, -1, 0>());
 #endif
 	return *this;
 }
@@ -1356,13 +1363,12 @@ inline Matrix3<float>& Matrix3<float>::setShearing(float xy, float xz, float yx,
 inline Matrix3<float>& Matrix3<float>::setTranspose(const Matrix3<float>& m) noexcept
 {
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	auto [r0, r1, r2] = simd::transpose3x3(m.row0, m.row1, m.row2);
+	auto [r0, r1, r2] = simd::transpose(m.row0, m.row1, m.row2);
 	row0 = simd::xyzz(r0);
 	row1 = simd::xyzz(r1);
 	row2 = simd::xyzz(r2);
 #else
-	//simd::transpose3x3(m.row0, m.row1, m.row2, row0, row1, row2);
-	std::tie(row0, row1, row2) = simd::transpose3x3(m.row0, m.row1, m.row2);
+	std::tie(row0, row1, row2) = simd::transpose(m.row0, m.row1, m.row2);
 #endif
 	return *this;
 }
@@ -1465,13 +1471,12 @@ inline Matrix3<float>& Matrix3<float>::negate() noexcept
 inline Matrix3<float>& Matrix3<float>::transpose() noexcept
 {
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	auto [r0, r1, r2] = simd::transpose3x3(row0, row1, row2);
+	auto [r0, r1, r2] = simd::transpose(row0, row1, row2);
 	row0 = simd::xyzz(r0);
 	row1 = simd::xyzz(r1);
 	row2 = simd::xyzz(r2);
 #else
-	//simd::transpose3x3(row0, row1, row2, row0, row1, row2);
-	std::tie(row0, row1, row2) = simd::transpose3x3(row0, row1, row2); 
+	std::tie(row0, row1, row2) = simd::transpose(row0, row1, row2); 
 #endif
 	return *this;
 }
@@ -1602,13 +1607,12 @@ inline Matrix3<float> transpose(const Matrix3<float>& m) noexcept
 {
 	Matrix3<float> n{ Uninitialized() };
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	auto [r0, r1, r2] = simd::transpose3x3(m.row0, m.row1, m.row2);
+	auto [r0, r1, r2] = simd::transpose(m.row0, m.row1, m.row2);
 	n.row0 = simd::xyzz(r0);
 	n.row1 = simd::xyzz(r1);
 	n.row2 = simd::xyzz(r2);
 #else
-	//simd::transpose3x3(m.row0, m.row1, m.row2, n.row0, n.row1, n.row2);
-	std::tie(n.row0, n.row1, n.row2) = simd::transpose3x3(m.row0, m.row1, m.row2);
+	std::tie(n.row0, n.row1, n.row2) = simd::transpose(m.row0, m.row1, m.row2);
 #endif
 	return n;
 }
@@ -1617,13 +1621,12 @@ template<>
 inline Matrix3<float> transpose(Matrix3<float>&& m) noexcept
 {
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	auto [r0, r1, r2] = simd::transpose3x3(m.row0, m.row1, m.row2);
+	auto [r0, r1, r2] = simd::transpose(m.row0, m.row1, m.row2);
 	m.row0 = simd::xyzz(r0);
 	m.row1 = simd::xyzz(r1);
 	m.row2 = simd::xyzz(r2);
 #else
-	//simd::transpose3x3(m.row0, m.row1, m.row2, m.row0, m.row1, m.row2);
-	std::tie(m.row0, m.row1, m.row2) = simd::transpose3x3(m.row0, m.row1, m.row2);
+	std::tie(m.row0, m.row1, m.row2) = simd::transpose(m.row0, m.row1, m.row2);
 #endif
 	return m;
 }

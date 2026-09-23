@@ -228,8 +228,8 @@ struct alignas(16) Quaternion<float>
 	void setScalar(float scalar) noexcept { xyzw = simd::insert<simd::W>(scalar, xyzw); }
 	Vector3<float> getAxis() const noexcept;	// quaternion must be normalized (i.e. a rotation quaternion)
 	float getAngle() const;						// quaternion must be normalized (i.e. a rotation quaternion)
-	float getAbsoluteValue() const noexcept { return simd::toFloat(simd::sqrt1(simd::dot4(xyzw, xyzw))); }
-	float getNorm() const noexcept { return simd::toFloat(simd::dot4(xyzw, xyzw)); }
+	float getAbsoluteValue() const noexcept { return simd::extract(simd::sqrt1(simd::dot4(xyzw, xyzw))); }
+	float getNorm() const noexcept { return simd::extract(simd::dot4(xyzw, xyzw)); }
 	float getMagnitude() const noexcept { return getAbsoluteValue(); }
 	float getMagnitudeSquared() const noexcept { return getNorm(); }
 	Quaternion& setZero() noexcept { xyzw = simd::zero<simd::float4>(); return *this; }
@@ -738,7 +738,7 @@ inline Quaternion<float> operator*(const Quaternion<float>& q, float f) noexcept
 template<>
 inline Quaternion<float> operator/(float f, const Quaternion<float>& q) noexcept
 {
-	f /= simd::toFloat(simd::dot4(q, q));
+	f /= simd::extract(simd::dot4(q, q));
 	return Quaternion<float>(simd::mul4(simd::neg3(q), simd::set4(f)));
 }
 
@@ -813,7 +813,7 @@ inline Vector3<float> Quaternion<float>::getAxis() const noexcept
 		return Vector3<float>();
 
 #if MATHEMATICS_FAST_NORMALIZE
-	float m = simd::toFloat(simd::rcpSqrtApprox1(simd::set1(cosine)));
+	float m = simd::extract(simd::rcpSqrtApprox1(simd::set1(cosine)));
 	if (m <= std::numeric_limits<float>::max())
 	{
 		//if (w < 0.f) m = -m;	// <0, PI>
@@ -875,7 +875,7 @@ inline Quaternion<float>& Quaternion<float>::concatenate(const Quaternion<float>
 inline Quaternion<float>& Quaternion<float>::normalize() noexcept
 {
 #if MATHEMATICS_FAST_NORMALIZE
-	float m = simd::toFloat(simd::rcpSqrtApprox1(simd::dot4(xyzw, xyzw)));
+	float m = simd::extract(simd::rcpSqrtApprox1(simd::dot4(xyzw, xyzw)));
 	if (m <= std::numeric_limits<float>::max())
 		*this *= m;
 #else
@@ -1058,13 +1058,13 @@ inline Quaternion<T> inverse(Quaternion<T>&& q) noexcept
 template<>
 inline float dot(const Quaternion<float>& q1, const Quaternion<float>& q2) noexcept
 {
-	return simd::toFloat(simd::dot4(q1, q2));
+	return simd::extract(simd::dot4(q1, q2));
 }
 
 template<>
 inline Quaternion<float> lerp(const Quaternion<float>& q1, const Quaternion<float>& q2, float t) noexcept
 {
-	float cosTheta = simd::toFloat(simd::dot4(q1, q2));
+	float cosTheta = simd::extract(simd::dot4(q1, q2));
 	float t0 = 1.f - t;
 	float t1 = t;
 	if (/*shortestArc &&*/ (cosTheta < 0.f)) // If q2 is on the oposite hemisphere use -q2 instead of q2
@@ -1076,7 +1076,7 @@ inline Quaternion<float> lerp(const Quaternion<float>& q1, const Quaternion<floa
 template<>
 inline Quaternion<float> slerp(const Quaternion<float>& q1, const Quaternion<float>& q2, float t)
 {
-	float cosTheta = simd::toFloat(simd::dot4(q1, q2));
+	float cosTheta = simd::extract(simd::dot4(q1, q2));
 	float signOfT1 = 1.f;
 	if (/*shortestArc &&*/ (cosTheta < 0.f)) // If q2 is on the oposite hemisphere use -q2 instead of q2
 	{

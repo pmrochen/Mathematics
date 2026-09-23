@@ -435,7 +435,7 @@ inline HalfSpace<float>& HalfSpace<float>::transform(const AffineTransform<float
 inline HalfSpace<float>& HalfSpace<float>::normalize() noexcept
 {
 #if MATHEMATICS_FAST_NORMALIZE
-	float m = simd::toFloat(simd::rcpSqrtApprox1(simd::dot3(abcd, abcd)));
+	float m = simd::extract(simd::rcpSqrtApprox1(simd::dot3(abcd, abcd)));
 	if (m <= std::numeric_limits<float>::max()) 
 		abcd = simd::mul4(abcd, simd::set4(m));
 #else

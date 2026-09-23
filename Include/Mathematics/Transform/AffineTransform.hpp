@@ -1002,17 +1002,28 @@ inline AffineTransform<float>::AffineTransform(const Vector3<float>& up, const V
 	}
 }
 
-#if MATHEMATICS_SIMD_EXPAND_LAST
-inline AffineTransform<float>::AffineTransform(const float* m) noexcept :
-	AffineTransform(m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11])
-{
-}
-#else
 inline AffineTransform<float>::AffineTransform(const float* m) noexcept
 {
-	simd::unpack4x3(m, row0, row1, row2, row3);
-}
+	auto t0 = simd::load4(&m[0]);
+	auto t1 = simd::load4(&m[4]);
+	auto t2 = simd::load4(&m[8]);
+	auto t3 = t2;
+	t2 = simd::or4(simd::and4(t1, simd::bits<simd::float4, 0, 0, -1, -1>()), 
+		simd::and4(t2, simd::bits<simd::float4, -1, 0, 0, 0>()));
+	t1 = simd::or4(simd::and4(t0, simd::bits<simd::float4, 0, 0, 0, -1>()),
+		simd::and4(t1, simd::bits<simd::float4, -1, -1, 0, 0>()));
+#if MATHEMATICS_SIMD_EXPAND_LAST
+	row0 = simd::swizzle<0, 1, 2, 2>(t0);
+	row1 = simd::swizzle<3, 0, 1, 1>(t1);
+	row2 = simd::swizzle<2, 3, 0, 0>(t2);
+	row3 = simd::swizzle<1, 2, 3, 3>(t3);
+#else
+	row0 = simd::and4(t0, simd::bits<simd::float4, -1, -1, -1, 0>());
+	row1 = simd::swizzle<3, 0, 1, 2>(t1);
+	row2 = simd::swizzle<2, 3, 0, 1>(t2);
+	row3 = simd::swizzle<1, 2, 3, 0>(simd::and4(t3, simd::bits<simd::float4, 0, -1, -1, -1>()));
 #endif
+}
 
 inline AffineTransform<float>::AffineTransform(simd::float4 row0, simd::float4 row1, simd::float4 row2, simd::float4 row3) noexcept : 
 	row0(row0), 
@@ -1180,11 +1191,11 @@ inline AffineTransform<float>& AffineTransform<float>::setTranslation(const Vect
 inline AffineTransform<float>& AffineTransform<float>::setScaling(const Vector3<float>& v) noexcept
 {
 	row0 = simd::cutoff1(v);
-	row1 = simd::and4(v, simd::constant4i<simd::float4, 0, -1, 0, 0>());
+	row1 = simd::and4(v, simd::bits<simd::float4, 0, -1, 0, 0>());
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	row2 = simd::and4(v, simd::constant4i<simd::float4, 0, 0, -1, -1>());
+	row2 = simd::and4(v, simd::bits<simd::float4, 0, 0, -1, -1>());
 #else
-	row2 = simd::and4(v, simd::constant4i<simd::float4, 0, 0, -1, 0>());
+	row2 = simd::and4(v, simd::bits<simd::float4, 0, 0, -1, 0>());
 #endif
 	row3 = simd::zero<simd::float4>();
 	return *this;
@@ -1252,11 +1263,11 @@ inline AffineTransform<float>& AffineTransform<float>::setRotation(const Vector3
 inline AffineTransform<float>& AffineTransform<float>::setScalingTranslation(const Vector3<float>& s, const Vector3<float>& t) noexcept
 {
 	row0 = simd::cutoff1(s);
-	row1 = simd::and4(s, simd::constant4i<simd::float4, 0, -1, 0, 0>());
+	row1 = simd::and4(s, simd::bits<simd::float4, 0, -1, 0, 0>());
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	row2 = simd::and4(s, simd::constant4i<simd::float4, 0, 0, -1, -1>());
+	row2 = simd::and4(s, simd::bits<simd::float4, 0, 0, -1, -1>());
 #else
-	row2 = simd::and4(s, simd::constant4i<simd::float4, 0, 0, -1, 0>());
+	row2 = simd::and4(s, simd::bits<simd::float4, 0, 0, -1, 0>());
 #endif
 	row3 = t;
 	return *this;
@@ -1305,13 +1316,12 @@ inline AffineTransform<float>& AffineTransform<float>::setInverse(const AffineTr
 inline AffineTransform<float>& AffineTransform<float>::setInverseOrthogonal(const AffineTransform<float>& m) noexcept
 {
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	auto [r0, r1, r2] = simd::transpose3x3(m.row0, m.row1, m.row2);
+	auto [r0, r1, r2] = simd::transpose(m.row0, m.row1, m.row2);
 	row0 = simd::xyzz(r0);
 	row1 = simd::xyzz(r1);
 	row2 = simd::xyzz(r2);
 #else
-	//simd::transpose3x3(m.row0, m.row1, m.row2, row0, row1, row2);
-	std::tie(row0, row1, row2) = simd::transpose3x3(m.row0, m.row1, m.row2);
+	std::tie(row0, row1, row2) = simd::transpose(m.row0, m.row1, m.row2);
 #endif
 	setOrigin(-(m.getOrigin()*getBasis()));
 	return *this;
@@ -1425,13 +1435,12 @@ inline AffineTransform<float>& AffineTransform<float>::invert() noexcept
 inline AffineTransform<float>& AffineTransform<float>::invertOrthogonal() noexcept
 {
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	auto [r0, r1, r2] = simd::transpose3x3(row0, row1, row2);
+	auto [r0, r1, r2] = simd::transpose(row0, row1, row2);
 	row0 = simd::xyzz(r0);
 	row1 = simd::xyzz(r1);
 	row2 = simd::xyzz(r2);
 #else
-	//simd::transpose3x3(row0, row1, row2, row0, row1, row2);
-	std::tie(row0, row1, row2) = simd::transpose3x3(row0, row1, row2);
+	std::tie(row0, row1, row2) = simd::transpose(row0, row1, row2);
 #endif
 	setOrigin(-(getOrigin()*getBasis()));
 	return *this;
@@ -1536,13 +1545,12 @@ inline AffineTransform<float> inverseOrthogonal(const AffineTransform<float>& m)
 {
 	AffineTransform<float> n{ Uninitialized() };
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	auto [r0, r1, r2] = simd::transpose3x3(m.row0, m.row1, m.row2);
+	auto [r0, r1, r2] = simd::transpose(m.row0, m.row1, m.row2);
 	n.row0 = simd::xyzz(r0);
 	n.row1 = simd::xyzz(r1);
 	n.row2 = simd::xyzz(r2);
 #else
-	//simd::transpose3x3(m.row0, m.row1, m.row2, n.row0, n.row1, n.row2); 
-	std::tie(n.row0, n.row1, n.row2) = simd::transpose3x3(m.row0, m.row1, m.row2);
+	std::tie(n.row0, n.row1, n.row2) = simd::transpose(m.row0, m.row1, m.row2);
 #endif
 	n.setOrigin(-(m.getOrigin()*n.getBasis()));
 	return n;
@@ -1552,13 +1560,12 @@ template<>
 inline AffineTransform<float> inverseOrthogonal(AffineTransform<float>&& m) noexcept
 {
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	auto [r0, r1, r2] = simd::transpose3x3(m.row0, m.row1, m.row2);
+	auto [r0, r1, r2] = simd::transpose(m.row0, m.row1, m.row2);
 	m.row0 = simd::xyzz(r0);
 	m.row1 = simd::xyzz(r1);
 	m.row2 = simd::xyzz(r2);
 #else
-	//simd::transpose3x3(m.row0, m.row1, m.row2, m.row0, m.row1, m.row2); 
-	std::tie(m.row0, m.row1, m.row2) = simd::transpose3x3(m.row0, m.row1, m.row2);
+	std::tie(m.row0, m.row1, m.row2) = simd::transpose(m.row0, m.row1, m.row2);
 #endif
 	m.setOrigin(-(m.getOrigin()*m.getBasis()));
 	return m;

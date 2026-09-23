@@ -1462,8 +1462,8 @@ inline Matrix4<float>& Matrix4<float>::setTranslation(const Vector3<float>& v) n
 inline Matrix4<float>& Matrix4<float>::setScaling(const Vector3<float>& v) noexcept
 {
 	row0 = simd::cutoff1(v);
-	row1 = simd::and4(v, simd::constant4i<simd::float4, 0, -1, 0, 0>());
-	row2 = simd::and4(v, simd::constant4i<simd::float4, 0, 0, -1, 0>());
+	row1 = simd::and4(v, simd::bits<simd::float4, 0, -1, 0, 0>());
+	row2 = simd::and4(v, simd::bits<simd::float4, 0, 0, -1, 0>());
 	row3 = Vector4<float>::UNIT_W;
 	return *this;
 }
@@ -1530,8 +1530,8 @@ inline Matrix4<float>& Matrix4<float>::setRotationTranslation(const Vector3<floa
 inline Matrix4<float>& Matrix4<float>::setScalingTranslation(const Vector3<float>& s, const Vector3<float>& t) noexcept
 {
 	row0 = simd::cutoff1(s);
-	row1 = simd::and4(s, simd::constant4i<simd::float4, 0, -1, 0, 0>());
-	row2 = simd::and4(s, simd::constant4i<simd::float4, 0, 0, -1, 0>());
+	row1 = simd::and4(s, simd::bits<simd::float4, 0, -1, 0, 0>());
+	row2 = simd::and4(s, simd::bits<simd::float4, 0, 0, -1, 0>());
 	row3 = simd::insert3(t, Vector4<float>::UNIT_W);
 	return *this;
 }
@@ -1565,8 +1565,7 @@ inline Matrix4<float>& Matrix4<float>::setShearing(float xy, float xz, float yx,
 
 inline Matrix4<float>& Matrix4<float>::setTranspose(const Matrix4<float>& m) noexcept
 {
-	//simd::transpose4x4(m.row0, m.row1, m.row2, m.row3, row0, row1, row2, row3);
-	std::tie(row0, row1, row2, row3) = simd::transpose4x4(m.row0, m.row1, m.row2, m.row3);
+	std::tie(row0, row1, row2, row3) = simd::transpose(m.row0, m.row1, m.row2, m.row3);
 	return *this;
 }
 
@@ -1685,8 +1684,7 @@ inline Matrix4<float>& Matrix4<float>::negate() noexcept
 
 inline Matrix4<float>& Matrix4<float>::transpose() noexcept
 {
-	//simd::transpose4x4(row0, row1, row2, row3, row0, row1, row2, row3);
-	std::tie(row0, row1, row2, row3) = simd::transpose4x4(row0, row1, row2, row3);
+	std::tie(row0, row1, row2, row3) = simd::transpose(row0, row1, row2, row3);
 	return *this;
 }
 
@@ -1795,16 +1793,14 @@ template<>
 inline Matrix4<float> transpose(const Matrix4<float>& m) noexcept
 {
 	Matrix4<float> n{ Uninitialized() };
-	//simd::transpose4x4(m.row0, m.row1, m.row2, m.row3, n.row0, n.row1, n.row2, n.row3);
-	std::tie(n.row0, n.row1, n.row2, n.row3) = simd::transpose4x4(m.row0, m.row1, m.row2, m.row3);
+	std::tie(n.row0, n.row1, n.row2, n.row3) = simd::transpose(m.row0, m.row1, m.row2, m.row3);
 	return n;
 }
 
 template<>
 inline Matrix4<float> transpose(Matrix4<float>&& m) noexcept
 {
-	//simd::transpose4x4(m.row0, m.row1, m.row2, m.row3, m.row0, m.row1, m.row2, m.row3);
-	std::tie(m.row0, m.row1, m.row2, m.row3) = simd::transpose4x4(m.row0, m.row1, m.row2, m.row3);
+	std::tie(m.row0, m.row1, m.row2, m.row3) = simd::transpose(m.row0, m.row1, m.row2, m.row3);
 	return m;
 }
 

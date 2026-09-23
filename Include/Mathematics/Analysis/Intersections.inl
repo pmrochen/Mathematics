@@ -633,7 +633,7 @@ inline O findLineAxisAlignedBox(const Vector3<float>& origin, const Vector3<floa
 	lMax = simd::min4/*min1*/(lMax, lMax1);
 	lMin = simd::max4/*max1*/(lMin, lMin1);
 
-	return detail::intervalChecked<O>(simd::toFloat(lMin), simd::toFloat(lMax));
+	return detail::intervalChecked<O>(simd::extract(lMin), simd::extract(lMax));
 }
 
 #endif /* SIMD_HAS_FLOAT4 */

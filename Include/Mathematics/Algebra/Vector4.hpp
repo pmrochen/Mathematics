@@ -261,8 +261,8 @@ struct alignas(16) Vector4<float>
 	/*constexpr*/ explicit Vector4(float scalar) noexcept : xyzw(simd::set4(scalar)) {}
 	/*constexpr*/ Vector4(float x, float y, float z, float w) noexcept : xyzw(simd::set4(x, y, z, w)) {}
 	/*constexpr*/ Vector4(const Vector2<float>& v) noexcept : xyzw(simd::insert2(v, UNIT_W)) {}
-	/*constexpr*/ Vector4(const Vector2<float>& v, float z, float w) noexcept : xyzw(simd::pack2x2(v, simd::set2(z, w))) {}
-	/*constexpr*/ Vector4(const Vector2<float>& xy, const Vector2<float>& zw) noexcept : xyzw(simd::pack2x2(xy, zw)) {}
+	/*constexpr*/ Vector4(const Vector2<float>& v, float z, float w) noexcept : xyzw(simd::pack(v, simd::set2(z, w))) {}
+	/*constexpr*/ Vector4(const Vector2<float>& xy, const Vector2<float>& zw) noexcept : xyzw(simd::pack(xy, zw)) {}
 	/*constexpr*/ Vector4(const Vector3<float>& v) noexcept : xyzw(simd::insert3(v, UNIT_W)) {}
 	/*constexpr*/ Vector4(const Vector3<float>& v, float w) noexcept : xyzw(simd::insert<simd::W>(w, v)) {}
 	//explicit Vector4(const Tuple4<float>& t) noexcept : xyzw(simd::set4(t.x, t.y, t.z, t.w)) {}
@@ -330,14 +330,14 @@ struct alignas(16) Vector4<float>
 	bool anyGreaterThan(const Vector4& v) const noexcept { return simd::any4(simd::greaterThan(xyzw, v)); }
 	bool anyGreaterThanEqual(const Vector4& v) const noexcept { return simd::any4(simd::greaterThanEqual(xyzw, v)); }
 	bool isFinite() const noexcept { return simd::all4(simd::isFinite(xyzw)); }
-	float getMagnitude() const noexcept { return simd::toFloat(simd::sqrt1(simd::dot4(xyzw, xyzw))); }
-	float getMagnitudeSquared() const noexcept { return simd::toFloat(simd::dot4(xyzw, xyzw)); }
+	float getMagnitude() const noexcept { return simd::extract(simd::sqrt1(simd::dot4(xyzw, xyzw))); }
+	float getMagnitudeSquared() const noexcept { return simd::extract(simd::dot4(xyzw, xyzw)); }
 	void setMagnitude(float magnitude) noexcept;
 	float getLength() const noexcept { return getMagnitude(); }
 	float getLengthSquared() const noexcept { return getMagnitudeSquared(); }
 	void setLength(float length) noexcept { setMagnitude(length); }
-	float getMinComponent() const noexcept { return simd::toFloat(simd::hMin4(xyzw)); }
-	float getMaxComponent() const noexcept { return simd::toFloat(simd::hMax4(xyzw)); }
+	float getMinComponent() const noexcept { return simd::extract(simd::hMin4(xyzw)); }
+	float getMaxComponent() const noexcept { return simd::extract(simd::hMax4(xyzw)); }
 	Vector4& setZero() noexcept { xyzw = simd::zero<simd::float4>(); return *this; }
 	Vector4& set(float x, float y, float z, float w) noexcept { xyzw = simd::set4(x, y, z, w); return *this; }
 	Vector4& setMinimum(const Vector4& v1, const Vector4& v2) noexcept { xyzw = simd::min4(v1, v2); return *this; }
@@ -725,7 +725,7 @@ inline void Vector4<float>::setMagnitude(float magnitude) noexcept
 inline Vector4<float>& Vector4<float>::normalize() noexcept
 {
 #if MATHEMATICS_FAST_NORMALIZE
-	float m = simd::toFloat(simd::rcpSqrtApprox1(simd::dot4(xyzw, xyzw)));
+	float m = simd::extract(simd::rcpSqrtApprox1(simd::dot4(xyzw, xyzw)));
 	if (m <= std::numeric_limits<float>::max())
 		xyzw = simd::mul4(xyzw, simd::set4(m));
 #else
@@ -966,13 +966,13 @@ inline Vector4<float> abs(const Vector4<float>& v) noexcept
 template<>
 inline float sum(const Vector4<float>& v) noexcept
 {
-	return simd::toFloat(simd::hAdd4(v));
+	return simd::extract(simd::hAdd4(v));
 }
 
 template<>
 inline float dot(const Vector4<float>& v1, const Vector4<float>& v2) noexcept
 {
-	return simd::toFloat(simd::dot4(v1, v2));
+	return simd::extract(simd::dot4(v1, v2));
 }
 
 template<>
@@ -992,26 +992,26 @@ template<>
 inline float distance(const Vector4<float>& v1, const Vector4<float>& v2) noexcept
 {
 	auto v = simd::sub4(v2, v1);
-	return simd::toFloat(simd::sqrt1(simd::dot4(v, v)));
+	return simd::extract(simd::sqrt1(simd::dot4(v, v)));
 }
 
 template<>
 inline float distanceSquared(const Vector4<float>& v1, const Vector4<float>& v2) noexcept
 {
 	auto v = simd::sub4(v2, v1);
-	return simd::toFloat(simd::dot4(v, v));
+	return simd::extract(simd::dot4(v, v));
 }
 
 template<>
 inline float length(const Vector4<float>& v) noexcept
 {
-	return simd::toFloat(simd::sqrt1(simd::dot4(v, v)));
+	return simd::extract(simd::sqrt1(simd::dot4(v, v)));
 }
 
 template<>
 inline float lengthSquared(const Vector4<float>& v) noexcept
 {
-	return simd::toFloat(simd::dot4(v, v));
+	return simd::extract(simd::dot4(v, v));
 }
 
 template<>
@@ -1041,7 +1041,7 @@ inline Vector4<float> lerp(const Vector4<float>& v1, const Vector4<float>& v2, f
 template<>
 inline Vector4<float> slerp(const Vector4<float>& v1, const Vector4<float>& v2, float t)
 {
-	float dp = simd::toFloat(simd::dot4(v1, v2));
+	float dp = simd::extract(simd::dot4(v1, v2));
 	if ((1.f - dp) < Constants<float>::TOLERANCE)
 	{
 		Vector4<float> c(simd::mulAdd4(simd::set4(t), simd::sub4(v2, v1), v1));
