@@ -1076,8 +1076,11 @@ inline float dot(const Vector3<float>& v1, const Vector3<float>& v2) noexcept
 template<>
 inline Vector3<float> cross(const Vector3<float>& v1, const Vector3<float>& v2) noexcept
 {
-	return Vector3<float>(simd::sub4(simd::mul4(simd::yzxw(v1), simd::zxyw(v2)),
-		simd::mul4(simd::zxyw(v1), simd::yzxw(v2))));
+#if MATHEMATICS_SIMD_EXPAND_LAST
+	return Vector3<float>(simd::yzxx(simd::mulSub4(v1, simd::yzxw(v2), simd::mul4(simd::yzxw(v1), v2))));
+#else
+	return Vector3<float>(simd::yzxw(simd::mulSub4(v1, simd::yzxw(v2), simd::mul4(simd::yzxw(v1), v2))));
+#endif
 }
 
 template<>
@@ -1441,8 +1444,8 @@ inline Vector3<float>& Vector3<float>::rotate(const Quaternion<float>& q) noexce
 {
 	auto qyzx = simd::yzxx(q);
 	auto qzxy = simd::zxyy(q);
-	auto t1 = simd::sub4(simd::mul4(qyzx, simd::zxyy(xyz)), simd::mul4(qzxy, simd::yzxx(xyz)));
-	auto t2 = simd::mulAdd4(simd::wwww(q), t1, simd::sub4(simd::mul4(qyzx, simd::zxyy(t1)), simd::mul4(qzxy, simd::yzxx(t1))));
+	auto t1 = simd::mulSub4(qyzx, simd::zxyy(xyz), simd::mul4(qzxy, simd::yzxx(xyz)));
+	auto t2 = simd::mulAdd4(simd::wwww(q), t1, simd::mulSub4(qyzx, simd::zxyy(t1), simd::mul4(qzxy, simd::yzxx(t1))));
 	static const simd::float4 two = simd::set3(2.0f);
 	xyz = simd::mulAdd4(two, t2, xyz);
 	return *this;
@@ -1467,8 +1470,8 @@ inline Vector3<float> rotate(const Vector3<float>& v, const Quaternion<float>& q
 {
 	auto qyzx = simd::yzxx(q);
 	auto qzxy = simd::zxyy(q);
-	auto t1 = simd::sub4(simd::mul4(qyzx, simd::zxyy(v)), simd::mul4(qzxy, simd::yzxx(v)));
-	auto t2 = simd::mulAdd4(simd::wwww(q), t1, simd::sub4(simd::mul4(qyzx, simd::zxyy(t1)), simd::mul4(qzxy, simd::yzxx(t1))));
+	auto t1 = simd::mulSub4(qyzx, simd::zxyy(v), simd::mul4(qzxy, simd::yzxx(v)));
+	auto t2 = simd::mulAdd4(simd::wwww(q), t1, simd::mulSub4(qyzx, simd::zxyy(t1), simd::mul4(qzxy, simd::yzxx(t1))));
 	static const simd::float4 two = simd::set3(2.0f);
 	return Vector3<float>(simd::mulAdd4(two, t2, v));
 }
