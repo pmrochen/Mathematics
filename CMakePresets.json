@@ -283,7 +283,7 @@
       "inherits": "emscripten-base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "MATHEMATICS_ENABLE_AVX2": "ON"
+        "MATHEMATICS_ENABLE_SSE4": "ON"
       }
     },
     {
