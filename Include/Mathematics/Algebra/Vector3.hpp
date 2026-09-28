@@ -263,13 +263,13 @@ struct alignas(16) Vector3<float>
 
 	static constexpr int NUM_COMPONENTS = 3;
 
-	/*constexpr*/ Vector3() noexcept : xyz(simd::zero<simd::float4>()) {}
+	/*constexpr*/ Vector3() noexcept : xyz(simd::zero4<float>()) {}
 	explicit Vector3(Uninitialized) noexcept {}
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	/*constexpr*/ explicit Vector3(float scalar) noexcept : xyz(simd::set4(scalar)) {}
 	/*constexpr*/ Vector3(float x, float y, float z) noexcept : xyz(simd::set4(x, y, z, z)) {}
 	/*constexpr*/ Vector3(const Vector2<float>& v) noexcept : xyz(simd::cutoff2(v)) {}
-	/*constexpr*/ Vector3(const Vector2<float>& v, float z) noexcept : xyz(simd::pack(v, simd::set2(z))) {}
+	/*constexpr*/ Vector3(const Vector2<float>& v, float z) noexcept : xyz(simd::pack2(v, simd::set2(z))) {}
 	//explicit Vector3(const Tuple3<float>& t) noexcept : xyz(simd::set4(t.x, t.y, t.z, t.z)) {}
 	//template<Arithmetic U> explicit Vector3(const Tuple3<U>& t) noexcept : Vector3((float)t.x, (float)t.y, (float)t.z) {}
 	explicit Vector3(const TupleType& t) noexcept : Vector3(std::get<0>(t), std::get<1>(t), std::get<2>(t)) {}
@@ -279,7 +279,7 @@ struct alignas(16) Vector3<float>
 	/*constexpr*/ explicit Vector3(float scalar) noexcept : xyz(simd::set3(scalar)) {}
 	/*constexpr*/ Vector3(float x, float y, float z) noexcept : xyz(simd::set3(x, y, z)) {}
 	/*constexpr*/ Vector3(const Vector2<float>& v) noexcept : xyz(simd::cutoff2(v)) {}
-	/*constexpr*/ Vector3(const Vector2<float>& v, float z) noexcept : xyz(simd::pack(v, simd::set1(z))) {}
+	/*constexpr*/ Vector3(const Vector2<float>& v, float z) noexcept : xyz(simd::pack2(v, simd::set1(z))) {}
 	//explicit Vector3(const Tuple3<float>& t) noexcept : xyz(simd::set3(t.x, t.y, t.z)) {}
 	//template<Arithmetic U> explicit Vector3(const Tuple3<U>& t) noexcept : xyz(simd::set3((float)t.x, (float)t.y, (float)t.z)) {}
 	explicit Vector3(const TupleType& t) noexcept : xyz(simd::set3(std::get<0>(t), std::get<1>(t), std::get<2>(t))) {}
@@ -308,10 +308,10 @@ struct alignas(16) Vector3<float>
 #else
 	Vector3 operator-() const noexcept { return Vector3(simd::neg3(xyz)); }
 #endif
-	Vector3& operator+=(const Vector3& v) noexcept { xyz = simd::add4(xyz, v); return *this; }
-	Vector3& operator-=(const Vector3& v) noexcept { xyz = simd::sub4(xyz, v); return *this; }
-	Vector3& operator*=(const Vector3& v) noexcept { xyz = simd::mul4(xyz, v); return *this; }
-	Vector3& operator*=(float f) noexcept { xyz = simd::mul4(xyz, simd::set4(f)); return *this; }
+	Vector3& operator+=(const Vector3& v) noexcept { xyz = simd::add(xyz, v); return *this; }
+	Vector3& operator-=(const Vector3& v) noexcept { xyz = simd::sub(xyz, v); return *this; }
+	Vector3& operator*=(const Vector3& v) noexcept { xyz = simd::mul(xyz, v); return *this; }
+	Vector3& operator*=(float f) noexcept { xyz = simd::mul(xyz, simd::set4(f)); return *this; }
 	Vector3& operator*=(const Matrix3<float>& m) noexcept;
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	Vector3& operator/=(const Vector3& v) noexcept { xyz = simd::div4(xyz, v); return *this; }
@@ -342,10 +342,10 @@ struct alignas(16) Vector3<float>
 	const Vector2<float> zy/*getZY*/() const noexcept { return Vector2<float>(simd::zyww(xyz)); }
 #endif
 	//void setXY(const Vector2<float>& v) noexcept { xyz = simd::insert2(v, xyz); }
-	bool isZero() const noexcept { return simd::all3(simd::equal(xyz, simd::zero<simd::float4>())); }
-	bool isApproxZero() const noexcept { return simd::all3(simd::lessThan(simd::abs4(xyz), TOLERANCE)); }
-	bool approxEquals(const Vector3& v) const noexcept { return simd::all3(simd::lessThan(simd::abs4(simd::sub4(xyz, v)), TOLERANCE)); }
-	bool approxEquals(const Vector3& v, float tolerance) const noexcept { return simd::all3(simd::lessThan(simd::abs4(simd::sub4(xyz, v)), simd::set4(tolerance))); }
+	bool isZero() const noexcept { return simd::all3(simd::equal(xyz, simd::zero4<float>())); }
+	bool isApproxZero() const noexcept { return simd::all3(simd::lessThan(simd::abs(xyz), TOLERANCE)); }
+	bool approxEquals(const Vector3& v) const noexcept { return simd::all3(simd::lessThan(simd::abs(simd::sub(xyz, v)), TOLERANCE)); }
+	bool approxEquals(const Vector3& v, float tolerance) const noexcept { return simd::all3(simd::lessThan(simd::abs(simd::sub(xyz, v)), simd::set4(tolerance))); }
 	bool allLessThan(const Vector3& v) const noexcept { return simd::all3(simd::lessThan(xyz, v)); }
 	bool allLessThanEqual(const Vector3& v) const noexcept { return simd::all3(simd::lessThanEqual(xyz, v)); }
 	bool allGreaterThan(const Vector3& v) const noexcept { return simd::all3(simd::greaterThan(xyz, v)); }
@@ -361,17 +361,17 @@ struct alignas(16) Vector3<float>
 	float getLength() const noexcept { return getMagnitude(); }
 	float getLengthSquared() const noexcept { return getMagnitudeSquared(); }
 	void setLength(float length) noexcept { setMagnitude(length); }
-	Axis getMajorAxis() const noexcept { return (Axis)simd::asIndex(simd::equal(xyz, simd::hMax3(simd::abs4(xyz)))); }
+	Axis getMajorAxis() const noexcept { return (Axis)simd::asIndex(simd::equal(xyz, simd::hMax3(simd::abs(xyz)))); }
 	float getMinComponent() const noexcept { return simd::extract(simd::hMin3(xyz)); }
 	float getMaxComponent() const noexcept { return simd::extract(simd::hMax3(xyz)); }
-	Vector3& setZero() noexcept { xyz = simd::zero<simd::float4>(); return *this; }
+	Vector3& setZero() noexcept { xyz = simd::zero4<float>(); return *this; }
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	Vector3& set(float x, float y, float z) noexcept { xyz = simd::set4(x, y, z, z); return *this; }
 #else
 	Vector3& set(float x, float y, float z) noexcept { xyz = simd::set3(x, y, z); return *this; }
 #endif
-	Vector3& setMinimum(const Vector3& v1, const Vector3& v2) noexcept { xyz = simd::min4(v1, v2); return *this; }
-	Vector3& setMaximum(const Vector3& v1, const Vector3& v2) noexcept { xyz = simd::max4(v1, v2); return *this; }
+	Vector3& setMinimum(const Vector3& v1, const Vector3& v2) noexcept { xyz = simd::min(v1, v2); return *this; }
+	Vector3& setMaximum(const Vector3& v1, const Vector3& v2) noexcept { xyz = simd::max(v1, v2); return *this; }
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	Vector3& negate() noexcept { xyz = simd::neg4(xyz); return *this; }
 #else
@@ -690,31 +690,31 @@ inline Vector3<T>& Vector3<T>::setMaximum(const Vector3<T>& v1, const Vector3<T>
 template<>
 inline Vector3<float> operator+(const Vector3<float>& v1, const Vector3<float>& v2) noexcept 
 { 
-	return Vector3<float>(simd::add4(v1, v2)); 
+	return Vector3<float>(simd::add(v1, v2)); 
 }
 
 template<>
 inline Vector3<float> operator-(const Vector3<float>& v1, const Vector3<float>& v2) noexcept 
 { 
-	return Vector3<float>(simd::sub4(v1, v2));
+	return Vector3<float>(simd::sub(v1, v2));
 }
 
 template<>
 inline Vector3<float> operator*(const Vector3<float>& v1, const Vector3<float>& v2) noexcept 
 { 
-	return Vector3<float>(simd::mul4(v1, v2)); 
+	return Vector3<float>(simd::mul(v1, v2)); 
 }
 
 template<>
 inline Vector3<float> operator*(float f, const Vector3<float>& v) noexcept 
 { 
-	return Vector3<float>(simd::mul4(simd::set4(f), v)); 
+	return Vector3<float>(simd::mul(simd::set4(f), v)); 
 }
 
 template<>
 inline Vector3<float> operator*(const Vector3<float>& v, float f) noexcept 
 { 
-	return Vector3<float>(simd::mul4(v, simd::set4(f))); 
+	return Vector3<float>(simd::mul(v, simd::set4(f))); 
 }
 
 template<>
@@ -802,7 +802,7 @@ inline Vector3<float>& Vector3<float>::normalize() noexcept
 #if MATHEMATICS_FAST_NORMALIZE
 	float m = simd::extract(simd::rcpSqrtApprox1(simd::dot3(xyz, xyz)));
 	if (m <= std::numeric_limits<float>::max()) 
-		xyz = simd::mul4(xyz, simd::set4(m));
+		xyz = simd::mul(xyz, simd::set4(m));
 #else
 	float m = getMagnitude(); 
 	if (m > 0.f) 
@@ -1058,7 +1058,7 @@ inline Matrix3<T> tensor(const Vector3<T>& v1, const Vector3<T>& v2) noexcept;
 template<>
 inline Vector3<float> abs(const Vector3<float>& v) noexcept
 {
-	return Vector3<float>(simd::abs4(v));
+	return Vector3<float>(simd::abs(v));
 }
 
 template<>
@@ -1077,23 +1077,23 @@ template<>
 inline Vector3<float> cross(const Vector3<float>& v1, const Vector3<float>& v2) noexcept
 {
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	return Vector3<float>(simd::yzxx(simd::mulSub4(v1, simd::yzxw(v2), simd::mul4(simd::yzxw(v1), v2))));
+	return Vector3<float>(simd::yzxx(simd::mulSub(v1, simd::yzxw(v2), simd::mul(simd::yzxw(v1), v2))));
 #else
-	return Vector3<float>(simd::yzxw(simd::mulSub4(v1, simd::yzxw(v2), simd::mul4(simd::yzxw(v1), v2))));
+	return Vector3<float>(simd::yzxw(simd::mulSub(v1, simd::yzxw(v2), simd::mul(simd::yzxw(v1), v2))));
 #endif
 }
 
 template<>
 inline float distance(const Vector3<float>& v1, const Vector3<float>& v2) noexcept
 {
-	auto v = simd::sub4(v2, v1);
+	auto v = simd::sub(v2, v1);
 	return simd::extract(simd::sqrt1(simd::dot3(v, v)));
 }
 
 template<>
 inline float distanceSquared(const Vector3<float>& v1, const Vector3<float>& v2) noexcept
 {
-	auto v = simd::sub4(v2, v1);
+	auto v = simd::sub(v2, v1);
 	return simd::extract(simd::dot3(v, v));
 }
 
@@ -1112,25 +1112,25 @@ inline float lengthSquared(const Vector3<float>& v) noexcept
 template<>
 inline Vector3<float> min(const Vector3<float>& v1, const Vector3<float>& v2)
 {
-	return Vector3<float>(simd::min4(v1, v2));
+	return Vector3<float>(simd::min(v1, v2));
 }
 
 template<>
 inline Vector3<float> max(const Vector3<float>& v1, const Vector3<float>& v2)
 {
-	return Vector3<float>(simd::max4(v1, v2));
+	return Vector3<float>(simd::max(v1, v2));
 }
 
 template<>
 inline Vector3<float> clamp(const Vector3<float>& v, const Vector3<float>& low, const Vector3<float>& high)
 {
-	return Vector3<float>(simd::min4(simd::max4(v, low), high));
+	return Vector3<float>(simd::clamp(v, low, high));
 }
 
 template<>
 inline Vector3<float> lerp(const Vector3<float>& v1, const Vector3<float>& v2, float t) noexcept
 {
-	return Vector3<float>(simd::mulAdd4(simd::set4(t), simd::sub4(v2, v1), v1));
+	return Vector3<float>(simd::mulAdd(simd::set4(t), simd::sub(v2, v1), v1));
 }
 
 template<>
@@ -1139,7 +1139,7 @@ inline Vector3<float> slerp(const Vector3<float>& v1, const Vector3<float>& v2, 
 	float dp = simd::extract(simd::dot3(v1, v2));
 	if ((1.f - dp) < Constants<float>::TOLERANCE)
 	{
-		Vector3<float> c(simd::mulAdd4(simd::set4(t), simd::sub4(v2, v1), v1));
+		Vector3<float> c(simd::mulAdd(simd::set4(t), simd::sub(v2, v1), v1));
 		c.normalize();
 		return c;
 	}
@@ -1148,9 +1148,9 @@ inline Vector3<float> slerp(const Vector3<float>& v1, const Vector3<float>& v2, 
 	float theta = std::acos(dp)*t;
 	float st = std::sin(theta);
 	float ct = std::cos(theta);
-	Vector3<float> c(simd::sub4(v2, simd::mul4(v1, simd::set4(dp))));
+	Vector3<float> c(simd::sub(v2, simd::mul(v1, simd::set4(dp))));
 	c.normalize();
-	return Vector3<float>(simd::mulAdd4(v1, simd::set4(ct), simd::mul4(c, simd::set4(st))));
+	return Vector3<float>(simd::mulAdd(v1, simd::set4(ct), simd::mul(c, simd::set4(st))));
 }
 
 template<>
@@ -1418,16 +1418,16 @@ inline Matrix3<T> tensor(const Vector3<T>& v1, const Vector3<T>& v2) noexcept
 
 inline Vector3<float>& Vector3<float>::operator*=(const Matrix3<float>& m) noexcept
 {
-	auto t = simd::mulAdd4(simd::xxxx(xyz), m.row0, simd::mul4(simd::yyyy(xyz), m.row1));
-	xyz = simd::add4(t, simd::mul4(simd::zzzz(xyz), m.row2));
+	auto t = simd::mulAdd(simd::xxxx(xyz), m.row0, simd::mul(simd::yyyy(xyz), m.row1));
+	xyz = simd::add(t, simd::mul(simd::zzzz(xyz), m.row2));
 	return *this;
 }
 
 template<>
 inline Vector3<float> operator*(const Vector3<float>& v, const Matrix3<float>& m) noexcept
 {
-	auto t = simd::mulAdd4(simd::xxxx(v), m.row0, simd::mul4(simd::yyyy(v), m.row1));
-	return Vector3<float>(simd::add4(t, simd::mul4(simd::zzzz(v), m.row2)));
+	auto t = simd::mulAdd(simd::xxxx(v), m.row0, simd::mul(simd::yyyy(v), m.row1));
+	return Vector3<float>(simd::add(t, simd::mul(simd::zzzz(v), m.row2)));
 }
 
 template<>
@@ -1444,10 +1444,10 @@ inline Vector3<float>& Vector3<float>::rotate(const Quaternion<float>& q) noexce
 {
 	auto qyzx = simd::yzxx(q);
 	auto qzxy = simd::zxyy(q);
-	auto t1 = simd::mulSub4(qyzx, simd::zxyy(xyz), simd::mul4(qzxy, simd::yzxx(xyz)));
-	auto t2 = simd::mulAdd4(simd::wwww(q), t1, simd::mulSub4(qyzx, simd::zxyy(t1), simd::mul4(qzxy, simd::yzxx(t1))));
+	auto t1 = simd::mulSub(qyzx, simd::zxyy(xyz), simd::mul(qzxy, simd::yzxx(xyz)));
+	auto t2 = simd::mulAdd(simd::wwww(q), t1, simd::mulSub(qyzx, simd::zxyy(t1), simd::mul(qzxy, simd::yzxx(t1))));
 	static const simd::float4 two = simd::set3(2.0f);
-	xyz = simd::mulAdd4(two, t2, xyz);
+	xyz = simd::mulAdd(two, t2, xyz);
 	return *this;
 }
 
@@ -1459,9 +1459,9 @@ inline Vector3<float>& Vector3<float>::transform(const Matrix3<float>& m) noexce
 
 inline Vector3<float>& Vector3<float>::transform(const AffineTransform<float>& m) noexcept
 {
-	auto t = simd::mulAdd4(simd::xxxx(xyz), m.row0, simd::mul4(simd::yyyy(xyz), m.row1));
-	t = simd::add4(t, simd::mul4(simd::zzzz(xyz), m.row2));
-	xyz = simd::add4(t, m.row3);
+	auto t = simd::mulAdd(simd::xxxx(xyz), m.row0, simd::mul(simd::yyyy(xyz), m.row1));
+	t = simd::add(t, simd::mul(simd::zzzz(xyz), m.row2));
+	xyz = simd::add(t, m.row3);
 	return *this;
 }
 
@@ -1470,10 +1470,10 @@ inline Vector3<float> rotate(const Vector3<float>& v, const Quaternion<float>& q
 {
 	auto qyzx = simd::yzxx(q);
 	auto qzxy = simd::zxyy(q);
-	auto t1 = simd::mulSub4(qyzx, simd::zxyy(v), simd::mul4(qzxy, simd::yzxx(v)));
-	auto t2 = simd::mulAdd4(simd::wwww(q), t1, simd::mulSub4(qyzx, simd::zxyy(t1), simd::mul4(qzxy, simd::yzxx(t1))));
+	auto t1 = simd::mulSub(qyzx, simd::zxyy(v), simd::mul(qzxy, simd::yzxx(v)));
+	auto t2 = simd::mulAdd(simd::wwww(q), t1, simd::mulSub(qyzx, simd::zxyy(t1), simd::mul(qzxy, simd::yzxx(t1))));
 	static const simd::float4 two = simd::set3(2.0f);
-	return Vector3<float>(simd::mulAdd4(two, t2, v));
+	return Vector3<float>(simd::mulAdd(two, t2, v));
 }
 
 template<>
@@ -1485,17 +1485,17 @@ inline Vector3<float> transform(const Vector3<float>& v, const Matrix3<float>& m
 template<>
 inline Vector3<float> transform(const Vector3<float>& v, const AffineTransform<float>& m) noexcept
 {
-	auto t = simd::mulAdd4(simd::xxxx(v), m.row0, simd::mul4(simd::yyyy(v), m.row1));
-	t = simd::add4(t, simd::mul4(simd::zzzz(v), m.row2));
-	return Vector3<float>(simd::add4(t, m.row3));
+	auto t = simd::mulAdd(simd::xxxx(v), m.row0, simd::mul(simd::yyyy(v), m.row1));
+	t = simd::add(t, simd::mul(simd::zzzz(v), m.row2));
+	return Vector3<float>(simd::add(t, m.row3));
 }
 
 template<>
 inline Matrix3<float> tensor(const Vector3<float>& v1, const Vector3<float>& v2) noexcept
 {
-	return Matrix3<float>(simd::mul4(simd::xxxx(v1), v2),
-		simd::mul4(simd::yyyy(v1), v2),
-		simd::mul4(simd::zzzz(v1), v2));
+	return Matrix3<float>(simd::mul(simd::xxxx(v1), v2),
+		simd::mul(simd::yyyy(v1), v2),
+		simd::mul(simd::zzzz(v1), v2));
 }
 
 #endif /* SIMD_HAS_FLOAT4 */

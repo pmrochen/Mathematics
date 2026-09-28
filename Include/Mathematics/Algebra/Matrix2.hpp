@@ -144,7 +144,7 @@ struct alignas(16) Matrix2<float>
 
 	static constexpr int DIMENSION = 2;
 
-	/*constexpr*/ Matrix2() noexcept : row0(simd::zero<simd::float4>()), row1(simd::zero<simd::float4>()) {}
+	/*constexpr*/ Matrix2() noexcept : row0(simd::zero4<float>()), row1(simd::zero4<float>()) {}
 	explicit Matrix2(Uninitialized) noexcept {}
 	explicit Matrix2(Identity) noexcept : row0(Vector2<float>::UNIT_X), row1(Vector2<float>::UNIT_Y) {}
 	/*constexpr*/ Matrix2(float m00, float m01, float m10, float m11) noexcept;
@@ -166,7 +166,7 @@ struct alignas(16) Matrix2<float>
 	//explicit operator const float*() const noexcept { return &m00; }
 	explicit operator simd::float4*() noexcept { return &row0; }
 	explicit operator const simd::float4*() const noexcept { return &row0; }
-	explicit operator simd::float4() const noexcept { return simd::pack(row0, row1); }
+	explicit operator simd::float4() const noexcept { return simd::pack2(row0, row1); }
 	Vector2<float>& operator[](int i) noexcept { return reinterpret_cast<Vector2<float>&>((&row0)[i]); }
 	const Vector2<float>& operator[](int i) const noexcept { return reinterpret_cast<const Vector2<float>&>((&row0)[i]); }
 
@@ -197,14 +197,14 @@ struct alignas(16) Matrix2<float>
 	bool approxEquals(const Matrix2& m, float tolerance) const noexcept;
 	bool isApproxOrthogonal() const noexcept;
 	bool hasApproxUniformScaling() const noexcept;
-	bool isFinite() const noexcept { return simd::all4(simd::isFinite(simd::pack(row0, row1))); }
+	bool isFinite() const noexcept { return simd::all4(simd::isFinite(simd::pack2(row0, row1))); }
 	const Vector2<float>& getRow(int i) const noexcept { return reinterpret_cast<const Vector2<float>&>((&row0)[i]); }
 	Vector2<float> getColumn(int i) const noexcept; // #TODO
 	Vector2<float> getScaleComponent() const noexcept { return Vector2<float>((*this)[0].getMagnitude(), (*this)[1].getMagnitude()); }
 	float getTrace() const noexcept { return (m00 + m11); }
 	float getDeterminant() const noexcept { return (m00*m11 - m01*m10); }
 	bool isSingular() const noexcept { return (getDeterminant() == 0.f); }
-	Matrix2& setZero() noexcept { row0 = simd::zero<simd::float4>(); row1 = simd::zero<simd::float4>(); return *this; }
+	Matrix2& setZero() noexcept { row0 = simd::zero4<float>(); row1 = simd::zero4<float>(); return *this; }
 	Matrix2& setIdentity() noexcept { row0 = Vector2<float>::UNIT_X; row1 = Vector2<float>::UNIT_Y; return *this; }
 	Matrix2& set(const Vector2<float>& row0, const Vector2<float>& row1) noexcept;
 	Matrix2& set(simd::float4 row0, simd::float4 row1) noexcept;
@@ -584,18 +584,18 @@ inline Matrix2<float>::Matrix2(const float* m) :
 #else
 inline Matrix2<float>::Matrix2(const float* m) noexcept
 {
-	std::tie(row0, row1) = simd::unpack(simd::load4(m));
+	std::tie(row0, row1) = simd::unpack2(simd::load4(m));
 }
 #endif
 
 inline Matrix2<float>::Matrix2(simd::float4 m) noexcept
 { 
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	auto [r0, r1] = simd::unpack(m);
+	auto [r0, r1] = simd::unpack2(m);
 	row0 = simd::xyyy(r0);
 	row1 = simd::xyyy(r1);
 #else
-	std::tie(row0, row1) = simd::unpack(m);
+	std::tie(row0, row1) = simd::unpack2(m);
 #endif
 }
 
@@ -610,41 +610,41 @@ inline Matrix2<float> Matrix2<float>::operator-() const noexcept
 
 inline Matrix2<float>& Matrix2<float>::operator+=(const Matrix2<float>& m) noexcept
 {
-	row0 = simd::add4(row0, m.row0);
-	row1 = simd::add4(row1, m.row1);
+	row0 = simd::add(row0, m.row0);
+	row1 = simd::add(row1, m.row1);
 	return *this;
 }
 
 inline Matrix2<float>& Matrix2<float>::operator-=(const Matrix2<float>& m) noexcept
 {
-	row0 = simd::sub4(row0, m.row0);
-	row1 = simd::sub4(row1, m.row1);
+	row0 = simd::sub(row0, m.row0);
+	row1 = simd::sub(row1, m.row1);
 	return *this;
 }
 
 inline Matrix2<float>& Matrix2<float>::operator*=(float f) noexcept
 {
 	auto t = simd::set4(f);
-	row0 = simd::mul4(row0, t);
-	row1 = simd::mul4(row1, t);
+	row0 = simd::mul(row0, t);
+	row1 = simd::mul(row1, t);
 	return *this;
 }
 
 inline Matrix2<float>& Matrix2<float>::operator*=(const Matrix2<float>& m) noexcept
 {
-	auto a = simd::pack(row0, row1);
-	auto b = simd::pack(m.row0, m.row1);
+	auto a = simd::pack2(row0, row1);
+	auto b = simd::pack2(m.row0, m.row1);
 	auto a1 = simd::swizzle<0, 0, 2, 2>(a);
 	auto b1 = simd::swizzle<0, 1, 0, 1>(b);
 	auto a2 = simd::swizzle<1, 1, 3, 3>(a);
 	auto b2 = simd::swizzle<2, 3, 2, 3>(b);
-	auto n = simd::add4(simd::mul4(a1, b1), simd::mul4(a2, b2));
+	auto n = simd::add(simd::mul(a1, b1), simd::mul(a2, b2));
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	auto [r0, r1] = simd::unpack(n);
+	auto [r0, r1] = simd::unpack2(n);
 	row0 = simd::xyyy(r0);
 	row1 = simd::xyyy(r1);
 #else
-	std::tie(row0, row1) = simd::unpack(n);
+	std::tie(row0, row1) = simd::unpack2(n);
 #endif
 	return *this;
 }
@@ -652,50 +652,50 @@ inline Matrix2<float>& Matrix2<float>::operator*=(const Matrix2<float>& m) noexc
 template<>
 inline Matrix2<float> operator+(const Matrix2<float>& m1, const Matrix2<float>& m2) noexcept
 {
-	return Matrix2<float>(simd::add4(m1.row0, m2.row0),
-		simd::add4(m1.row1, m2.row1));
+	return Matrix2<float>(simd::add(m1.row0, m2.row0),
+		simd::add(m1.row1, m2.row1));
 }
 
 template<>
 inline Matrix2<float> operator-(const Matrix2<float>& m1, const Matrix2<float>& m2) noexcept
 {
-	return Matrix2<float>(simd::sub4(m1.row0, m2.row0),
-		simd::sub4(m1.row1, m2.row1));
+	return Matrix2<float>(simd::sub(m1.row0, m2.row0),
+		simd::sub(m1.row1, m2.row1));
 }
 
 template<>
 inline Matrix2<float> operator*(float f, const Matrix2<float>& m) noexcept
 {
 	auto t = simd::set4(f);
-	return Matrix2<float>(simd::mul4(t, m.row0),
-		simd::mul4(t, m.row1));
+	return Matrix2<float>(simd::mul(t, m.row0),
+		simd::mul(t, m.row1));
 }
 
 template<>
 inline Matrix2<float> operator*(const Matrix2<float>& m, float f) noexcept
 {
 	auto t = simd::set4(f);
-	return Matrix2<float>(simd::mul4(m.row0, t),
-		simd::mul4(m.row1, t));
+	return Matrix2<float>(simd::mul(m.row0, t),
+		simd::mul(m.row1, t));
 }
 
 template<>
 inline Matrix2<float> operator*(const Matrix2<float>& m1, const Matrix2<float>& m2) noexcept
 {
-	auto a = simd::pack(m1.row0, m1.row1);
-	auto b = simd::pack(m2.row0, m2.row1);
+	auto a = simd::pack2(m1.row0, m1.row1);
+	auto b = simd::pack2(m2.row0, m2.row1);
 	auto a1 = simd::swizzle<0, 0, 2, 2>(a);
 	auto b1 = simd::swizzle<0, 1, 0, 1>(b);
 	auto a2 = simd::swizzle<1, 1, 3, 3>(a);
 	auto b2 = simd::swizzle<2, 3, 2, 3>(b);
-	auto n = simd::add4(simd::mul4(a1, b1), simd::mul4(a2, b2));
+	auto n = simd::add(simd::mul(a1, b1), simd::mul(a2, b2));
 	Matrix2<float> m{ Uninitialized() };
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	auto [r0, r1] = simd::unpack(n);
+	auto [r0, r1] = simd::unpack2(n);
 	m.row0 = simd::xyyy(r0);
 	m.row1 = simd::xyyy(r1);
 #else
-	std::tie(m.row0, m.row1) = simd::unpack(n);
+	std::tie(m.row0, m.row1) = simd::unpack2(n);
 #endif
 	return m;
 }
@@ -708,7 +708,7 @@ inline Matrix2<float> operator/(const Matrix2<float>& m, float f) noexcept
 
 inline bool Matrix2<float>::operator==(const Matrix2<float>& m) const noexcept
 {
-	return simd::all4(simd::equal(simd::pack(row0, row1), simd::pack(m.row0, m.row1)));
+	return simd::all4(simd::equal(simd::pack2(row0, row1), simd::pack2(m.row0, m.row1)));
 }
 
 template<typename C, typename T>
@@ -732,37 +732,37 @@ inline void Matrix2<float>::load(A& ar)
 
 inline bool Matrix2<float>::isZero() const noexcept
 { 
-	return simd::all4(simd::equal(simd::pack(row0, row1), simd::zero<simd::float4>())); 
+	return simd::all4(simd::equal(simd::pack2(row0, row1), simd::zero4<float>())); 
 }
 
 inline bool Matrix2<float>::isApproxZero() const noexcept
 { 
 	static const auto tolerance = simd::set4(Constants<float>::TOLERANCE);
-	return simd::all4(simd::lessThan(simd::abs4(simd::pack(row0, row1)), tolerance/*Vector4<float>::TOLERANCE*/)); 
+	return simd::all4(simd::lessThan(simd::abs(simd::pack2(row0, row1)), tolerance/*Vector4<float>::TOLERANCE*/)); 
 }
 
 inline bool Matrix2<float>::isIdentity() const noexcept
 { 
-	return simd::all4(simd::equal(simd::pack(row0, row1), simd::constant<simd::float4, 1, 0, 0, 1>())); 
+	return simd::all4(simd::equal(simd::pack2(row0, row1), simd::constant<simd::float4, 1, 0, 0, 1>())); 
 }
 
 inline bool Matrix2<float>::isApproxIdentity() const noexcept
 {
 	static const auto tolerance = simd::set4(Constants<float>::TOLERANCE);
-	return simd::all4(simd::lessThan(simd::abs4(simd::sub4(simd::pack(row0, row1), simd::constant<simd::float4, 1, 0, 0, 1>())), 
+	return simd::all4(simd::lessThan(simd::abs(simd::sub(simd::pack2(row0, row1), simd::constant<simd::float4, 1, 0, 0, 1>())), 
 		tolerance/*Vector4<float>::TOLERANCE*/));
 }
 
 inline bool Matrix2<float>::approxEquals(const Matrix2& m) const noexcept
 {
 	static const auto tolerance = simd::set4(Constants<float>::TOLERANCE);
-	return simd::all4(simd::lessThan(simd::abs4(simd::sub4(simd::pack(row0, row1), simd::pack(m.row0, m.row1))), 
+	return simd::all4(simd::lessThan(simd::abs(simd::sub(simd::pack2(row0, row1), simd::pack2(m.row0, m.row1))), 
 		tolerance/*Vector4<float>::TOLERANCE*/));
 }
 
 inline bool Matrix2<float>::approxEquals(const Matrix2& m, float tolerance) const noexcept
 {
-	return simd::all4(simd::lessThan(simd::abs4(simd::sub4(simd::pack(row0, row1), simd::pack(m.row0, m.row1))), 
+	return simd::all4(simd::lessThan(simd::abs(simd::sub(simd::pack2(row0, row1), simd::pack2(m.row0, m.row1))), 
 		simd::set4(tolerance)));
 }
 
@@ -778,7 +778,7 @@ inline bool Matrix2<float>::hasApproxUniformScaling() const noexcept
 	Matrix2<float> m(*this);
 	m *= Matrix2<float>(Uninitialized()).setTranspose(*this);
 	static const auto tolerance = simd::set4(Constants<float>::TOLERANCE);
-	return simd::all3(simd::lessThan(simd::abs4(simd::set3(m.m01, m.m10, m.m11 - m.m00)), tolerance/*Vector3<float>::TOLERANCE*/));
+	return simd::all3(simd::lessThan(simd::abs(simd::set3(m.m01, m.m10, m.m11 - m.m00)), tolerance/*Vector3<float>::TOLERANCE*/));
 }
 
 inline Matrix2<float>& Matrix2<float>::set(const Vector2<float>& row0, const Vector2<float>& row1) noexcept
@@ -811,9 +811,9 @@ inline Matrix2<float>& Matrix2<float>::setScaling(const Vector2<float>& v) noexc
 {
 	row0 = simd::cutoff1(v);
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	row1 = simd::and4(v, simd::bits<simd::float4, 0, -1, -1, -1>());
+	row1 = simd::logicalAnd(v, simd::bits<simd::float4, 0, -1, -1, -1>());
 #else
-	row1 = simd::and4(v, simd::bits<simd::float4, 0, -1, 0, 0>());
+	row1 = simd::logicalAnd(v, simd::bits<simd::float4, 0, -1, 0, 0>());
 #endif
 	return *this;
 }
@@ -824,7 +824,7 @@ inline Matrix2<float>& Matrix2<float>::setScaling(float f) noexcept
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	row1 = simd::set4(0.f, f, f, f);
 #else
-	row1 = simd::insert<1>(f, simd::zero<simd::float4>());
+	row1 = simd::insert<1>(f, simd::zero4<float>());
 #endif
 	return *this;
 }
@@ -872,11 +872,11 @@ inline Matrix2<float>& Matrix2<float>::setInverse(const Matrix2<float>& m) noexc
 	auto n = simd::set4(1.f/(a*d - b*c));
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	b = -b;
-	row0 = simd::mul4(simd::set4(d, b, b, b), n);
-	row1 = simd::mul4(simd::set4(-c, a, a, a), n);
+	row0 = simd::mul(simd::set4(d, b, b, b), n);
+	row1 = simd::mul(simd::set4(-c, a, a, a), n);
 #else
-	row0 = simd::mul4(simd::set2(d, -b), n);
-	row1 = simd::mul4(simd::set2(-c, a), n);
+	row0 = simd::mul(simd::set2(d, -b), n);
+	row1 = simd::mul(simd::set2(-c, a), n);
 #endif
 	return *this;
 }
@@ -888,45 +888,45 @@ inline Matrix2<float>& Matrix2<float>::setInverseTranspose(const Matrix2<float>&
 	auto n = simd::set4(1.f/(a*d - b*c));
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	c = -c;
-	row0 = simd::mul4(simd::set4(d, c, c, c), n);
-	row1 = simd::mul4(simd::set4(-b, a, a, a), n);
+	row0 = simd::mul(simd::set4(d, c, c, c), n);
+	row1 = simd::mul(simd::set4(-b, a, a, a), n);
 #else
-	row0 = simd::mul4(simd::set2(d, -c), n);
-	row1 = simd::mul4(simd::set2(-b, a), n);
+	row0 = simd::mul(simd::set2(d, -c), n);
+	row1 = simd::mul(simd::set2(-b, a), n);
 #endif
 	return *this;
 }
 
 inline Matrix2<float>& Matrix2<float>::preConcatenate(const Matrix2<float>& m) noexcept
 {
-	auto a = simd::pack(m.row0, m.row1);
-	auto b = simd::pack(row0, row1);
+	auto a = simd::pack2(m.row0, m.row1);
+	auto b = simd::pack2(row0, row1);
 	auto a1 = simd::swizzle<0, 0, 2, 2>(a);
 	auto b1 = simd::swizzle<0, 1, 0, 1>(b);
 	auto a2 = simd::swizzle<1, 1, 3, 3>(a);
 	auto b2 = simd::swizzle<2, 3, 2, 3>(b);
-	auto n = simd::add4(simd::mul4(a1, b1), simd::mul4(a2, b2));
+	auto n = simd::add(simd::mul(a1, b1), simd::mul(a2, b2));
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	auto [r0, r1] = simd::unpack(n);
+	auto [r0, r1] = simd::unpack2(n);
 	row0 = simd::xyyy(r0);
 	row1 = simd::xyyy(r1);
 #else
-	std::tie(row0, row1) = simd::unpack(n);
+	std::tie(row0, row1) = simd::unpack2(n);
 #endif
 	return *this;
 }
 
 inline Matrix2<float>& Matrix2<float>::preScale(const Vector2<float>& v) noexcept
 {
-	row0 = simd::mul4(row0, simd::xxxx(v));
-	row1 = simd::mul4(row1, simd::yyyy(v));
+	row0 = simd::mul(row0, simd::xxxx(v));
+	row1 = simd::mul(row1, simd::yyyy(v));
 	return *this;
 }
 
 inline Matrix2<float>& Matrix2<float>::scale(const Vector2<float>& v) noexcept
 {
-	row0 = simd::mul4(row0, v);
-	row1 = simd::mul4(row1, v);
+	row0 = simd::mul(row0, v);
+	row1 = simd::mul(row1, v);
 	return *this;
 }
 
@@ -961,11 +961,11 @@ inline Matrix2<float>& Matrix2<float>::invert() noexcept
 	auto n = simd::set4(1.f/(a*d - b*c));
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	b = -b;
-	row0 = simd::mul4(simd::set4(d, b, b, b), n);
-	row1 = simd::mul4(simd::set4(-c, a, a, a), n);
+	row0 = simd::mul(simd::set4(d, b, b, b), n);
+	row1 = simd::mul(simd::set4(-c, a, a, a), n);
 #else
-	row0 = simd::mul4(simd::set2(d, -b), n);
-	row1 = simd::mul4(simd::set2(-c, a), n);
+	row0 = simd::mul(simd::set2(d, -b), n);
+	row1 = simd::mul(simd::set2(-c, a), n);
 #endif
 	return *this;
 }

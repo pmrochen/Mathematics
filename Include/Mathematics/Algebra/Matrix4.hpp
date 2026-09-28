@@ -1087,10 +1087,10 @@ inline Matrix4<T>& Matrix4<T>::transpose() noexcept
 #if SIMD_HAS_FLOAT4
 
 inline Matrix4<float>::Matrix4() noexcept : 
-	row0(simd::zero<simd::float4>()), 
-	row1(simd::zero<simd::float4>()), 
-	row2(simd::zero<simd::float4>()), 
-	row3(simd::zero<simd::float4>()) 
+	row0(simd::zero4<float>()), 
+	row1(simd::zero4<float>()), 
+	row2(simd::zero4<float>()), 
+	row3(simd::zero4<float>()) 
 {
 }
 
@@ -1180,50 +1180,50 @@ inline Matrix4<float> Matrix4<float>::operator-() const noexcept
 
 inline Matrix4<float>& Matrix4<float>::operator+=(const Matrix4<float>& m) noexcept
 {
-	row0 = simd::add4(row0, m.row0);
-	row1 = simd::add4(row1, m.row1);
-	row2 = simd::add4(row2, m.row2);
-	row3 = simd::add4(row3, m.row3);
+	row0 = simd::add(row0, m.row0);
+	row1 = simd::add(row1, m.row1);
+	row2 = simd::add(row2, m.row2);
+	row3 = simd::add(row3, m.row3);
 	return *this;
 }
 
 inline Matrix4<float>& Matrix4<float>::operator-=(const Matrix4<float>& m) noexcept
 {
-	row0 = simd::sub4(row0, m.row0);
-	row1 = simd::sub4(row1, m.row1);
-	row2 = simd::sub4(row2, m.row2);
-	row3 = simd::sub4(row3, m.row3);
+	row0 = simd::sub(row0, m.row0);
+	row1 = simd::sub(row1, m.row1);
+	row2 = simd::sub(row2, m.row2);
+	row3 = simd::sub(row3, m.row3);
 	return *this;
 }
 
 inline Matrix4<float>& Matrix4<float>::operator*=(float f) noexcept
 {
 	auto t = simd::set4(f);
-	row0 = simd::mul4(row0, t);
-	row1 = simd::mul4(row1, t);
-	row2 = simd::mul4(row2, t);
-	row3 = simd::mul4(row3, t);
+	row0 = simd::mul(row0, t);
+	row1 = simd::mul(row1, t);
+	row2 = simd::mul(row2, t);
+	row3 = simd::mul(row3, t);
 	return *this;
 }
 
 inline Matrix4<float>& Matrix4<float>::operator*=(const Matrix4<float>& m) noexcept
 {
-	auto r0 = simd::mul4(simd::broadcast<0>(row0), m.row0);
-	r0 = simd::add4(r0, simd::mul4(simd::broadcast<1>(row0), m.row1));
-	r0 = simd::add4(r0, simd::mul4(simd::broadcast<2>(row0), m.row2));
-	r0 = simd::add4(r0, simd::mul4(simd::broadcast<3>(row0), m.row3));
-	auto r1 = simd::mul4(simd::broadcast<0>(row1), m.row0);
-	r1 = simd::add4(r1, simd::mul4(simd::broadcast<1>(row1), m.row1));
-	r1 = simd::add4(r1, simd::mul4(simd::broadcast<2>(row1), m.row2));
-	r1 = simd::add4(r1, simd::mul4(simd::broadcast<3>(row1), m.row3));
-	auto r2 = simd::mul4(simd::broadcast<0>(row2), m.row0);
-	r2 = simd::add4(r2, simd::mul4(simd::broadcast<1>(row2), m.row1));
-	r2 = simd::add4(r2, simd::mul4(simd::broadcast<2>(row2), m.row2));
-	r2 = simd::add4(r2, simd::mul4(simd::broadcast<3>(row2), m.row3));
-	auto r3 = simd::mul4(simd::broadcast<0>(row3), m.row0);
-	r3 = simd::add4(r3, simd::mul4(simd::broadcast<1>(row3), m.row1));
-	r3 = simd::add4(r3, simd::mul4(simd::broadcast<2>(row3), m.row2));
-	r3 = simd::add4(r3, simd::mul4(simd::broadcast<3>(row3), m.row3));
+	auto r0 = simd::mul(simd::broadcast<0>(row0), m.row0);
+	r0 = simd::add(r0, simd::mul(simd::broadcast<1>(row0), m.row1));
+	r0 = simd::add(r0, simd::mul(simd::broadcast<2>(row0), m.row2));
+	r0 = simd::add(r0, simd::mul(simd::broadcast<3>(row0), m.row3));
+	auto r1 = simd::mul(simd::broadcast<0>(row1), m.row0);
+	r1 = simd::add(r1, simd::mul(simd::broadcast<1>(row1), m.row1));
+	r1 = simd::add(r1, simd::mul(simd::broadcast<2>(row1), m.row2));
+	r1 = simd::add(r1, simd::mul(simd::broadcast<3>(row1), m.row3));
+	auto r2 = simd::mul(simd::broadcast<0>(row2), m.row0);
+	r2 = simd::add(r2, simd::mul(simd::broadcast<1>(row2), m.row1));
+	r2 = simd::add(r2, simd::mul(simd::broadcast<2>(row2), m.row2));
+	r2 = simd::add(r2, simd::mul(simd::broadcast<3>(row2), m.row3));
+	auto r3 = simd::mul(simd::broadcast<0>(row3), m.row0);
+	r3 = simd::add(r3, simd::mul(simd::broadcast<1>(row3), m.row1));
+	r3 = simd::add(r3, simd::mul(simd::broadcast<2>(row3), m.row2));
+	r3 = simd::add(r3, simd::mul(simd::broadcast<3>(row3), m.row3));
 	row0 = r0;
 	row1 = r1;
 	row2 = r2;
@@ -1234,60 +1234,60 @@ inline Matrix4<float>& Matrix4<float>::operator*=(const Matrix4<float>& m) noexc
 template<>
 inline Matrix4<float> operator+(const Matrix4<float>& m1, const Matrix4<float>& m2) noexcept
 {
-	return Matrix4<float>(simd::add4(m1.row0, m2.row0),
-		simd::add4(m1.row1, m2.row1),
-		simd::add4(m1.row2, m2.row2),
-		simd::add4(m1.row3, m2.row3));
+	return Matrix4<float>(simd::add(m1.row0, m2.row0),
+		simd::add(m1.row1, m2.row1),
+		simd::add(m1.row2, m2.row2),
+		simd::add(m1.row3, m2.row3));
 }
 
 template<>
 inline Matrix4<float> operator-(const Matrix4<float>& m1, const Matrix4<float>& m2) noexcept
 {
-	return Matrix4<float>(simd::sub4(m1.row0, m2.row0),
-		simd::sub4(m1.row1, m2.row1),
-		simd::sub4(m1.row2, m2.row2),
-		simd::sub4(m1.row3, m2.row3));
+	return Matrix4<float>(simd::sub(m1.row0, m2.row0),
+		simd::sub(m1.row1, m2.row1),
+		simd::sub(m1.row2, m2.row2),
+		simd::sub(m1.row3, m2.row3));
 }
 
 template<>
 inline Matrix4<float> operator*(float f, const Matrix4<float>& m) noexcept
 {
 	auto t = simd::set4(f);
-	return Matrix4<float>(simd::mul4(t, m.row0),
-		simd::mul4(t, m.row1),
-		simd::mul4(t, m.row2),
-		simd::mul4(t, m.row3));
+	return Matrix4<float>(simd::mul(t, m.row0),
+		simd::mul(t, m.row1),
+		simd::mul(t, m.row2),
+		simd::mul(t, m.row3));
 }
 
 template<>
 inline Matrix4<float> operator*(const Matrix4<float>& m, float f) noexcept
 {
 	auto t = simd::set4(f);
-	return Matrix4<float>(simd::mul4(m.row0, t),
-		simd::mul4(m.row1, t),
-		simd::mul4(m.row2, t),
-		simd::mul4(m.row3, t));
+	return Matrix4<float>(simd::mul(m.row0, t),
+		simd::mul(m.row1, t),
+		simd::mul(m.row2, t),
+		simd::mul(m.row3, t));
 }
 
 template<>
 inline Matrix4<float> operator*(const Matrix4<float>& m1, const Matrix4<float>& m2) noexcept
 {
-	auto r0 = simd::mul4(simd::broadcast<0>(m1.row0), m2.row0);
-	r0 = simd::add4(r0, simd::mul4(simd::broadcast<1>(m1.row0), m2.row1));
-	r0 = simd::add4(r0, simd::mul4(simd::broadcast<2>(m1.row0), m2.row2));
-	r0 = simd::add4(r0, simd::mul4(simd::broadcast<3>(m1.row0), m2.row3));
-	auto r1 = simd::mul4(simd::broadcast<0>(m1.row1), m2.row0);
-	r1 = simd::add4(r1, simd::mul4(simd::broadcast<1>(m1.row1), m2.row1));
-	r1 = simd::add4(r1, simd::mul4(simd::broadcast<2>(m1.row1), m2.row2));
-	r1 = simd::add4(r1, simd::mul4(simd::broadcast<3>(m1.row1), m2.row3));
-	auto r2 = simd::mul4(simd::broadcast<0>(m1.row2), m2.row0);
-	r2 = simd::add4(r2, simd::mul4(simd::broadcast<1>(m1.row2), m2.row1));
-	r2 = simd::add4(r2, simd::mul4(simd::broadcast<2>(m1.row2), m2.row2));
-	r2 = simd::add4(r2, simd::mul4(simd::broadcast<3>(m1.row2), m2.row3));
-	auto r3 = simd::mul4(simd::broadcast<0>(m1.row3), m2.row0);
-	r3 = simd::add4(r3, simd::mul4(simd::broadcast<1>(m1.row3), m2.row1));
-	r3 = simd::add4(r3, simd::mul4(simd::broadcast<2>(m1.row3), m2.row2));
-	r3 = simd::add4(r3, simd::mul4(simd::broadcast<3>(m1.row3), m2.row3));
+	auto r0 = simd::mul(simd::broadcast<0>(m1.row0), m2.row0);
+	r0 = simd::add(r0, simd::mul(simd::broadcast<1>(m1.row0), m2.row1));
+	r0 = simd::add(r0, simd::mul(simd::broadcast<2>(m1.row0), m2.row2));
+	r0 = simd::add(r0, simd::mul(simd::broadcast<3>(m1.row0), m2.row3));
+	auto r1 = simd::mul(simd::broadcast<0>(m1.row1), m2.row0);
+	r1 = simd::add(r1, simd::mul(simd::broadcast<1>(m1.row1), m2.row1));
+	r1 = simd::add(r1, simd::mul(simd::broadcast<2>(m1.row1), m2.row2));
+	r1 = simd::add(r1, simd::mul(simd::broadcast<3>(m1.row1), m2.row3));
+	auto r2 = simd::mul(simd::broadcast<0>(m1.row2), m2.row0);
+	r2 = simd::add(r2, simd::mul(simd::broadcast<1>(m1.row2), m2.row1));
+	r2 = simd::add(r2, simd::mul(simd::broadcast<2>(m1.row2), m2.row2));
+	r2 = simd::add(r2, simd::mul(simd::broadcast<3>(m1.row2), m2.row3));
+	auto r3 = simd::mul(simd::broadcast<0>(m1.row3), m2.row0);
+	r3 = simd::add(r3, simd::mul(simd::broadcast<1>(m1.row3), m2.row1));
+	r3 = simd::add(r3, simd::mul(simd::broadcast<2>(m1.row3), m2.row2));
+	r3 = simd::add(r3, simd::mul(simd::broadcast<3>(m1.row3), m2.row3));
 	return Matrix4<float>(r0, r1, r2, r3);
 }
 
@@ -1333,7 +1333,7 @@ inline void Matrix4<float>::load(A& ar)
 
 inline bool Matrix4<float>::isZero() const noexcept
 {
-	const auto zero = simd::zero<simd::float4>();
+	const auto zero = simd::zero4<float>();
 	return simd::all4(simd::equal(row0, zero)) && 
 		simd::all4(simd::equal(row1, zero)) && 
 		simd::all4(simd::equal(row2, zero)) && 
@@ -1342,10 +1342,10 @@ inline bool Matrix4<float>::isZero() const noexcept
 
 inline bool Matrix4<float>::isApproxZero() const noexcept
 {
-	return simd::all4(simd::lessThan(simd::abs4(row0), Vector4<float>::TOLERANCE)) &&
-		simd::all4(simd::lessThan(simd::abs4(row1), Vector4<float>::TOLERANCE)) &&
-		simd::all4(simd::lessThan(simd::abs4(row2), Vector4<float>::TOLERANCE)) &&
-		simd::all4(simd::lessThan(simd::abs4(row3), Vector4<float>::TOLERANCE));
+	return simd::all4(simd::lessThan(simd::abs(row0), Vector4<float>::TOLERANCE)) &&
+		simd::all4(simd::lessThan(simd::abs(row1), Vector4<float>::TOLERANCE)) &&
+		simd::all4(simd::lessThan(simd::abs(row2), Vector4<float>::TOLERANCE)) &&
+		simd::all4(simd::lessThan(simd::abs(row3), Vector4<float>::TOLERANCE));
 }
 
 inline bool Matrix4<float>::isIdentity() const noexcept
@@ -1358,27 +1358,27 @@ inline bool Matrix4<float>::isIdentity() const noexcept
 
 inline bool Matrix4<float>::isApproxIdentity() const noexcept
 {
-	return simd::all4(simd::lessThan(simd::abs4(simd::sub4(row0, Vector4<float>::UNIT_X)), Vector4<float>::TOLERANCE)) &&
-		simd::all4(simd::lessThan(simd::abs4(simd::sub4(row1, Vector4<float>::UNIT_Y)), Vector4<float>::TOLERANCE)) &&
-		simd::all4(simd::lessThan(simd::abs4(simd::sub4(row2, Vector4<float>::UNIT_Z)), Vector4<float>::TOLERANCE)) &&
-		simd::all4(simd::lessThan(simd::abs4(simd::sub4(row3, Vector4<float>::UNIT_W)), Vector4<float>::TOLERANCE));
+	return simd::all4(simd::lessThan(simd::abs(simd::sub(row0, Vector4<float>::UNIT_X)), Vector4<float>::TOLERANCE)) &&
+		simd::all4(simd::lessThan(simd::abs(simd::sub(row1, Vector4<float>::UNIT_Y)), Vector4<float>::TOLERANCE)) &&
+		simd::all4(simd::lessThan(simd::abs(simd::sub(row2, Vector4<float>::UNIT_Z)), Vector4<float>::TOLERANCE)) &&
+		simd::all4(simd::lessThan(simd::abs(simd::sub(row3, Vector4<float>::UNIT_W)), Vector4<float>::TOLERANCE));
 }
 
 inline bool Matrix4<float>::approxEquals(const Matrix4& m) const noexcept
 {
-	return simd::all4(simd::lessThan(simd::abs4(simd::sub4(row0, m.row0)), Vector4<float>::TOLERANCE)) &&
-		simd::all4(simd::lessThan(simd::abs4(simd::sub4(row1, m.row1)), Vector4<float>::TOLERANCE)) &&
-		simd::all4(simd::lessThan(simd::abs4(simd::sub4(row2, m.row2)), Vector4<float>::TOLERANCE)) &&
-		simd::all4(simd::lessThan(simd::abs4(simd::sub4(row3, m.row3)), Vector4<float>::TOLERANCE));
+	return simd::all4(simd::lessThan(simd::abs(simd::sub(row0, m.row0)), Vector4<float>::TOLERANCE)) &&
+		simd::all4(simd::lessThan(simd::abs(simd::sub(row1, m.row1)), Vector4<float>::TOLERANCE)) &&
+		simd::all4(simd::lessThan(simd::abs(simd::sub(row2, m.row2)), Vector4<float>::TOLERANCE)) &&
+		simd::all4(simd::lessThan(simd::abs(simd::sub(row3, m.row3)), Vector4<float>::TOLERANCE));
 }
 
 inline bool Matrix4<float>::approxEquals(const Matrix4& m, float tolerance) const noexcept
 {
 	auto t = simd::set4(tolerance);
-	return simd::all4(simd::lessThan(simd::abs4(simd::sub4(row0, m.row0)), t)) &&
-		simd::all4(simd::lessThan(simd::abs4(simd::sub4(row1, m.row1)), t)) &&
-		simd::all4(simd::lessThan(simd::abs4(simd::sub4(row2, m.row2)), t)) &&
-		simd::all4(simd::lessThan(simd::abs4(simd::sub4(row3, m.row3)), t));
+	return simd::all4(simd::lessThan(simd::abs(simd::sub(row0, m.row0)), t)) &&
+		simd::all4(simd::lessThan(simd::abs(simd::sub(row1, m.row1)), t)) &&
+		simd::all4(simd::lessThan(simd::abs(simd::sub(row2, m.row2)), t)) &&
+		simd::all4(simd::lessThan(simd::abs(simd::sub(row3, m.row3)), t));
 }
 
 inline bool Matrix4<float>::isFinite() const noexcept
@@ -1405,10 +1405,10 @@ inline float Matrix4<float>::getDeterminant() const noexcept // #TODO SIMD
 
 inline Matrix4<float>& Matrix4<float>::setZero() noexcept
 {
-	row0 = simd::zero<simd::float4>();
-	row1 = simd::zero<simd::float4>();
-	row2 = simd::zero<simd::float4>();
-	row3 = simd::zero<simd::float4>();
+	row0 = simd::zero4<float>();
+	row1 = simd::zero4<float>();
+	row2 = simd::zero4<float>();
+	row3 = simd::zero4<float>();
 	return *this;
 }
 
@@ -1462,8 +1462,8 @@ inline Matrix4<float>& Matrix4<float>::setTranslation(const Vector3<float>& v) n
 inline Matrix4<float>& Matrix4<float>::setScaling(const Vector3<float>& v) noexcept
 {
 	row0 = simd::cutoff1(v);
-	row1 = simd::and4(v, simd::bits<simd::float4, 0, -1, 0, 0>());
-	row2 = simd::and4(v, simd::bits<simd::float4, 0, 0, -1, 0>());
+	row1 = simd::logicalAnd(v, simd::bits<simd::float4, 0, -1, 0, 0>());
+	row2 = simd::logicalAnd(v, simd::bits<simd::float4, 0, 0, -1, 0>());
 	row3 = Vector4<float>::UNIT_W;
 	return *this;
 }
@@ -1530,8 +1530,8 @@ inline Matrix4<float>& Matrix4<float>::setRotationTranslation(const Vector3<floa
 inline Matrix4<float>& Matrix4<float>::setScalingTranslation(const Vector3<float>& s, const Vector3<float>& t) noexcept
 {
 	row0 = simd::cutoff1(s);
-	row1 = simd::and4(s, simd::bits<simd::float4, 0, -1, 0, 0>());
-	row2 = simd::and4(s, simd::bits<simd::float4, 0, 0, -1, 0>());
+	row1 = simd::logicalAnd(s, simd::bits<simd::float4, 0, -1, 0, 0>());
+	row2 = simd::logicalAnd(s, simd::bits<simd::float4, 0, 0, -1, 0>());
 	row3 = simd::insert3(t, Vector4<float>::UNIT_W);
 	return *this;
 }
@@ -1572,82 +1572,82 @@ inline Matrix4<float>& Matrix4<float>::setTranspose(const Matrix4<float>& m) noe
 inline Matrix4<float>& Matrix4<float>::setInverse(const Matrix4<float>& m) noexcept
 {
 	auto r2 = m.row2;
-	auto t = simd::mul4(r2, m.row3);
+	auto t = simd::mul(r2, m.row3);
 	t = simd::swizzle<1, 0, 3, 2>(t);
-	auto minor0 = simd::mul4(m.row1, t);
-	auto minor1 = simd::mul4(m.row0, t);
+	auto minor0 = simd::mul(m.row1, t);
+	auto minor1 = simd::mul(m.row0, t);
 	t = simd::swizzle<2, 3, 0, 1>(t);
-	minor0 = simd::sub4(simd::mul4(m.row1, t), minor0);
-	minor1 = simd::sub4(simd::mul4(m.row0, t), minor1);
+	minor0 = simd::sub(simd::mul(m.row1, t), minor0);
+	minor1 = simd::sub(simd::mul(m.row0, t), minor1);
 	minor1 = simd::swizzle<2, 3, 0, 1>(minor1);
-	t = simd::mul4(m.row1, r2);
+	t = simd::mul(m.row1, r2);
 	t = simd::swizzle<1, 0, 3, 2>(t);
-	minor0 = simd::add4(simd::mul4(m.row3, t), minor0);
-	auto minor3 = simd::mul4(m.row0, t);
+	minor0 = simd::add(simd::mul(m.row3, t), minor0);
+	auto minor3 = simd::mul(m.row0, t);
 	t = simd::swizzle<2, 3, 0, 1>(t);
-	minor0 = simd::sub4(minor0, simd::mul4(m.row3, t));
-	minor3 = simd::sub4(simd::mul4(m.row0, t), minor3);
+	minor0 = simd::sub(minor0, simd::mul(m.row3, t));
+	minor3 = simd::sub(simd::mul(m.row0, t), minor3);
 	minor3 = simd::swizzle<2, 3, 0, 1>(minor3);
-	t = simd::mul4(simd::swizzle<2, 3, 0, 1>(m.row1), m.row3);
+	t = simd::mul(simd::swizzle<2, 3, 0, 1>(m.row1), m.row3);
 	t = simd::swizzle<1, 0, 3, 2>(t);
 	r2 = simd::swizzle<2, 3, 0, 1>(r2);
-	minor0 = simd::add4(simd::mul4(r2, t), minor0);
-	auto minor2 = simd::mul4(m.row0, t);
+	minor0 = simd::add(simd::mul(r2, t), minor0);
+	auto minor2 = simd::mul(m.row0, t);
 	t = simd::swizzle<2, 3, 0, 1>(t);
-	minor0 = simd::sub4(minor0, simd::mul4(r2, t));
-	minor2 = simd::sub4(simd::mul4(m.row0, t), minor2);
+	minor0 = simd::sub(minor0, simd::mul(r2, t));
+	minor2 = simd::sub(simd::mul(m.row0, t), minor2);
 	minor2 = simd::swizzle<2, 3, 0, 1>(minor2);
-	t = simd::mul4(m.row0, m.row1);
+	t = simd::mul(m.row0, m.row1);
 	t = simd::swizzle<1, 0, 3, 2>(t);
-	minor2 = simd::add4(simd::mul4(m.row3, t), minor2);
-	minor3 = simd::sub4(simd::mul4(r2, t), minor3);
+	minor2 = simd::add(simd::mul(m.row3, t), minor2);
+	minor3 = simd::sub(simd::mul(r2, t), minor3);
 	t = simd::swizzle<2, 3, 0, 1>(t);
-	minor2 = simd::sub4(simd::mul4(m.row3, t), minor2);
-	minor3 = simd::sub4(minor3, simd::mul4(r2, t));
-	t = simd::mul4(m.row0, m.row3);
+	minor2 = simd::sub(simd::mul(m.row3, t), minor2);
+	minor3 = simd::sub(minor3, simd::mul(r2, t));
+	t = simd::mul(m.row0, m.row3);
 	t = simd::swizzle<1, 0, 3, 2>(t);
-	minor1 = simd::sub4(minor1, simd::mul4(r2, t));
-	minor2 = simd::add4(simd::mul4(m.row1, t), minor2);
+	minor1 = simd::sub(minor1, simd::mul(r2, t));
+	minor2 = simd::add(simd::mul(m.row1, t), minor2);
 	t = simd::swizzle<2, 3, 0, 1>(t);
-	minor1 = simd::add4(simd::mul4(r2, t), minor1);
-	minor2 = simd::sub4(minor2, simd::mul4(m.row1, t));
-	t = simd::mul4(m.row0, r2);
+	minor1 = simd::add(simd::mul(r2, t), minor1);
+	minor2 = simd::sub(minor2, simd::mul(m.row1, t));
+	t = simd::mul(m.row0, r2);
 	t = simd::swizzle<1, 0, 3, 2>(t);
-	minor1 = simd::add4(simd::mul4(m.row3, t), minor1);
-	minor3 = simd::sub4(minor3, simd::mul4(m.row1, t));
+	minor1 = simd::add(simd::mul(m.row3, t), minor1);
+	minor3 = simd::sub(minor3, simd::mul(m.row1, t));
 	t = simd::swizzle<2, 3, 0, 1>(t);
-	minor1 = simd::sub4(minor1, simd::mul4(m.row3, t));
-	minor3 = simd::add4(simd::mul4(m.row1, t), minor3);
-	auto det = simd::mul4(m.row0, minor0);
-	det = simd::add4(simd::swizzle<2, 3, 0, 1>(det), det);
-	det = simd::add4(simd::swizzle<1, 0, 3, 2>(det), det);
+	minor1 = simd::sub(minor1, simd::mul(m.row3, t));
+	minor3 = simd::add(simd::mul(m.row1, t), minor3);
+	auto det = simd::mul(m.row0, minor0);
+	det = simd::add(simd::swizzle<2, 3, 0, 1>(det), det);
+	det = simd::add(simd::swizzle<1, 0, 3, 2>(det), det);
 	//static const auto one = simd::set4(1.f);
 	auto n = simd::div4(/*one*/Vector4<float>::ONE, det);
-	row0 = simd::mul4(minor0, n);
-	row1 = simd::mul4(minor1, n);
-	row2 = simd::mul4(minor2, n);
-	row3 = simd::mul4(minor3, n);
+	row0 = simd::mul(minor0, n);
+	row1 = simd::mul(minor1, n);
+	row2 = simd::mul(minor2, n);
+	row3 = simd::mul(minor3, n);
 	return *this;
 }
 
 inline Matrix4<float>& Matrix4<float>::preConcatenate(const Matrix4<float>& m) noexcept
 {
-	auto r0 = simd::mul4(simd::broadcast<0>(m.row0), row0);
-	r0 = simd::add4(r0, simd::mul4(simd::broadcast<1>(m.row0), row1));
-	r0 = simd::add4(r0, simd::mul4(simd::broadcast<2>(m.row0), row2));
-	r0 = simd::add4(r0, simd::mul4(simd::broadcast<3>(m.row0), row3));
-	auto r1 = simd::mul4(simd::broadcast<0>(m.row1), row0);
-	r1 = simd::add4(r1, simd::mul4(simd::broadcast<1>(m.row1), row1));
-	r1 = simd::add4(r1, simd::mul4(simd::broadcast<2>(m.row1), row2));
-	r1 = simd::add4(r1, simd::mul4(simd::broadcast<3>(m.row1), row3));
-	auto r2 = simd::mul4(simd::broadcast<0>(m.row2), row0);
-	r2 = simd::add4(r2, simd::mul4(simd::broadcast<1>(m.row2), row1));
-	r2 = simd::add4(r2, simd::mul4(simd::broadcast<2>(m.row2), row2));
-	r2 = simd::add4(r2, simd::mul4(simd::broadcast<3>(m.row2), row3));
-	auto r3 = simd::mul4(simd::broadcast<0>(m.row3), row0);
-	r3 = simd::add4(r3, simd::mul4(simd::broadcast<1>(m.row3), row1));
-	r3 = simd::add4(r3, simd::mul4(simd::broadcast<2>(m.row3), row2));
-	r3 = simd::add4(r3, simd::mul4(simd::broadcast<3>(m.row3), row3));
+	auto r0 = simd::mul(simd::broadcast<0>(m.row0), row0);
+	r0 = simd::add(r0, simd::mul(simd::broadcast<1>(m.row0), row1));
+	r0 = simd::add(r0, simd::mul(simd::broadcast<2>(m.row0), row2));
+	r0 = simd::add(r0, simd::mul(simd::broadcast<3>(m.row0), row3));
+	auto r1 = simd::mul(simd::broadcast<0>(m.row1), row0);
+	r1 = simd::add(r1, simd::mul(simd::broadcast<1>(m.row1), row1));
+	r1 = simd::add(r1, simd::mul(simd::broadcast<2>(m.row1), row2));
+	r1 = simd::add(r1, simd::mul(simd::broadcast<3>(m.row1), row3));
+	auto r2 = simd::mul(simd::broadcast<0>(m.row2), row0);
+	r2 = simd::add(r2, simd::mul(simd::broadcast<1>(m.row2), row1));
+	r2 = simd::add(r2, simd::mul(simd::broadcast<2>(m.row2), row2));
+	r2 = simd::add(r2, simd::mul(simd::broadcast<3>(m.row2), row3));
+	auto r3 = simd::mul(simd::broadcast<0>(m.row3), row0);
+	r3 = simd::add(r3, simd::mul(simd::broadcast<1>(m.row3), row1));
+	r3 = simd::add(r3, simd::mul(simd::broadcast<2>(m.row3), row2));
+	r3 = simd::add(r3, simd::mul(simd::broadcast<3>(m.row3), row3));
 	row0 = r0;
 	row1 = r1;
 	row2 = r2;
@@ -1657,19 +1657,19 @@ inline Matrix4<float>& Matrix4<float>::preConcatenate(const Matrix4<float>& m) n
 
 inline Matrix4<float>& Matrix4<float>::preScale(const Vector3<float>& v) noexcept
 {
-	row0 = simd::mul4(row0, simd::xxxx(v));
-	row1 = simd::mul4(row1, simd::yyyy(v));
-	row2 = simd::mul4(row2, simd::zzzz(v));
+	row0 = simd::mul(row0, simd::xxxx(v));
+	row1 = simd::mul(row1, simd::yyyy(v));
+	row2 = simd::mul(row2, simd::zzzz(v));
 	return *this;
 }
 
 inline Matrix4<float>& Matrix4<float>::scale(const Vector3<float>& v) noexcept
 {
 	auto t = simd::insert3(v, Vector4<float>::UNIT_W);
-	row0 = simd::mul4(row0, t);
-	row1 = simd::mul4(row1, t);
-	row2 = simd::mul4(row2, t);
-	row3 = simd::mul4(row3, t);
+	row0 = simd::mul(row0, t);
+	row1 = simd::mul(row1, t);
+	row2 = simd::mul(row2, t);
+	row3 = simd::mul(row3, t);
 	return *this;
 }
 
@@ -2246,11 +2246,11 @@ inline Matrix4<float>& Matrix4<float>::setReflection(const Plane<float>& plane) 
 	p.normalize();
 	static const auto mTwo = simd::set4(-2.f);
 	auto n = simd::cutoff3(p);
-	auto t = simd::mul4(mTwo, p);
-	row0 = simd::mulAdd4(simd::xxxx(t), n, Vector4<float>::UNIT_X);
-	row1 = simd::mulAdd4(simd::yyyy(t), n, Vector4<float>::UNIT_Y);
-	row2 = simd::mulAdd4(simd::zzzz(t), n, Vector4<float>::UNIT_Z);
-	row3 = simd::mulAdd4(simd::wwww(t), n, Vector4<float>::UNIT_W);
+	auto t = simd::mul(mTwo, p);
+	row0 = simd::mulAdd(simd::xxxx(t), n, Vector4<float>::UNIT_X);
+	row1 = simd::mulAdd(simd::yyyy(t), n, Vector4<float>::UNIT_Y);
+	row2 = simd::mulAdd(simd::zzzz(t), n, Vector4<float>::UNIT_Z);
+	row3 = simd::mulAdd(simd::wwww(t), n, Vector4<float>::UNIT_W);
 	return *this;
 }
 

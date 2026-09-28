@@ -331,7 +331,7 @@ struct alignas(16) AffineTransform<float>
 	//template<typename U = void> AffineTransform& setInverse(const AffineTransform& m) noexcept;
 	AffineTransform& preConcatenate(const AffineTransform& m) noexcept;
 	AffineTransform& concatenate(const AffineTransform& m) noexcept;
-	AffineTransform& translate(const Vector3<float>& v) noexcept { row3 = simd::add4(row3, v); return *this; }
+	AffineTransform& translate(const Vector3<float>& v) noexcept { row3 = simd::add(row3, v); return *this; }
 	AffineTransform& preScale(const Vector3<float>& v) noexcept;
 	AffineTransform& preScale(float f) noexcept;
 	AffineTransform& scale(const Vector3<float>& v) noexcept;
@@ -887,10 +887,10 @@ inline AffineTransform<T>& AffineTransform<T>::invertOrthogonal() noexcept
 #if SIMD_HAS_FLOAT4
 
 inline AffineTransform<float>::AffineTransform() noexcept : 
-	row0(simd::zero<simd::float4>()), 
-	row1(simd::zero<simd::float4>()), 
-	row2(simd::zero<simd::float4>()), 
-	row3(simd::zero<simd::float4>()) 
+	row0(simd::zero4<float>()), 
+	row1(simd::zero4<float>()), 
+	row2(simd::zero4<float>()), 
+	row3(simd::zero4<float>()) 
 {
 }
 
@@ -898,7 +898,7 @@ inline AffineTransform<float>::AffineTransform(Identity) noexcept :
 	row0(Vector3<float>::UNIT_X),
 	row1(Vector3<float>::UNIT_Y),
 	row2(Vector3<float>::UNIT_Z),
-	row3(simd::zero<simd::float4>())
+	row3(simd::zero4<float>())
 {
 }
 
@@ -1008,20 +1008,20 @@ inline AffineTransform<float>::AffineTransform(const float* m) noexcept
 	auto t1 = simd::load4(&m[4]);
 	auto t2 = simd::load4(&m[8]);
 	auto t3 = t2;
-	t2 = simd::or4(simd::and4(t1, simd::bits<simd::float4, 0, 0, -1, -1>()), 
-		simd::and4(t2, simd::bits<simd::float4, -1, 0, 0, 0>()));
-	t1 = simd::or4(simd::and4(t0, simd::bits<simd::float4, 0, 0, 0, -1>()),
-		simd::and4(t1, simd::bits<simd::float4, -1, -1, 0, 0>()));
+	t2 = simd::logicalOr(simd::logicalAnd(t1, simd::bits<simd::float4, 0, 0, -1, -1>()), 
+		simd::logicalAnd(t2, simd::bits<simd::float4, -1, 0, 0, 0>()));
+	t1 = simd::logicalOr(simd::logicalAnd(t0, simd::bits<simd::float4, 0, 0, 0, -1>()),
+		simd::logicalAnd(t1, simd::bits<simd::float4, -1, -1, 0, 0>()));
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	row0 = simd::swizzle<0, 1, 2, 2>(t0);
 	row1 = simd::swizzle<3, 0, 1, 1>(t1);
 	row2 = simd::swizzle<2, 3, 0, 0>(t2);
 	row3 = simd::swizzle<1, 2, 3, 3>(t3);
 #else
-	row0 = simd::and4(t0, simd::bits<simd::float4, -1, -1, -1, 0>());
+	row0 = simd::logicalAnd(t0, simd::bits<simd::float4, -1, -1, -1, 0>());
 	row1 = simd::swizzle<3, 0, 1, 2>(t1);
 	row2 = simd::swizzle<2, 3, 0, 1>(t2);
-	row3 = simd::swizzle<1, 2, 3, 0>(simd::and4(t3, simd::bits<simd::float4, 0, -1, -1, -1>()));
+	row3 = simd::swizzle<1, 2, 3, 0>(simd::logicalAnd(t3, simd::bits<simd::float4, 0, -1, -1, -1>()));
 #endif
 }
 
@@ -1080,32 +1080,32 @@ inline bool AffineTransform<float>::isIdentity() const noexcept
 	return simd::all3(simd::equal(row0, Vector3<float>::UNIT_X)) &&
 		simd::all3(simd::equal(row1, Vector3<float>::UNIT_Y)) &&
 		simd::all3(simd::equal(row2, Vector3<float>::UNIT_Z)) &&
-		simd::all3(simd::equal(row3, simd::zero<simd::float4>()));
+		simd::all3(simd::equal(row3, simd::zero4<float>()));
 }
 
 inline bool AffineTransform<float>::isApproxIdentity() const noexcept
 {
-	return simd::all3(simd::lessThan(simd::abs4(simd::sub4(row0, Vector3<float>::UNIT_X)), Vector3<float>::TOLERANCE)) &&
-		simd::all3(simd::lessThan(simd::abs4(simd::sub4(row1, Vector3<float>::UNIT_Y)), Vector3<float>::TOLERANCE)) &&
-		simd::all3(simd::lessThan(simd::abs4(simd::sub4(row2, Vector3<float>::UNIT_Z)), Vector3<float>::TOLERANCE)) &&
-		simd::all3(simd::lessThan(simd::abs4(row3), Vector3<float>::TOLERANCE));
+	return simd::all3(simd::lessThan(simd::abs(simd::sub(row0, Vector3<float>::UNIT_X)), Vector3<float>::TOLERANCE)) &&
+		simd::all3(simd::lessThan(simd::abs(simd::sub(row1, Vector3<float>::UNIT_Y)), Vector3<float>::TOLERANCE)) &&
+		simd::all3(simd::lessThan(simd::abs(simd::sub(row2, Vector3<float>::UNIT_Z)), Vector3<float>::TOLERANCE)) &&
+		simd::all3(simd::lessThan(simd::abs(row3), Vector3<float>::TOLERANCE));
 }
 
 inline bool AffineTransform<float>::approxEquals(const AffineTransform& m) const noexcept
 {
-	return simd::all3(simd::lessThan(simd::abs4(simd::sub4(row0, m.row0)), Vector3<float>::TOLERANCE)) &&
-		simd::all3(simd::lessThan(simd::abs4(simd::sub4(row1, m.row1)), Vector3<float>::TOLERANCE)) &&
-		simd::all3(simd::lessThan(simd::abs4(simd::sub4(row2, m.row2)), Vector3<float>::TOLERANCE)) &&
-		simd::all3(simd::lessThan(simd::abs4(simd::sub4(row3, m.row3)), Vector3<float>::TOLERANCE));
+	return simd::all3(simd::lessThan(simd::abs(simd::sub(row0, m.row0)), Vector3<float>::TOLERANCE)) &&
+		simd::all3(simd::lessThan(simd::abs(simd::sub(row1, m.row1)), Vector3<float>::TOLERANCE)) &&
+		simd::all3(simd::lessThan(simd::abs(simd::sub(row2, m.row2)), Vector3<float>::TOLERANCE)) &&
+		simd::all3(simd::lessThan(simd::abs(simd::sub(row3, m.row3)), Vector3<float>::TOLERANCE));
 }
 
 inline bool AffineTransform<float>::approxEquals(const AffineTransform& m, float tolerance) const noexcept
 {
 	auto t = simd::set4(tolerance);
-	return simd::all3(simd::lessThan(simd::abs4(simd::sub4(row0, m.row0)), t)) &&
-		simd::all3(simd::lessThan(simd::abs4(simd::sub4(row1, m.row1)), t)) &&
-		simd::all3(simd::lessThan(simd::abs4(simd::sub4(row2, m.row2)), t)) &&
-		simd::all3(simd::lessThan(simd::abs4(simd::sub4(row3, m.row3)), t));
+	return simd::all3(simd::lessThan(simd::abs(simd::sub(row0, m.row0)), t)) &&
+		simd::all3(simd::lessThan(simd::abs(simd::sub(row1, m.row1)), t)) &&
+		simd::all3(simd::lessThan(simd::abs(simd::sub(row2, m.row2)), t)) &&
+		simd::all3(simd::lessThan(simd::abs(simd::sub(row3, m.row3)), t));
 }
 
 inline bool AffineTransform<float>::isFinite() const noexcept
@@ -1118,10 +1118,10 @@ inline bool AffineTransform<float>::isFinite() const noexcept
 
 inline AffineTransform<float>& AffineTransform<float>::setZero() noexcept
 {
-	row0 = simd::zero<simd::float4>();
-	row1 = simd::zero<simd::float4>();
-	row2 = simd::zero<simd::float4>();
-	row3 = simd::zero<simd::float4>();
+	row0 = simd::zero4<float>();
+	row1 = simd::zero4<float>();
+	row2 = simd::zero4<float>();
+	row3 = simd::zero4<float>();
 	return *this;
 }
 
@@ -1130,7 +1130,7 @@ inline AffineTransform<float>& AffineTransform<float>::setIdentity() noexcept
 	row0 = Vector3<float>::UNIT_X;
 	row1 = Vector3<float>::UNIT_Y;
 	row2 = Vector3<float>::UNIT_Z;
-	row3 = simd::zero<simd::float4>();
+	row3 = simd::zero4<float>();
 	return *this;
 }
 
@@ -1191,19 +1191,19 @@ inline AffineTransform<float>& AffineTransform<float>::setTranslation(const Vect
 inline AffineTransform<float>& AffineTransform<float>::setScaling(const Vector3<float>& v) noexcept
 {
 	row0 = simd::cutoff1(v);
-	row1 = simd::and4(v, simd::bits<simd::float4, 0, -1, 0, 0>());
+	row1 = simd::logicalAnd(v, simd::bits<simd::float4, 0, -1, 0, 0>());
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	row2 = simd::and4(v, simd::bits<simd::float4, 0, 0, -1, -1>());
+	row2 = simd::logicalAnd(v, simd::bits<simd::float4, 0, 0, -1, -1>());
 #else
-	row2 = simd::and4(v, simd::bits<simd::float4, 0, 0, -1, 0>());
+	row2 = simd::logicalAnd(v, simd::bits<simd::float4, 0, 0, -1, 0>());
 #endif
-	row3 = simd::zero<simd::float4>();
+	row3 = simd::zero4<float>();
 	return *this;
 }
 
 inline AffineTransform<float>& AffineTransform<float>::setScaling(float f) noexcept
 {
-	const auto zero = simd::zero<simd::float4>();
+	const auto zero = simd::zero4<float>();
 	row0 = simd::set1(f);
 	row1 = simd::insert<1>(f, zero);
 #if MATHEMATICS_SIMD_EXPAND_LAST
@@ -1263,11 +1263,11 @@ inline AffineTransform<float>& AffineTransform<float>::setRotation(const Vector3
 inline AffineTransform<float>& AffineTransform<float>::setScalingTranslation(const Vector3<float>& s, const Vector3<float>& t) noexcept
 {
 	row0 = simd::cutoff1(s);
-	row1 = simd::and4(s, simd::bits<simd::float4, 0, -1, 0, 0>());
+	row1 = simd::logicalAnd(s, simd::bits<simd::float4, 0, -1, 0, 0>());
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	row2 = simd::and4(s, simd::bits<simd::float4, 0, 0, -1, -1>());
+	row2 = simd::logicalAnd(s, simd::bits<simd::float4, 0, 0, -1, -1>());
 #else
-	row2 = simd::and4(s, simd::bits<simd::float4, 0, 0, -1, 0>());
+	row2 = simd::logicalAnd(s, simd::bits<simd::float4, 0, 0, -1, 0>());
 #endif
 	row3 = t;
 	return *this;
@@ -1284,7 +1284,7 @@ inline AffineTransform<float>& AffineTransform<float>::setShearing(float xy, flo
 	row1 = simd::set3(yx, 1.f, yz);
 	row2 = simd::set3(zx, zy, 1.f);
 #endif
-	row3 = simd::zero<simd::float4>();
+	row3 = simd::zero4<float>();
 	return *this;
 }
 
@@ -1301,13 +1301,13 @@ inline AffineTransform<float>& AffineTransform<float>::setInverse(const AffineTr
 	float i = m.m00*m.m11 - m.m01*m.m10;
 	auto n = simd::set4(1.f/(m.m00*a + m.m01*b + m.m02*c));
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	row0 = simd::mul4(simd::set4(a, d, g, g), n);
-	row1 = simd::mul4(simd::set4(b, e, h, h), n);
-	row2 = simd::mul4(simd::set4(c, f, i, i), n);
+	row0 = simd::mul(simd::set4(a, d, g, g), n);
+	row1 = simd::mul(simd::set4(b, e, h, h), n);
+	row2 = simd::mul(simd::set4(c, f, i, i), n);
 #else
-	row0 = simd::mul4(simd::set3(a, d, g), n);
-	row1 = simd::mul4(simd::set3(b, e, h), n);
-	row2 = simd::mul4(simd::set3(c, f, i), n);
+	row0 = simd::mul(simd::set3(a, d, g), n);
+	row1 = simd::mul(simd::set3(b, e, h), n);
+	row2 = simd::mul(simd::set3(c, f, i), n);
 #endif
 	setOrigin(-(m.getOrigin()*getBasis()));
 	return *this;
@@ -1329,19 +1329,19 @@ inline AffineTransform<float>& AffineTransform<float>::setInverseOrthogonal(cons
 
 inline AffineTransform<float>& AffineTransform<float>::preConcatenate(const AffineTransform<float>& m) noexcept
 {
-	auto r0 = simd::mul4(simd::broadcast<0>(m.row0), row0);
-	r0 = simd::add4(r0, simd::mul4(simd::broadcast<1>(m.row0), row1));
-	r0 = simd::add4(r0, simd::mul4(simd::broadcast<2>(m.row0), row2));
-	auto r1 = simd::mul4(simd::broadcast<0>(m.row1), row0);
-	r1 = simd::add4(r1, simd::mul4(simd::broadcast<1>(m.row1), row1));
-	r1 = simd::add4(r1, simd::mul4(simd::broadcast<2>(m.row1), row2));
-	auto r2 = simd::mul4(simd::broadcast<0>(m.row2), row0);
-	r2 = simd::add4(r2, simd::mul4(simd::broadcast<1>(m.row2), row1));
-	r2 = simd::add4(r2, simd::mul4(simd::broadcast<2>(m.row2), row2));
-	auto r3 = simd::mul4(simd::broadcast<0>(m.row3), row0);
-	r3 = simd::add4(r3, simd::mul4(simd::broadcast<1>(m.row3), row1));
-	r3 = simd::add4(r3, simd::mul4(simd::broadcast<2>(m.row3), row2));
-	r3 = simd::add4(r3, row3);
+	auto r0 = simd::mul(simd::broadcast<0>(m.row0), row0);
+	r0 = simd::add(r0, simd::mul(simd::broadcast<1>(m.row0), row1));
+	r0 = simd::add(r0, simd::mul(simd::broadcast<2>(m.row0), row2));
+	auto r1 = simd::mul(simd::broadcast<0>(m.row1), row0);
+	r1 = simd::add(r1, simd::mul(simd::broadcast<1>(m.row1), row1));
+	r1 = simd::add(r1, simd::mul(simd::broadcast<2>(m.row1), row2));
+	auto r2 = simd::mul(simd::broadcast<0>(m.row2), row0);
+	r2 = simd::add(r2, simd::mul(simd::broadcast<1>(m.row2), row1));
+	r2 = simd::add(r2, simd::mul(simd::broadcast<2>(m.row2), row2));
+	auto r3 = simd::mul(simd::broadcast<0>(m.row3), row0);
+	r3 = simd::add(r3, simd::mul(simd::broadcast<1>(m.row3), row1));
+	r3 = simd::add(r3, simd::mul(simd::broadcast<2>(m.row3), row2));
+	r3 = simd::add(r3, row3);
 	row0 = r0;
 	row1 = r1;
 	row2 = r2;
@@ -1351,19 +1351,19 @@ inline AffineTransform<float>& AffineTransform<float>::preConcatenate(const Affi
 
 inline AffineTransform<float>& AffineTransform<float>::concatenate(const AffineTransform<float>& m) noexcept
 {
-	auto r0 = simd::mul4(simd::broadcast<0>(row0), m.row0);
-	r0 = simd::add4(r0, simd::mul4(simd::broadcast<1>(row0), m.row1));
-	r0 = simd::add4(r0, simd::mul4(simd::broadcast<2>(row0), m.row2));
-	auto r1 = simd::mul4(simd::broadcast<0>(row1), m.row0);
-	r1 = simd::add4(r1, simd::mul4(simd::broadcast<1>(row1), m.row1));
-	r1 = simd::add4(r1, simd::mul4(simd::broadcast<2>(row1), m.row2));
-	auto r2 = simd::mul4(simd::broadcast<0>(row2), m.row0);
-	r2 = simd::add4(r2, simd::mul4(simd::broadcast<1>(row2), m.row1));
-	r2 = simd::add4(r2, simd::mul4(simd::broadcast<2>(row2), m.row2));
-	auto r3 = simd::mul4(simd::broadcast<0>(row3), m.row0);
-	r3 = simd::add4(r3, simd::mul4(simd::broadcast<1>(row3), m.row1));
-	r3 = simd::add4(r3, simd::mul4(simd::broadcast<2>(row3), m.row2));
-	r3 = simd::add4(r3, m.row3);
+	auto r0 = simd::mul(simd::broadcast<0>(row0), m.row0);
+	r0 = simd::add(r0, simd::mul(simd::broadcast<1>(row0), m.row1));
+	r0 = simd::add(r0, simd::mul(simd::broadcast<2>(row0), m.row2));
+	auto r1 = simd::mul(simd::broadcast<0>(row1), m.row0);
+	r1 = simd::add(r1, simd::mul(simd::broadcast<1>(row1), m.row1));
+	r1 = simd::add(r1, simd::mul(simd::broadcast<2>(row1), m.row2));
+	auto r2 = simd::mul(simd::broadcast<0>(row2), m.row0);
+	r2 = simd::add(r2, simd::mul(simd::broadcast<1>(row2), m.row1));
+	r2 = simd::add(r2, simd::mul(simd::broadcast<2>(row2), m.row2));
+	auto r3 = simd::mul(simd::broadcast<0>(row3), m.row0);
+	r3 = simd::add(r3, simd::mul(simd::broadcast<1>(row3), m.row1));
+	r3 = simd::add(r3, simd::mul(simd::broadcast<2>(row3), m.row2));
+	r3 = simd::add(r3, m.row3);
 	row0 = r0;
 	row1 = r1;
 	row2 = r2;
@@ -1373,37 +1373,37 @@ inline AffineTransform<float>& AffineTransform<float>::concatenate(const AffineT
 
 inline AffineTransform<float>& AffineTransform<float>::preScale(const Vector3<float>& v) noexcept
 {
-	row0 = simd::mul4(row0, simd::xxxx(v));
-	row1 = simd::mul4(row1, simd::yyyy(v));
-	row2 = simd::mul4(row2, simd::zzzz(v));
+	row0 = simd::mul(row0, simd::xxxx(v));
+	row1 = simd::mul(row1, simd::yyyy(v));
+	row2 = simd::mul(row2, simd::zzzz(v));
 	return *this;
 }
 
 inline AffineTransform<float>& AffineTransform<float>::preScale(float f) noexcept
 {
 	auto t = simd::set4(f);
-	row0 = simd::mul4(row0, t);
-	row1 = simd::mul4(row1, t);
-	row2 = simd::mul4(row2, t);
+	row0 = simd::mul(row0, t);
+	row1 = simd::mul(row1, t);
+	row2 = simd::mul(row2, t);
 	return *this;
 }
 
 inline AffineTransform<float>& AffineTransform<float>::scale(const Vector3<float>& v) noexcept
 {
-	row0 = simd::mul4(row0, v);
-	row1 = simd::mul4(row1, v);
-	row2 = simd::mul4(row2, v);
-	row3 = simd::mul4(row3, v);
+	row0 = simd::mul(row0, v);
+	row1 = simd::mul(row1, v);
+	row2 = simd::mul(row2, v);
+	row3 = simd::mul(row3, v);
 	return *this;
 }
 
 inline AffineTransform<float>& AffineTransform<float>::scale(float f) noexcept
 {
 	auto t = simd::set4(f);
-	row0 = simd::mul4(row0, t);
-	row1 = simd::mul4(row1, t);
-	row2 = simd::mul4(row2, t);
-	row3 = simd::mul4(row3, t);
+	row0 = simd::mul(row0, t);
+	row1 = simd::mul(row1, t);
+	row2 = simd::mul(row2, t);
+	row3 = simd::mul(row3, t);
 	return *this;
 }
 
@@ -1420,13 +1420,13 @@ inline AffineTransform<float>& AffineTransform<float>::invert() noexcept
 	float i = m00*m11 - m01*m10;
 	auto n = simd::set4(1.f/(m00*a + m01*b + m02*c));
 #if MATHEMATICS_SIMD_EXPAND_LAST
-	row0 = simd::mul4(simd::set4(a, d, g, g), n);
-	row1 = simd::mul4(simd::set4(b, e, h, h), n);
-	row2 = simd::mul4(simd::set4(c, f, i, i), n);
+	row0 = simd::mul(simd::set4(a, d, g, g), n);
+	row1 = simd::mul(simd::set4(b, e, h, h), n);
+	row2 = simd::mul(simd::set4(c, f, i, i), n);
 #else
-	row0 = simd::mul4(simd::set3(a, d, g), n);
-	row1 = simd::mul4(simd::set3(b, e, h), n);
-	row2 = simd::mul4(simd::set3(c, f, i), n);
+	row0 = simd::mul(simd::set3(a, d, g), n);
+	row1 = simd::mul(simd::set3(b, e, h), n);
+	row2 = simd::mul(simd::set3(c, f, i), n);
 #endif
 	setOrigin(-(getOrigin()*getBasis()));
 	return *this;
@@ -1524,19 +1524,19 @@ inline AffineTransform<T> inverseOrthogonal(AffineTransform<T>&& m) noexcept
 template<>
 inline AffineTransform<float> concatenate(const AffineTransform<float>& m1, const AffineTransform<float>& m2) noexcept
 {
-	auto r0 = simd::mul4(simd::broadcast<0>(m1.row0), m2.row0);
-	r0 = simd::add4(r0, simd::mul4(simd::broadcast<1>(m1.row0), m2.row1));
-	r0 = simd::add4(r0, simd::mul4(simd::broadcast<2>(m1.row0), m2.row2));
-	auto r1 = simd::mul4(simd::broadcast<0>(m1.row1), m2.row0);
-	r1 = simd::add4(r1, simd::mul4(simd::broadcast<1>(m1.row1), m2.row1));
-	r1 = simd::add4(r1, simd::mul4(simd::broadcast<2>(m1.row1), m2.row2));
-	auto r2 = simd::mul4(simd::broadcast<0>(m1.row2), m2.row0);
-	r2 = simd::add4(r2, simd::mul4(simd::broadcast<1>(m1.row2), m2.row1));
-	r2 = simd::add4(r2, simd::mul4(simd::broadcast<2>(m1.row2), m2.row2));
-	auto r3 = simd::mul4(simd::broadcast<0>(m1.row3), m2.row0);
-	r3 = simd::add4(r3, simd::mul4(simd::broadcast<1>(m1.row3), m2.row1));
-	r3 = simd::add4(r3, simd::mul4(simd::broadcast<2>(m1.row3), m2.row2));
-	r3 = simd::add4(r3, m2.row3);
+	auto r0 = simd::mul(simd::broadcast<0>(m1.row0), m2.row0);
+	r0 = simd::add(r0, simd::mul(simd::broadcast<1>(m1.row0), m2.row1));
+	r0 = simd::add(r0, simd::mul(simd::broadcast<2>(m1.row0), m2.row2));
+	auto r1 = simd::mul(simd::broadcast<0>(m1.row1), m2.row0);
+	r1 = simd::add(r1, simd::mul(simd::broadcast<1>(m1.row1), m2.row1));
+	r1 = simd::add(r1, simd::mul(simd::broadcast<2>(m1.row1), m2.row2));
+	auto r2 = simd::mul(simd::broadcast<0>(m1.row2), m2.row0);
+	r2 = simd::add(r2, simd::mul(simd::broadcast<1>(m1.row2), m2.row1));
+	r2 = simd::add(r2, simd::mul(simd::broadcast<2>(m1.row2), m2.row2));
+	auto r3 = simd::mul(simd::broadcast<0>(m1.row3), m2.row0);
+	r3 = simd::add(r3, simd::mul(simd::broadcast<1>(m1.row3), m2.row1));
+	r3 = simd::add(r3, simd::mul(simd::broadcast<2>(m1.row3), m2.row2));
+	r3 = simd::add(r3, m2.row3);
 	return AffineTransform<float>(r0, r1, r2, r3);
 }
 
@@ -1864,11 +1864,11 @@ inline AffineTransform<float>& AffineTransform<float>::setReflection(const Plane
 #else
 	auto n = simd::cutoff3(p);
 #endif
-	auto t = simd::mul4(mTwo, p);
-	row0 = simd::mulAdd4(simd::xxxx(t), n, Vector3<float>::UNIT_X);
-	row1 = simd::mulAdd4(simd::yyyy(t), n, Vector3<float>::UNIT_Y);
-	row2 = simd::mulAdd4(simd::zzzz(t), n, Vector3<float>::UNIT_Z);
-	row3 = simd::mul4(simd::wwww(t), n);
+	auto t = simd::mul(mTwo, p);
+	row0 = simd::mulAdd(simd::xxxx(t), n, Vector3<float>::UNIT_X);
+	row1 = simd::mulAdd(simd::yyyy(t), n, Vector3<float>::UNIT_Y);
+	row2 = simd::mulAdd(simd::zzzz(t), n, Vector3<float>::UNIT_Z);
+	row3 = simd::mul(simd::wwww(t), n);
 	return *this;
 }
 

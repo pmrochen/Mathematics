@@ -146,7 +146,7 @@ struct alignas(16) Plane<float>
 	using TupleType = std::tuple<float, float, float, float>;
 	using SimdType = simd::float4;
 
-	/*constexpr*/ Plane() noexcept : abcd(simd::zero<simd::float4>()) {}
+	/*constexpr*/ Plane() noexcept : abcd(simd::zero4<float>()) {}
 	explicit Plane(Uninitialized) noexcept {}
 	/*constexpr*/ Plane(float a, float b, float c, float d) noexcept : abcd(simd::set4(a, b, c, d)) {}
 	/*constexpr*/ Plane(const Vector3<float>& normal, float constant) noexcept : abcd(simd::insert<simd::W>(constant, normal)) {}
@@ -185,9 +185,9 @@ struct alignas(16) Plane<float>
 	//template<std::input_iterator I, std::sentinel_for<I> S> static Plane computeBestFit(I first, S last); // #TODO
 
 	// Properties
-	bool isZero() const noexcept { return simd::all4(simd::equal(abcd, simd::zero<simd::float4>())); }
-	bool approxEquals(const Plane& p) const noexcept { return simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, p)), simd::set4(Constants<float>::TOLERANCE))); }
-	bool approxEquals(const Plane& p, float tolerance) const noexcept { return simd::all4(simd::lessThan(simd::abs4(simd::sub4(abcd, p)), simd::set4(tolerance))); }
+	bool isZero() const noexcept { return simd::all4(simd::equal(abcd, simd::zero4<float>())); }
+	bool approxEquals(const Plane& p) const noexcept { return simd::all4(simd::lessThan(simd::abs(simd::sub(abcd, p)), simd::set4(Constants<float>::TOLERANCE))); }
+	bool approxEquals(const Plane& p, float tolerance) const noexcept { return simd::all4(simd::lessThan(simd::abs(simd::sub(abcd, p)), simd::set4(tolerance))); }
 	bool isFinite() const noexcept { return simd::all4(simd::isFinite(abcd)); }
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	const Vector3<float> getNormal() const noexcept { return Vector3<float>(simd::xyzz(abcd)); }
@@ -197,7 +197,7 @@ struct alignas(16) Plane<float>
 	void setNormal(const Vector3<float>& normal) noexcept { abcd = simd::insert3(normal, abcd); }
 	float getConstant() const noexcept { return simd::extract<simd::W>(abcd); }
 	void setConstant(float constant) noexcept { abcd = simd::insert<simd::W>(constant, abcd); }
-	Plane& setZero() noexcept { abcd = simd::zero<simd::float4>(); return *this; }
+	Plane& setZero() noexcept { abcd = simd::zero4<float>(); return *this; }
 	Plane& set(const Vector3<float>& normal, float constant) noexcept { abcd = simd::insert<simd::W>(constant, normal); return *this; }
 	Plane& set(float a, float b, float c, float d) noexcept { abcd = simd::set4(a, b, c, d); return *this; }
 
@@ -464,7 +464,7 @@ inline Plane<float>& Plane<float>::normalize() noexcept
 #if MATHEMATICS_FAST_NORMALIZE
 	float m = simd::extract(simd::rcpSqrtApprox1(simd::dot3(abcd, abcd)));
 	if (m <= std::numeric_limits<float>::max()) 
-		abcd = simd::mul4(abcd, simd::set4(m));
+		abcd = simd::mul(abcd, simd::set4(m));
 #else
 	float m = getNormal().getMagnitude();
 	if (m > 0.f) 

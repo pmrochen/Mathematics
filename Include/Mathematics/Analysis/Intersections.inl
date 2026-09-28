@@ -613,25 +613,25 @@ inline O findLineAxisAlignedBox(const Vector3<float>& origin, const Vector3<floa
 	const Vector3<float>& minimum, const Vector3<float>& maximum) noexcept
 {
 	auto invDir = simd::div4(Vector4<float>::ONE, direction);
-	auto l1 = simd::mul4(simd::sub4(minimum, origin), invDir);
-	auto l2 = simd::mul4(simd::sub4(maximum, origin), invDir);
+	auto l1 = simd::mul(simd::sub(minimum, origin), invDir);
+	auto l2 = simd::mul(simd::sub(maximum, origin), invDir);
 
 	// The order we use for those min/max is vital to filter out NaNs that happens
 	// when an invDir is +/- inf and (minimum - origin) is 0. inf*0 = NaN
-	auto filteredL1a = simd::min4(l1, Vector4<float>::INF);
-	auto filteredL2a = simd::min4(l2, Vector4<float>::INF);
-	auto filteredL1b = simd::max4(l1, Vector4<float>::MINUS_INF);
-	auto filteredL2b = simd::max4(l2, Vector4<float>::MINUS_INF);
-	auto lMax = simd::max4(filteredL1a, filteredL2a);
-	auto lMin = simd::min4(filteredL1b, filteredL2b);
+	auto filteredL1a = simd::min(l1, Vector4<float>::INF);
+	auto filteredL2a = simd::min(l2, Vector4<float>::INF);
+	auto filteredL1b = simd::max(l1, Vector4<float>::MINUS_INF);
+	auto filteredL2b = simd::max(l2, Vector4<float>::MINUS_INF);
+	auto lMax = simd::max(filteredL1a, filteredL2a);
+	auto lMin = simd::min(filteredL1b, filteredL2b);
 	auto lMax0 = simd::swizzle<1, 2, 3, 0>(lMax);
 	auto lMin0 = simd::swizzle<1, 2, 3, 0>(lMin);
-	lMax = simd::min4/*min1*/(lMax, lMax0);
-	lMin = simd::max4/*max1*/(lMin, lMin0);
+	lMax = simd::min/*min1*/(lMax, lMax0);
+	lMin = simd::max/*max1*/(lMin, lMin0);
 	auto lMax1 = simd::swizzle<2, 3, 2, 3>(lMax);
 	auto lMin1 = simd::swizzle<2, 3, 2, 3>(lMin);
-	lMax = simd::min4/*min1*/(lMax, lMax1);
-	lMin = simd::max4/*max1*/(lMin, lMin1);
+	lMax = simd::min/*min1*/(lMax, lMax1);
+	lMin = simd::max/*max1*/(lMin, lMin1);
 
 	return detail::intervalChecked<O>(simd::extract(lMin), simd::extract(lMax));
 }
