@@ -374,6 +374,13 @@ const AffineTransform<float> AffineTransform<float>::IDENTITY{ 1.f, 0.f, 0.f, 0.
 
 #endif /* SIMD_HAS_FLOAT4 */
 
+template<std::floating_point T>
+inline Vector3<T>& Vector3<T>::transform(const AffineTransform<T>& m) noexcept
+{
+	set(x*m.m00 + y*m.m10 + z*m.m20 + m.m30, x*m.m01 + y*m.m11 + z*m.m21 + m.m31, x*m.m02 + y*m.m12 + z*m.m22 + m.m32);
+	return *this;
+}
+
 template<typename T>
 	requires std::floating_point<T>
 inline constexpr AffineTransform<T>::AffineTransform(T m00, T m01, T m02, T m10, T m11, T m12, T m20, T m21, T m22, T m30, T m31, T m32) noexcept :
@@ -885,6 +892,14 @@ inline AffineTransform<T>& AffineTransform<T>::invertOrthogonal() noexcept
 }
 
 #if SIMD_HAS_FLOAT4
+
+inline Vector3<float>& Vector3<float>::transform(const AffineTransform<float>& m) noexcept
+{
+	auto t = simd::mulAdd(simd::xxxx(xyz), m.row0, simd::mul(simd::yyyy(xyz), m.row1));
+	t = simd::add(t, simd::mul(simd::zzzz(xyz), m.row2));
+	xyz = simd::add(t, m.row3);
+	return *this;
+}
 
 inline AffineTransform<float>::AffineTransform() noexcept : 
 	row0(simd::zero4<float>()), 
@@ -1450,6 +1465,14 @@ inline AffineTransform<float>& AffineTransform<float>::invertOrthogonal() noexce
 
 template<typename T>
 	requires std::floating_point<T>
+inline Vector3<T> transform(const Vector3<T>& v, const AffineTransform<T>& m) noexcept
+{
+	return Vector3<T>(v.x*m.m00 + v.y*m.m10 + v.z*m.m20 + m.m30, v.x*m.m01 + v.y*m.m11 + v.z*m.m21 + m.m31, 
+		v.x*m.m02 + v.y*m.m12 + v.z*m.m22 + m.m32);
+}
+
+template<typename T>
+	requires std::floating_point<T>
 inline AffineTransform<T> concatenate(const AffineTransform<T>& m1, const AffineTransform<T>& m2) noexcept
 {
 	return AffineTransform<T>(m1.m00*m2.m00 + m1.m01*m2.m10 + m1.m02*m2.m20,
@@ -1520,6 +1543,14 @@ inline AffineTransform<T> inverseOrthogonal(AffineTransform<T>&& m) noexcept
 }
 
 #if SIMD_HAS_FLOAT4
+
+template<>
+inline Vector3<float> transform(const Vector3<float>& v, const AffineTransform<float>& m) noexcept
+{
+	auto t = simd::mulAdd(simd::xxxx(v), m.row0, simd::mul(simd::yyyy(v), m.row1));
+	t = simd::add(t, simd::mul(simd::zzzz(v), m.row2));
+	return Vector3<float>(simd::add(t, m.row3));
+}
 
 template<>
 inline AffineTransform<float> concatenate(const AffineTransform<float>& m1, const AffineTransform<float>& m2) noexcept

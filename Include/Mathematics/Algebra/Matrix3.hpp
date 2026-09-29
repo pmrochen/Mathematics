@@ -313,6 +313,34 @@ const Matrix3<float> Matrix3<float>::IDENTITY{ 1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f
 
 #endif /* SIMD_HAS_FLOAT4 */
 
+template<std::floating_point T>
+inline Vector3<T>& Vector3<T>::operator*=(const Matrix3<T>& m) noexcept
+{
+	set(x*m.m00 + y*m.m10 + z*m.m20, x*m.m01 + y*m.m11 + z*m.m21, x*m.m02 + y*m.m12 + z*m.m22);
+	return *this;
+}
+
+template<typename T>
+	requires std::floating_point<T>
+inline Vector3<T> operator*(const Vector3<T>& v, const Matrix3<T>& m) noexcept
+{
+	return Vector3<T>(v.x*m.m00 + v.y*m.m10 + v.z*m.m20, v.x*m.m01 + v.y*m.m11 + v.z*m.m21, v.x*m.m02 + v.y*m.m12 + v.z*m.m22);
+}
+
+template<typename T>
+	requires std::floating_point<T>
+inline Vector3<T> operator*(const Matrix3<T>& m, const Vector3<T>& v) noexcept
+{
+	return Vector3<T>(m.m00*v.x + m.m01*v.y + m.m02*v.z, m.m10*v.x + m.m11*v.y + m.m12*v.z, m.m20*v.x + m.m21*v.y + m.m22*v.z);
+}
+
+template<std::floating_point T>
+inline Vector3<T>& Vector3<T>::transform(const Matrix3<T>& m) noexcept
+{
+	*this *= m;
+	return *this;
+}
+
 template<typename T>
 	requires std::floating_point<T>
 inline constexpr Matrix3<T>::Matrix3(T m00, T m01, T m02, T m10, T m11, T m12, T m20, T m21, T m22) noexcept :
@@ -905,6 +933,36 @@ inline Matrix3<T>& Matrix3<T>::orthonormalize() noexcept
 }
 
 #if SIMD_HAS_FLOAT4
+
+inline Vector3<float>& Vector3<float>::operator*=(const Matrix3<float>& m) noexcept
+{
+	auto t = simd::mulAdd(simd::xxxx(xyz), m.row0, simd::mul(simd::yyyy(xyz), m.row1));
+	xyz = simd::add(t, simd::mul(simd::zzzz(xyz), m.row2));
+	return *this;
+}
+
+template<>
+inline Vector3<float> operator*(const Vector3<float>& v, const Matrix3<float>& m) noexcept
+{
+	auto t = simd::mulAdd(simd::xxxx(v), m.row0, simd::mul(simd::yyyy(v), m.row1));
+	return Vector3<float>(simd::add(t, simd::mul(simd::zzzz(v), m.row2)));
+}
+
+template<>
+inline Vector3<float> operator*(const Matrix3<float>& m, const Vector3<float>& v) noexcept
+{
+#if MATHEMATICS_SIMD_EXPAND_LAST
+	return Vector3<float>(simd:xyzz(simd::set3(simd::dot3(m.row0, v), simd::dot3(m.row1, v), simd::dot3(m.row2, v))));
+#else
+	return Vector3<float>(simd::set3(simd::dot3(m.row0, v), simd::dot3(m.row1, v), simd::dot3(m.row2, v)));
+#endif
+}
+
+inline Vector3<float>& Vector3<float>::transform(const Matrix3<float>& m) noexcept
+{
+	*this *= m;
+	return *this;
+}
 
 inline Matrix3<float>::Matrix3() noexcept : 
 	row0(simd::zero4<float>()), 
@@ -1523,6 +1581,22 @@ inline Matrix3<float>& Matrix3<float>::orthonormalize() noexcept
 
 template<typename T>
 	requires std::floating_point<T>
+inline Vector3<T> transform(const Vector3<T>& v, const Matrix3<T>& m) noexcept
+{
+	return v*m;
+}
+
+template<typename T>
+	requires std::floating_point<T>
+inline Matrix3<T> tensor(const Vector3<T>& v1, const Vector3<T>& v2) noexcept
+{
+	return Matrix3<T>(v1.x*v2.x, v1.x*v2.y, v1.x*v2.z,
+		v1.y*v2.x, v1.y*v2.y, v1.y*v2.z,
+		v1.z*v2.x, v1.z*v2.y, v1.z*v2.z);
+}
+
+template<typename T>
+	requires std::floating_point<T>
 inline Matrix3<T> concatenate(const Matrix3<T>& m1, const Matrix3<T>& m2) noexcept
 {
 	return m1*m2;
@@ -1601,6 +1675,20 @@ inline Matrix3<T> adjoint(const Matrix3<T>& m) noexcept
 }
 
 #if SIMD_HAS_FLOAT4
+
+template<>
+inline Vector3<float> transform(const Vector3<float>& v, const Matrix3<float>& m) noexcept
+{
+	return v*m;
+}
+
+template<>
+inline Matrix3<float> tensor(const Vector3<float>& v1, const Vector3<float>& v2) noexcept
+{
+	return Matrix3<float>(simd::mul(simd::xxxx(v1), v2),
+		simd::mul(simd::yyyy(v1), v2),
+		simd::mul(simd::zzzz(v1), v2));
+}
 
 template<>
 inline Matrix3<float> transpose(const Matrix3<float>& m) noexcept
@@ -1690,8 +1778,6 @@ struct hash<::mathematics::templates::Matrix3<float>>
 
 } // namespace std
 
-#include "../Transform/AffineTransform.hpp"
-#include "Matrix4.hpp"
 #include "Quaternion.hpp"
 #include "../Transform/YawPitchRoll.hpp"
 #include "../Transform/Euler.hpp"

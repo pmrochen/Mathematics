@@ -22,8 +22,6 @@
 #endif
 #include "../Constants.hpp"
 #include "Vector2.hpp"
-//#include "Vector3.hpp"
-//#include "Vector4.hpp"
 
 namespace mathematics {
 namespace templates {
@@ -249,6 +247,34 @@ const Matrix2<float> Matrix2<float>::ZERO{};
 const Matrix2<float> Matrix2<float>::IDENTITY{ 1.f, 0.f, 0.f, 1.f };
 
 #endif /* SIMD_HAS_FLOAT4 */
+
+template<std::floating_point T>
+inline Vector2<T>& Vector2<T>::operator*=(const Matrix2<T>& m) noexcept
+{
+	set(x*m.m00 + y*m.m10, x*m.m01 + y*m.m11);
+	return *this;
+}
+
+template<typename T>
+	requires std::floating_point<T>
+inline Vector2<T> operator*(const Vector2<T>& v, const Matrix2<T>& m) noexcept
+{
+	return Vector2<T>(v.x*m.m00 + v.y*m.m10, v.x*m.m01 + v.y*m.m11);
+}
+
+template<typename T>
+	requires std::floating_point<T>
+inline Vector2<T> operator*(const Matrix2<T>& m, const Vector2<T>& v) noexcept
+{
+	return Vector2<T>(m.m00*v.x + m.m01*v.y, m.m10*v.x + m.m11*v.y);
+}
+
+template<std::floating_point T>
+inline Vector2<T>& Vector2<T>::transform(const Matrix2<T>& m) noexcept
+{
+	*this *= m;
+	return *this;
+}
 
 template<typename T>
 	requires std::floating_point<T>
@@ -564,6 +590,48 @@ inline Matrix2<T>& Matrix2<T>::orthonormalize() noexcept
 }
 
 #if SIMD_HAS_FLOAT4
+
+inline Vector2<float>& Vector2<float>::operator*=(const Matrix2<float>& m) noexcept
+{
+	auto t = simd::mul(simd::xxyy(xy), simd::pack2(m.row0, m.row1));
+	t = simd::add(t, simd::zwxy(t));
+#if MATHEMATICS_SIMD_EXPAND_LAST
+	xy = simd::xyyy(t);
+#else
+	xy = simd::cutoff2(t);
+#endif
+	return *this;
+}
+
+template<>
+inline Vector2<float> operator*(const Vector2<float>& v, const Matrix2<float>& m) noexcept
+{
+	auto t = simd::mul(simd::xxyy(v), simd::pack2(m.row0, m.row1));
+	t = simd::add(t, simd::zwxy(t));
+#if MATHEMATICS_SIMD_EXPAND_LAST
+	return Vector2<float>(simd::xyyy(t));
+#else
+	return Vector2<float>(simd::cutoff2(t));
+#endif
+}
+
+template<>
+inline Vector2<float> operator*(const Matrix2<float>& m, const Vector2<float>& v) noexcept
+{
+	auto t = simd::mul(simd::xyxy(v), simd::pack2(m.row0, m.row1));
+	t = simd::add(t, simd::yxwz(t));
+#if MATHEMATICS_SIMD_EXPAND_LAST
+	return Vector2<float>(simd::xzzz(t));
+#else
+	return Vector2<float>(simd::cutoff2(simd::xzzz(t)));
+#endif
+}
+
+inline Vector2<float>& Vector2<float>::transform(const Matrix2<float>& m) noexcept
+{
+	*this *= m;
+	return *this;
+}
 
 inline Matrix2<float>::Matrix2(float m00, float m01, float m10, float m11) noexcept : 
 #if MATHEMATICS_SIMD_EXPAND_LAST
@@ -984,6 +1052,13 @@ inline Matrix2<float>& Matrix2<float>::orthonormalize() noexcept
 
 template<typename T>
 	requires std::floating_point<T>
+inline Vector2<T> transform(const Vector2<T>& v, const Matrix2<T>& m) noexcept
+{
+	return v*m;
+}
+
+template<typename T>
+	requires std::floating_point<T>
 inline Matrix2<T> concatenate(const Matrix2<T>& m1, const Matrix2<T>& m2) noexcept
 {
 	return m1*m2;
@@ -1057,6 +1132,12 @@ inline Matrix2<T> adjoint(const Matrix2<T>& m) noexcept
 }
 
 #if SIMD_HAS_FLOAT4
+
+template<>
+inline Vector2<float> transform(const Vector2<float>& v, const Matrix2<float>& m) noexcept
+{
+	return v*m;
+}
 
 template<>
 inline Matrix2<float> transpose(const Matrix2<float>& m) noexcept

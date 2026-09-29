@@ -263,6 +263,21 @@ const Quaternion<float> Quaternion<float>::TOLERANCE{ Constants<float>::TOLERANC
 
 #endif /* SIMD_HAS_FLOAT4 */
 
+template<std::floating_point T>
+inline Vector3<T>& Vector3<T>::rotate(const Quaternion<T>& q) noexcept
+{
+	T x1 = q.y*z - q.z*y;
+	T y1 = q.z*x - q.x*z;
+	T z1 = q.x*y - q.y*x;
+	T x2 = q.w*x1 + q.y*z1 - q.z*y1;
+	T y2 = q.w*y1 + q.z*x1 - q.x*z1;
+	T z2 = q.w*z1 + q.x*y1 - q.y*x1;
+	x += T(2)*x2;
+	y += T(2)*y2;
+	z += T(2)*z2;
+	return *this;
+}
+
 template<typename T>
 	requires std::floating_point<T>
 inline Quaternion<T>::Quaternion(const Matrix3<T>& m) noexcept
@@ -601,6 +616,17 @@ inline Quaternion<T>& Quaternion<T>::normalize() noexcept
 }
 
 #if SIMD_HAS_FLOAT4
+
+inline Vector3<float>& Vector3<float>::rotate(const Quaternion<float>& q) noexcept
+{
+	auto qyzx = simd::yzxx(q);
+	auto qzxy = simd::zxyy(q);
+	auto t1 = simd::mulSub(qyzx, simd::zxyy(xyz), simd::mul(qzxy, simd::yzxx(xyz)));
+	auto t2 = simd::mulAdd(simd::wwww(q), t1, simd::mulSub(qyzx, simd::zxyy(t1), simd::mul(qzxy, simd::yzxx(t1))));
+	static const simd::float4 two = simd::set3(2.0f);
+	xyz = simd::mulAdd(two, t2, xyz);
+	return *this;
+}
 
 inline Quaternion<float>::Quaternion(const Matrix3<float>& m) noexcept
 {
@@ -1129,6 +1155,19 @@ inline Quaternion<float> inverse(const Quaternion<float>& q) noexcept
 
 template<typename T>
 	requires std::floating_point<T>
+inline Vector3<T> rotate(const Vector3<T>& v, const Quaternion<T>& q) noexcept
+{
+	T x1 = q.y*v.z - q.z*v.y;
+	T y1 = q.z*v.x - q.x*v.z;
+	T z1 = q.x*v.y - q.y*v.x;
+	T x2 = q.w*x1 + q.y*z1 - q.z*y1;
+	T y2 = q.w*y1 + q.z*x1 - q.x*z1;
+	T z2 = q.w*z1 + q.x*y1 - q.y*x1;
+	return Vector3<T>(v.x + T(2)*x2, v.y + T(2)*y2, v.z + T(2)*z2);
+}
+
+template<typename T>
+	requires std::floating_point<T>
 inline Quaternion<T> rotate(const Quaternion<T>& q1, const Quaternion<T>& q2) noexcept
 {
 	return q2*q1*Quaternion<T>(-q2.x, -q2.y, -q2.z, q2.w);
@@ -1204,6 +1243,17 @@ inline Quaternion<T> arc(const Vector3<T>& v1, const Vector3<T>& v2) noexcept
 }
 
 #if SIMD_HAS_FLOAT4
+
+template<>
+inline Vector3<float> rotate(const Vector3<float>& v, const Quaternion<float>& q) noexcept
+{
+	auto qyzx = simd::yzxx(q);
+	auto qzxy = simd::zxyy(q);
+	auto t1 = simd::mulSub(qyzx, simd::zxyy(v), simd::mul(qzxy, simd::yzxx(v)));
+	auto t2 = simd::mulAdd(simd::wwww(q), t1, simd::mulSub(qyzx, simd::zxyy(t1), simd::mul(qzxy, simd::yzxx(t1))));
+	static const simd::float4 two = simd::set3(2.0f);
+	return Vector3<float>(simd::mulAdd(two, t2, v));
+}
 
 template<>
 inline Quaternion<float> rotate(const Quaternion<float>& q1, const Quaternion<float>& q2) noexcept
