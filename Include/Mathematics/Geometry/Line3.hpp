@@ -206,7 +206,7 @@ template<typename T>
 template<Normalization U>
 inline Vector3<T> Line3<T>::getClosestPoint(const Vector3<T>& point) const
 {
-	if costexpr(std::is_same_v<U, Normalized>)
+	if constexpr (std::is_same_v<U, Normalized>)
 		return dot(point - origin, direction)*direction + origin;
 	else
 		return (dot(point - origin, direction)/dot(direction, direction))*direction + origin;
@@ -303,7 +303,7 @@ template<typename T>
 template<Normalization U>
 inline bool Line3<T>::intersects(const Sphere<T>& sphere) const
 {
-	if costexpr(std::is_same_v<U, Normalized>)
+	if constexpr (std::is_same_v<U, Normalized>)
 		return intersections::testNormalizedLineNSphere(origin, direction, sphere.center, sphere.radius);
 	else
 		return intersections::testLineNSphere(origin, direction, sphere.center, sphere.radius);
@@ -414,7 +414,7 @@ template<typename T>
 template<Normalization U>
 inline std::optional<Interval<T>> Line3<T>::findIntersection(const Sphere<T>& sphere) const
 {
-	if costexpr(std::is_same_v<U, Normalized>)
+	if constexpr (std::is_same_v<U, Normalized>)
 		return intersections::findNormalizedLineNSphere<std::optional<Interval<T>>>(origin, direction, sphere.center, sphere.radius);
 	else
 		return intersections::findLineNSphere<std::optional<Interval<T>>>(origin, direction, sphere.center, sphere.radius);

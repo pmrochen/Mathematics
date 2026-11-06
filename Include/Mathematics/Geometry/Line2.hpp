@@ -203,7 +203,7 @@ template<typename T>
 template<Normalization U>
 inline Vector2<T> Line2<T>::getClosestPoint(const Vector2<T>& point) const
 {
-	if costexpr(std::is_same_v<U, Normalized>)
+	if constexpr (std::is_same_v<U, Normalized>)
 		return dot(point - origin, direction)*direction + origin;
 	else
 		return (dot(point - origin, direction)/dot(direction, direction))*direction + origin;
@@ -337,7 +337,7 @@ template<typename T>
 template<Normalization U>
 inline bool Line2<T>::intersects(const Circle2<T>& circle) const
 {
-	if costexpr(std::is_same_v<U, Normalized>)
+	if constexpr (std::is_same_v<U, Normalized>)
 		return intersections::testNormalizedLineNSphere(origin, direction, circle.center, circle.radius);
 	else
 		return intersections::testLineNSphere(origin, direction, circle.center, circle.radius);
@@ -383,7 +383,7 @@ template<typename T>
 template<Normalization U>
 inline std::optional<Interval<T>> Line2<T>::findIntersection(const Circle2<T>& circle) const
 {
-	if costexpr(std::is_same_v<U, Normalized>)
+	if constexpr (std::is_same_v<U, Normalized>)
 		return intersections::findNormalizedLineNSphere<std::optional<Interval<T>>>(origin, direction, circle.center, circle.radius);
 	else
 		return intersections::findLineNSphere<std::optional<Interval<T>>>(origin, direction, circle.center, circle.radius);

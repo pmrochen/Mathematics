@@ -513,7 +513,7 @@ inline Vector3<T> Quaternion<T>::getAxis() const noexcept
 		return Vector3<T>();
 
 	//#if MATHEMATICS_FAST_NORMALIZE
-	//	if costexpr(std::is_same_v<T, float>)
+	//	if constexpr (std::is_same_v<T, float>)
 	//	{
 	//		float m = rcpSqrtApprox(cosine);
 	//		if (m <= std::numeric_limits<T>::max())
@@ -599,7 +599,7 @@ template<typename T>
 inline Quaternion<T>& Quaternion<T>::normalize() noexcept
 {
 	//#if MATHEMATICS_FAST_NORMALIZE
-	//	if costexpr(std::is_same_v<T, float>)
+	//	if constexpr (std::is_same_v<T, float>)
 	//	{
 	//		T m = rcpSqrtApprox(getMagnitudeSquared());
 	//		if (m <= std::numeric_limits<T>::max())

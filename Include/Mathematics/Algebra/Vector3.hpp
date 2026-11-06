@@ -586,7 +586,7 @@ template<std::floating_point T>
 inline Vector3<T>& Vector3<T>::normalize() noexcept
 {
 //#if MATHEMATICS_FAST_NORMALIZE
-//	if costexpr(std::is_same_v<T, float>)
+//	if constexpr (std::is_same_v<T, float>)
 //	{
 //		T m = rcpSqrtApprox(getMagnitudeSquared());
 //		if (m <= std::numeric_limits<T>::max()) 

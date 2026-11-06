@@ -192,7 +192,7 @@ template<typename T>
 template<Normalization U>
 inline Vector3<T> Ray3<T>::getClosestPoint(const Vector3<T>& point) const
 {
-	if costexpr(std::is_same_v<U, Normalized>)
+	if constexpr (std::is_same_v<U, Normalized>)
 		return std::max(dot(point - origin, direction), T(0))*direction + origin;
 	else
 		return std::max(dot(point - origin, direction)/dot(direction, direction), T(0))*direction + origin;
@@ -405,7 +405,7 @@ template<Normalization U>
 inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Sphere<T>& sphere) const
 {
 	std::optional<Interval<T>> result;
-	if costexpr(std::is_same_v<U, Normalized>)
+	if constexpr (std::is_same_v<U, Normalized>)
 		result = intersections::findNormalizedLineNSphere<std::optional<Interval<T>>>(origin, direction, sphere.center, sphere.radius);
 	else
 		result = intersections::findLineNSphere<std::optional<Interval<T>>>(origin, direction, sphere.center, sphere.radius);

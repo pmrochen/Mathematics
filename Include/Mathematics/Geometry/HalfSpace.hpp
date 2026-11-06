@@ -332,7 +332,7 @@ template<typename T>
 inline HalfSpace<T>& HalfSpace<T>::normalize() noexcept
 {
 //#if MATHEMATICS_FAST_NORMALIZE
-//	if costexpr(std::is_same_v<T, float>)
+//	if constexpr (std::is_same_v<T, float>)
 //	{
 //		T m = rcpSqrtApprox(getNormal().getMagnitudeSquared());
 //		if (m <= std::numeric_limits<T>::max())
