@@ -21,6 +21,7 @@
 #include <Simd/Functional.hpp>
 #endif
 //#include <Tuples/Tuple4.hpp>
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "../Scalar.hpp"
 #include "../Geometry/Axis.hpp"
@@ -91,8 +92,8 @@ struct Vector4<T>
 	template<typename A> void load(A& ar) { ar(x, y, z, w); }
 	template<typename A> void save(A& ar) const { ar(x, y, z, w); }
 
-	template<std::size_t I> T& get() noexcept;
-	template<std::size_t I> const T& get() const noexcept;
+	template<std::size_t I> requires (I < 4) T& get() noexcept;
+	template<std::size_t I> requires (I < 4) const T& get() const noexcept;
 
 	const Vector2<T>& xy/*getXY*/() const noexcept { return reinterpret_cast<const Vector2<T>&>(*this); }
 	const Vector3<T>& xyz/*getXYZ*/() const noexcept { return reinterpret_cast<const Vector3<T>&>(*this); }
@@ -207,8 +208,8 @@ struct Vector4<T>
 
 	template<typename A> void serialize(A& ar) { ar(x, y, z, w); }
 
-	template<std::size_t I> T& get() noexcept;
-	template<std::size_t I> const T& get() const noexcept;
+	template<std::size_t I> requires (I < 4) T& get() noexcept;
+	template<std::size_t I> requires (I < 4) const T& get() const noexcept;
 
 	const Vector2<T>& xy/*getXY*/() const noexcept { return reinterpret_cast<const Vector2<T>&>(*this); }
 	const Vector3<T>& xyz/*getXYZ*/() const noexcept { return reinterpret_cast<const Vector3<T>&>(*this); }
@@ -301,12 +302,10 @@ struct alignas(16) Vector4<float>
 	template<typename A> void load(A& ar);
 	template<typename A> void save(A& ar) const { ar(x, y, z, w); }
 
-	template<std::size_t I> float& get() noexcept;
-	template<std::size_t I> const float& get() const noexcept;
-	template<typename U> U& get() noexcept;				// intentionally undefined
-	template<typename U> const U& get() const noexcept;	// intentionally undefined
-	template<> simd::float4& get() noexcept { return xyzw; }
-	template<> const simd::float4& get() const noexcept { return xyzw; }
+	template<std::size_t I> requires (I < 4) float& get() noexcept;
+	template<std::size_t I> requires (I < 4) const float& get() const noexcept;
+	template<typename U> requires std::same_as<U, simd::float4> simd::float4& as() noexcept { return xyzw; }
+	template<typename U> requires std::same_as<U, simd::float4> const simd::float4& as() const noexcept { return xyzw; }
 
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	const Vector2<float> xy/*getXY*/() const noexcept { return Vector2<float>(simd::xyyy(xyzw)); }
@@ -367,19 +366,19 @@ struct alignas(16) Vector4<float>
 	};
 };
 
-const Vector4<float> Vector4<float>::ZERO{};
-const Vector4<float> Vector4<float>::UNIT_X{ 1.f, 0.f, 0.f, 0.f };
-const Vector4<float> Vector4<float>::UNIT_Y{ 0.f, 1.f, 0.f, 0.f };
-const Vector4<float> Vector4<float>::UNIT_Z{ 0.f, 0.f, 1.f, 0.f };
-const Vector4<float> Vector4<float>::UNIT_W{ 0.f, 0.f, 0.f, 1.f };
-const Vector4<float> Vector4<float>::MINUS_UNIT_X{ -1.f, 0.f, 0.f, 0.f };
-const Vector4<float> Vector4<float>::MINUS_UNIT_Y{ 0.f, -1.f, 0.f, 0.f };
-const Vector4<float> Vector4<float>::MINUS_UNIT_Z{ 0.f, 0.f, -1.f, 0.f };
-const Vector4<float> Vector4<float>::MINUS_UNIT_W{ 0.f, 0.f, 0.f, -1.f };
-const Vector4<float> Vector4<float>::ONE{ 1.f, 1.f, 1.f, 1.f };
-const Vector4<float> Vector4<float>::TOLERANCE{ Constants<float>::TOLERANCE, Constants<float>::TOLERANCE, Constants<float>::TOLERANCE, Constants<float>::TOLERANCE };
-const Vector4<float> Vector4<float>::INF{ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() };
-const Vector4<float> Vector4<float>::MINUS_INF{ -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity() };
+inline const Vector4<float> Vector4<float>::ZERO{};
+inline const Vector4<float> Vector4<float>::UNIT_X{ 1.f, 0.f, 0.f, 0.f };
+inline const Vector4<float> Vector4<float>::UNIT_Y{ 0.f, 1.f, 0.f, 0.f };
+inline const Vector4<float> Vector4<float>::UNIT_Z{ 0.f, 0.f, 1.f, 0.f };
+inline const Vector4<float> Vector4<float>::UNIT_W{ 0.f, 0.f, 0.f, 1.f };
+inline const Vector4<float> Vector4<float>::MINUS_UNIT_X{ -1.f, 0.f, 0.f, 0.f };
+inline const Vector4<float> Vector4<float>::MINUS_UNIT_Y{ 0.f, -1.f, 0.f, 0.f };
+inline const Vector4<float> Vector4<float>::MINUS_UNIT_Z{ 0.f, 0.f, -1.f, 0.f };
+inline const Vector4<float> Vector4<float>::MINUS_UNIT_W{ 0.f, 0.f, 0.f, -1.f };
+inline const Vector4<float> Vector4<float>::ONE{ 1.f, 1.f, 1.f, 1.f };
+inline const Vector4<float> Vector4<float>::TOLERANCE{ Constants<float>::TOLERANCE, Constants<float>::TOLERANCE, Constants<float>::TOLERANCE, Constants<float>::TOLERANCE };
+inline const Vector4<float> Vector4<float>::INF{ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() };
+inline const Vector4<float> Vector4<float>::MINUS_INF{ -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity() };
 
 #endif /* SIMD_HAS_FLOAT4 */
 
@@ -467,6 +466,7 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const V
 
 template<std::floating_point T>
 template<std::size_t I>
+	requires (I < 4)
 inline T& Vector4<T>::get() noexcept
 {
 	if constexpr (I == 0)
@@ -475,13 +475,13 @@ inline T& Vector4<T>::get() noexcept
 		return y;
 	else if constexpr (I == 2)
 		return z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return w;
-	static_assert(false);
 }
 
 template<std::floating_point T>
 template<std::size_t I>
+	requires (I < 4)
 inline const T& Vector4<T>::get() const noexcept
 {
 	if constexpr (I == 0)
@@ -490,9 +490,8 @@ inline const T& Vector4<T>::get() const noexcept
 		return y;
 	else if constexpr (I == 2)
 		return z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return w;
-	static_assert(false);
 }
 
 template<std::floating_point T>
@@ -566,6 +565,7 @@ inline Vector4<T>& Vector4<T>::normalize() noexcept
 
 template<std::integral T>
 template<std::size_t I>
+	requires (I < 4)
 inline T& Vector4<T>::get() noexcept
 {
 	if constexpr (I == 0)
@@ -574,13 +574,13 @@ inline T& Vector4<T>::get() noexcept
 		return y;
 	else if constexpr (I == 2)
 		return z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return w;
-	static_assert(false);
 }
 
 template<std::integral T>
 template<std::size_t I>
+	requires (I < 4)
 inline const T& Vector4<T>::get() const noexcept
 {
 	if constexpr (I == 0)
@@ -589,9 +589,8 @@ inline const T& Vector4<T>::get() const noexcept
 		return y;
 	else if constexpr (I == 2)
 		return z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return w;
-	static_assert(false);
 }
 
 template<std::integral T>
@@ -688,6 +687,7 @@ inline void Vector4<float>::load(A& ar)
 }
 
 template<std::size_t I>
+	requires (I < 4)
 inline float& Vector4<float>::get() noexcept
 {
 	if constexpr (I == 0)
@@ -696,12 +696,12 @@ inline float& Vector4<float>::get() noexcept
 		return y;
 	else if constexpr (I == 2)
 		return z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return w;
-	static_assert(false);
 }
 
 template<std::size_t I>
+	requires (I < 4)
 inline const float& Vector4<float>::get() const noexcept
 {
 	if constexpr (I == 0)
@@ -710,9 +710,8 @@ inline const float& Vector4<float>::get() const noexcept
 		return y;
 	else if constexpr (I == 2)
 		return z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return w;
-	static_assert(false);
 }
 
 inline void Vector4<float>::setMagnitude(float magnitude) noexcept
@@ -739,7 +738,7 @@ inline Vector4<float>& Vector4<float>::normalize() noexcept
 #endif /* SIMD_HAS_FLOAT4 */
 
 template<std::size_t I, typename T>
-	requires (std::floating_point<T> || std::integral<T>)
+	requires ((I < 4) && (std::floating_point<T> || std::integral<T>))
 inline T& get(Vector4<T>& v) noexcept
 {
 	if constexpr (I == 0)
@@ -748,13 +747,12 @@ inline T& get(Vector4<T>& v) noexcept
 		return v.y;
 	else if constexpr (I == 2)
 		return v.z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return v.w;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires (std::floating_point<T> || std::integral<T>)
+	requires ((I < 4) && (std::floating_point<T> || std::integral<T>))
 inline const T& get(const Vector4<T>& v) noexcept
 {
 	if constexpr (I == 0)
@@ -763,13 +761,12 @@ inline const T& get(const Vector4<T>& v) noexcept
 		return v.y;
 	else if constexpr (I == 2)
 		return v.z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return v.w;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires (std::floating_point<T> || std::integral<T>)
+	requires ((I < 4) && (std::floating_point<T> || std::integral<T>))
 inline T&& get(Vector4<T>&& v) noexcept
 {
 	if constexpr (I == 0)
@@ -778,13 +775,12 @@ inline T&& get(Vector4<T>&& v) noexcept
 		return v.y;
 	else if constexpr (I == 2)
 		return v.z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return v.w;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires (std::floating_point<T> || std::integral<T>)
+	requires ((I < 4) && (std::floating_point<T> || std::integral<T>))
 inline const T&& get(const Vector4<T>&& v) noexcept
 {
 	if constexpr (I == 0)
@@ -793,9 +789,8 @@ inline const T&& get(const Vector4<T>&& v) noexcept
 		return v.y;
 	else if constexpr (I == 2)
 		return v.z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return v.w;
-	static_assert(false);
 }
 
 template<typename T>
@@ -805,7 +800,7 @@ inline Vector4<T> abs(const Vector4<T>& v) noexcept
 	if constexpr (std::is_floating_point_v<T>)
 		return Vector4<T>(std::fabs(v.x), std::fabs(v.y), std::fabs(v.z), std::fabs(v.w));
 	else // integral
-		return Vector4<T>(abs(v.x), abs(v.y), abs(v.z), abs(v.w));
+		return Vector4<T>(mathematics::abs(v.x), mathematics::abs(v.y), mathematics::abs(v.z), mathematics::abs(v.w));
 }
 
 template<typename T>
@@ -825,10 +820,10 @@ inline Vector4<T> abs(Vector4<T>&& v) noexcept
 	}
 	else // integral
 	{
-		v.x = abs(v.x);
-		v.y = abs(v.y);
-		v.z = abs(v.z);
-		v.w = abs(v.w);
+		v.x = mathematics::abs(v.x);
+		v.y = mathematics::abs(v.y);
+		v.z = mathematics::abs(v.z);
+		v.w = mathematics::abs(v.w);
 	}
 	return v;
 }

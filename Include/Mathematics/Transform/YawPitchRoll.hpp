@@ -16,6 +16,7 @@
 #include <tuple>
 #include <cstddef>
 #include <cmath>
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "../Algebra/Vector3.hpp"
 #include "../Algebra/Matrix3.hpp"
@@ -61,8 +62,8 @@ struct YawPitchRoll
 
 	template<typename A> void serialize(A& ar) { ar(yaw, pitch, roll); }
 
-	template<std::size_t I> T& get() noexcept;
-	template<std::size_t I> const T& get() const noexcept;
+	template<std::size_t I> requires (I < 3) T& get() noexcept;
+	template<std::size_t I> requires (I < 3) const T& get() const noexcept;
 
     static YawPitchRoll fromForward(const Vector3<T>& forward, T roll = T()) noexcept;
 	Vector3<T> toForward/*toDirection*/() const noexcept;
@@ -153,29 +154,29 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const Y
 template<typename T>
 	requires std::floating_point<T>
 template<std::size_t I>
+	requires (I < 3)
 inline T& YawPitchRoll<T>::get() noexcept
 {
 	if constexpr (I == 0)
 		return yaw;
 	else if constexpr (I == 1)
 		return pitch;
-	else if constexpr (I == 2)
+	else //if constexpr (I == 2)
 		return roll;
-	static_assert(false);
 }
 
 template<typename T>
 	requires std::floating_point<T>
 template<std::size_t I>
+	requires (I < 3)
 inline const T& YawPitchRoll<T>::get() const noexcept
 {
 	if constexpr (I == 0)
 		return yaw;
 	else if constexpr (I == 1)
 		return pitch;
-	else if constexpr (I == 2)
+	else //if constexpr (I == 2)
 		return roll;
-	static_assert(false);
 }
 
 template<typename T>
@@ -247,55 +248,51 @@ inline bool YawPitchRoll<T>::approxEquals(const YawPitchRoll<T>& r, T tolerance)
 //}
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 3) && std::floating_point<T>)
 inline T& get(YawPitchRoll<T>& r) noexcept
 {
 	if constexpr (I == 0)
 		return r.yaw;
 	else if constexpr (I == 1)
 		return r.pitch;
-	else if constexpr (I == 2)
+	else //if constexpr (I == 2)
 		return r.roll;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 3) && std::floating_point<T>)
 inline const T& get(const YawPitchRoll<T>& r) noexcept
 {
 	if constexpr (I == 0)
 		return r.yaw;
 	else if constexpr (I == 1)
 		return r.pitch;
-	else if constexpr (I == 2)
+	else //if constexpr (I == 2)
 		return r.roll;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 3) && std::floating_point<T>)
 inline T&& get(YawPitchRoll<T>&& r) noexcept
 {
 	if constexpr (I == 0)
 		return r.yaw;
 	else if constexpr (I == 1)
 		return r.pitch;
-	else if constexpr (I == 2)
+	else //if constexpr (I == 2)
 		return r.roll;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 3) && std::floating_point<T>)
 inline const T&& get(const YawPitchRoll<T>&& r) noexcept
 {
 	if constexpr (I == 0)
 		return r.yaw;
 	else if constexpr (I == 1)
 		return r.pitch;
-	else if constexpr (I == 2)
+	else //if constexpr (I == 2)
 		return r.roll;
-	static_assert(false);
 }
 
 } // namespace templates

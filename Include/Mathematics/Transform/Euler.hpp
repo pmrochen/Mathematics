@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <cctype>
 #include <cmath>
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "EulerOrder.hpp"
 #include "../Algebra/Vector3.hpp"
@@ -98,8 +99,8 @@ struct Euler
 
 	template<typename A> void serialize(A& ar) { ar(x, y, z, order); }
 
-	template<std::size_t I> typename std::tuple_element<I, Euler>::type& get() noexcept;
-	template<std::size_t I> const typename std::tuple_element<I, Euler>::type& get() const noexcept;
+	template<std::size_t I> requires (I < 4) typename std::tuple_element<I, Euler>::type& get() noexcept;
+	template<std::size_t I> requires (I < 4) const typename std::tuple_element<I, Euler>::type& get() const noexcept;
 
 	bool isZero() const noexcept { return (x == T()) && (y == T()) && (z == T()); }
 	bool isApproxZero() const noexcept;
@@ -338,6 +339,8 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const E
 		case EulerOrder::ZYX: 
 			order = "ZYX"; 
 			break;
+		default:
+			break;
 	}
 	constexpr C WS(0x20);
 	return s << e.x << WS << e.y << WS << e.z << WS << order;
@@ -346,6 +349,7 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const E
 template<typename T>
 	requires std::floating_point<T>
 template<std::size_t I>
+	requires (I < 4)
 inline typename std::tuple_element<I, Euler<T>>::type& Euler<T>::get() noexcept
 {
 	if constexpr (I == 0)
@@ -354,14 +358,14 @@ inline typename std::tuple_element<I, Euler<T>>::type& Euler<T>::get() noexcept
 		return y;
 	else if constexpr (I == 2)
 		return z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return order;
-	static_assert(false);
 }
 
 template<typename T>
 	requires std::floating_point<T>
 template<std::size_t I>
+	requires (I < 4)
 inline const typename std::tuple_element<I, Euler<T>>::type& Euler<T>::get() const noexcept
 {
 	if constexpr (I == 0)
@@ -370,9 +374,8 @@ inline const typename std::tuple_element<I, Euler<T>>::type& Euler<T>::get() con
 		return y;
 	else if constexpr (I == 2)
 		return z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return order;
-	static_assert(false);
 }
 
 template<typename T>
@@ -410,7 +413,7 @@ inline bool Euler<T>::approxEquals(const Euler<T>& e, T tolerance) const noexcep
 //}
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 4) && std::floating_point<T>)
 inline typename std::tuple_element<I, Euler<T>>::type& get(Euler<T>& e) noexcept
 {
 	if constexpr (I == 0)
@@ -419,13 +422,12 @@ inline typename std::tuple_element<I, Euler<T>>::type& get(Euler<T>& e) noexcept
 		return e.y;
 	else if constexpr (I == 2)
 		return e.z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return e.order;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 4) && std::floating_point<T>)
 inline const typename std::tuple_element<I, Euler<T>>::type& get(const Euler<T>& e) noexcept
 {
 	if constexpr (I == 0)
@@ -434,13 +436,12 @@ inline const typename std::tuple_element<I, Euler<T>>::type& get(const Euler<T>&
 		return e.y;
 	else if constexpr (I == 2)
 		return e.z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return e.order;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 4) && std::floating_point<T>)
 inline typename std::tuple_element<I, Euler<T>>::type&& get(Euler<T>&& e) noexcept
 {
 	if constexpr (I == 0)
@@ -449,13 +450,12 @@ inline typename std::tuple_element<I, Euler<T>>::type&& get(Euler<T>&& e) noexce
 		return e.y;
 	else if constexpr (I == 2)
 		return e.z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return e.order;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 4) && std::floating_point<T>)
 inline const typename std::tuple_element<I, Euler<T>>::type&& get(const Euler<T>&& e) noexcept
 {
 	if constexpr (I == 0)
@@ -464,9 +464,8 @@ inline const typename std::tuple_element<I, Euler<T>>::type&& get(const Euler<T>
 		return e.y;
 	else if constexpr (I == 2)
 		return e.z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return e.order;
-	static_assert(false);
 }
 
 } // namespace templates

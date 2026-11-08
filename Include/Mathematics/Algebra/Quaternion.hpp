@@ -20,6 +20,7 @@
 #include <Simd/Functional.hpp>
 #endif
 //#include <Tuples/Tuple4.hpp>
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "../Transform/EulerOrder.hpp"
 #include "Vector3.hpp"
@@ -90,8 +91,8 @@ struct Quaternion
 	template<typename A> void load(A& ar) { ar(x, y, z, w); }
 	template<typename A> void save(A& ar) const { ar(x, y, z, w); }
 
-	template<std::size_t I> T& get() noexcept;
-	template<std::size_t I> const T& get() const noexcept;
+	template<std::size_t I> requires (I < 4) T& get() noexcept;
+	template<std::size_t I> requires (I < 4) const T& get() const noexcept;
 
 	static Quaternion fromAxisAngle(const Vector3<T>& axis, T angle) noexcept;
 
@@ -202,12 +203,10 @@ struct alignas(16) Quaternion<float>
 	template<typename A> void load(A& ar);
 	template<typename A> void save(A& ar) const { ar(x, y, z, w); }
 
-	template<std::size_t I> float& get() noexcept;
-	template<std::size_t I> const float& get() const noexcept;
-	template<typename U> U& get() noexcept;				// intentionally undefined
-	template<typename U> const U& get() const noexcept;	// intentionally undefined
-	template<> simd::float4& get() noexcept { return xyzw; }
-	template<> const simd::float4& get() const noexcept { return xyzw; }
+	template<std::size_t I> requires (I < 4) float& get() noexcept;
+	template<std::size_t I> requires (I < 4) const float& get() const noexcept;
+	template<typename U> requires std::same_as<U, simd::float4> simd::float4& as() noexcept { return xyzw; }
+	template<typename U> requires std::same_as<U, simd::float4> const simd::float4& as() const noexcept { return xyzw; }
 
 	static Quaternion fromAxisAngle(const Vector3<float>& axis, float angle) noexcept;
 
@@ -257,9 +256,9 @@ struct alignas(16) Quaternion<float>
 	};
 };
 
-const Quaternion<float> Quaternion<float>::ZERO{};
-const Quaternion<float> Quaternion<float>::IDENTITY{ 0.f, 0.f, 0.f, 1.f };
-const Quaternion<float> Quaternion<float>::TOLERANCE{ Constants<float>::TOLERANCE, Constants<float>::TOLERANCE, Constants<float>::TOLERANCE, Constants<float>::TOLERANCE };
+inline const Quaternion<float> Quaternion<float>::ZERO{};
+inline const Quaternion<float> Quaternion<float>::IDENTITY{ 0.f, 0.f, 0.f, 1.f };
+inline const Quaternion<float> Quaternion<float>::TOLERANCE{ Constants<float>::TOLERANCE, Constants<float>::TOLERANCE, Constants<float>::TOLERANCE, Constants<float>::TOLERANCE };
 
 #endif /* SIMD_HAS_FLOAT4 */
 
@@ -428,6 +427,7 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const Q
 template<typename T>
 	requires std::floating_point<T>
 template<std::size_t I>
+	requires (I < 4)
 inline T& Quaternion<T>::get() noexcept
 {
 	if constexpr (I == 0)
@@ -436,14 +436,14 @@ inline T& Quaternion<T>::get() noexcept
 		return y;
 	else if constexpr (I == 2)
 		return z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return w;
-	static_assert(false);
 }
 
 template<typename T>
 	requires std::floating_point<T>
 template<std::size_t I>
+	requires (I < 4)
 inline const T& Quaternion<T>::get() const noexcept
 {
 	if constexpr (I == 0)
@@ -452,9 +452,8 @@ inline const T& Quaternion<T>::get() const noexcept
 		return y;
 	else if constexpr (I == 2)
 		return z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return w;
-	static_assert(false);
 }
 
 template<typename T>
@@ -792,6 +791,7 @@ inline void Quaternion<float>::load(A& ar)
 }
 
 template<std::size_t I>
+	requires (I < 4)
 inline float& Quaternion<float>::get() noexcept
 {
 	if constexpr (I == 0)
@@ -800,12 +800,12 @@ inline float& Quaternion<float>::get() noexcept
 		return y;
 	else if constexpr (I == 2)
 		return z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return w;
-	static_assert(false);
 }
 
 template<std::size_t I>
+	requires (I < 4)
 inline const float& Quaternion<float>::get() const noexcept
 {
 	if constexpr (I == 0)
@@ -814,9 +814,8 @@ inline const float& Quaternion<float>::get() const noexcept
 		return y;
 	else if constexpr (I == 2)
 		return z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return w;
-	static_assert(false);
 }
 
 inline Quaternion<float> Quaternion<float>::fromAxisAngle(const Vector3<float>& axis, float angle) noexcept
@@ -915,7 +914,7 @@ inline Quaternion<float>& Quaternion<float>::normalize() noexcept
 #endif /* SIMD_HAS_FLOAT4 */
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 4) && std::floating_point<T>)
 inline T& get(Quaternion<T>& v) noexcept
 {
 	if constexpr (I == 0)
@@ -924,13 +923,12 @@ inline T& get(Quaternion<T>& v) noexcept
 		return v.y;
 	else if constexpr (I == 2)
 		return v.z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return v.w;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 4) && std::floating_point<T>)
 inline const T& get(const Quaternion<T>& v) noexcept
 {
 	if constexpr (I == 0)
@@ -939,13 +937,12 @@ inline const T& get(const Quaternion<T>& v) noexcept
 		return v.y;
 	else if constexpr (I == 2)
 		return v.z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return v.w;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 4) && std::floating_point<T>)
 inline T&& get(Quaternion<T>&& v) noexcept
 {
 	if constexpr (I == 0)
@@ -954,13 +951,12 @@ inline T&& get(Quaternion<T>&& v) noexcept
 		return v.y;
 	else if constexpr (I == 2)
 		return v.z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return v.w;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 4) && std::floating_point<T>)
 inline const T&& get(const Quaternion<T>&& v) noexcept
 {
 	if constexpr (I == 0)
@@ -969,9 +965,8 @@ inline const T&& get(const Quaternion<T>&& v) noexcept
 		return v.y;
 	else if constexpr (I == 2)
 		return v.z;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return v.w;
-	static_assert(false);
 }
 
 template<typename T>

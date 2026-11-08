@@ -21,6 +21,7 @@
 #include <Simd/Functional.hpp>
 #endif
 //#include <Tuples/Tuple3.hpp>
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "../Scalar.hpp"
 #include "../Geometry/Axis.hpp"
@@ -95,8 +96,8 @@ struct Vector3<T>
 	template<typename A> void load(A& ar) { ar(x, y, z); }
 	template<typename A> void save(A& ar) const { ar(x, y, z); }
 
-	template<std::size_t I> T& get() noexcept;
-	template<std::size_t I> const T& get() const noexcept;
+	template<std::size_t I> requires (I < 3) T& get() noexcept;
+	template<std::size_t I> requires (I < 3) const T& get() const noexcept;
 
 	const Vector2<T>& xy/*getXY*/() const noexcept { return reinterpret_cast<const Vector2<T>&>(*this); }
 	const Vector2<T> xz/*getXZ*/() const noexcept { return Vector2<T>(x, z); }
@@ -208,8 +209,8 @@ struct Vector3<T>
 
 	template<typename A> void serialize(A& ar) { ar(x, y, z); }
 
-	template<std::size_t I> T& get() noexcept;
-	template<std::size_t I> const T& get() const noexcept;
+	template<std::size_t I> requires (I < 3) T& get() noexcept;
+	template<std::size_t I> requires (I < 3) const T& get() const noexcept;
 
 	const Vector2<T>& xy/*getXY*/() const noexcept { return reinterpret_cast<const Vector2<T>&>(*this); }
 	Vector2<T> xz/*getXZ*/() const noexcept { return Vector2<T>(x, z); }
@@ -325,12 +326,10 @@ struct alignas(16) Vector3<float>
 	template<typename A> void load(A& ar);
 	template<typename A> void save(A& ar) const { ar(x, y, z); }
 
-	template<std::size_t I> float& get() noexcept;
-	template<std::size_t I> const float& get() const noexcept;
-	template<typename U> U& get() noexcept;				// intentionally undefined
-	template<typename U> const U& get() const noexcept;	// intentionally undefined
-	template<> simd::float4& get() noexcept { return xyz; }
-	template<> const simd::float4& get() const noexcept { return xyz; }
+	template<std::size_t I> requires (I < 3) float& get() noexcept;
+	template<std::size_t I> requires (I < 3) const float& get() const noexcept;
+	template<typename U> requires std::same_as<U, simd::float4> simd::float4& as() noexcept { return xyz; }
+	template<typename U> requires std::same_as<U, simd::float4> const simd::float4& as() const noexcept { return xyz; }
 
 #if MATHEMATICS_SIMD_EXPAND_LAST
 	const Vector2<float> xy/*getXY*/() const noexcept { return Vector2<float>(simd::xyyy(xyz)); }
@@ -361,7 +360,7 @@ struct alignas(16) Vector3<float>
 	float getLength() const noexcept { return getMagnitude(); }
 	float getLengthSquared() const noexcept { return getMagnitudeSquared(); }
 	void setLength(float length) noexcept { setMagnitude(length); }
-	Axis getMajorAxis() const noexcept { return (Axis)simd::asIndex(simd::equal(xyz, simd::hMax3(simd::abs(xyz)))); }
+	Axis getMajorAxis() const noexcept;
 	float getMinComponent() const noexcept { return simd::extract(simd::hMin3(xyz)); }
 	float getMaxComponent() const noexcept { return simd::extract(simd::hMax3(xyz)); }
 	Vector3& setZero() noexcept { xyz = simd::zero4<float>(); return *this; }
@@ -402,17 +401,17 @@ struct alignas(16) Vector3<float>
 	};
 };
 
-const Vector3<float> Vector3<float>::ZERO{};
-const Vector3<float> Vector3<float>::UNIT_X{ 1.f, 0.f, 0.f };
-const Vector3<float> Vector3<float>::UNIT_Y{ 0.f, 1.f, 0.f };
-const Vector3<float> Vector3<float>::UNIT_Z{ 0.f, 0.f, 1.f };
-const Vector3<float> Vector3<float>::MINUS_UNIT_X{ -1.f, 0.f, 0.f };
-const Vector3<float> Vector3<float>::MINUS_UNIT_Y{ 0.f, -1.f, 0.f };
-const Vector3<float> Vector3<float>::MINUS_UNIT_Z{ 0.f, 0.f, -1.f };
-const Vector3<float> Vector3<float>::ONE{ 1.f, 1.f, 1.f };
-const Vector3<float> Vector3<float>::TOLERANCE{ Constants<float>::TOLERANCE, Constants<float>::TOLERANCE, Constants<float>::TOLERANCE };
-const Vector3<float> Vector3<float>::INF{ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() };
-const Vector3<float> Vector3<float>::MINUS_INF{ -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity() };
+inline const Vector3<float> Vector3<float>::ZERO{};
+inline const Vector3<float> Vector3<float>::UNIT_X{ 1.f, 0.f, 0.f };
+inline const Vector3<float> Vector3<float>::UNIT_Y{ 0.f, 1.f, 0.f };
+inline const Vector3<float> Vector3<float>::UNIT_Z{ 0.f, 0.f, 1.f };
+inline const Vector3<float> Vector3<float>::MINUS_UNIT_X{ -1.f, 0.f, 0.f };
+inline const Vector3<float> Vector3<float>::MINUS_UNIT_Y{ 0.f, -1.f, 0.f };
+inline const Vector3<float> Vector3<float>::MINUS_UNIT_Z{ 0.f, 0.f, -1.f };
+inline const Vector3<float> Vector3<float>::ONE{ 1.f, 1.f, 1.f };
+inline const Vector3<float> Vector3<float>::TOLERANCE{ Constants<float>::TOLERANCE, Constants<float>::TOLERANCE, Constants<float>::TOLERANCE };
+inline const Vector3<float> Vector3<float>::INF{ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() };
+inline const Vector3<float> Vector3<float>::MINUS_INF{ -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity() };
 
 #endif /* SIMD_HAS_FLOAT4 */
 
@@ -500,28 +499,28 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const V
 
 template<std::floating_point T>
 template<std::size_t I>
+	requires (I < 3)
 inline T& Vector3<T>::get() noexcept
 {
 	if constexpr (I == 0)
 		return x;
 	else if constexpr (I == 1)
 		return y;
-	else if constexpr (I == 2)
+	else //if constexpr (I == 2)
 		return z;
-	static_assert(false);
 }
 
 template<std::floating_point T>
 template<std::size_t I>
+	requires (I < 3)
 inline const T& Vector3<T>::get() const noexcept
 {
 	if constexpr (I == 0)
 		return x;
 	else if constexpr (I == 1)
 		return y;
-	else if constexpr (I == 2)
+	else //if constexpr (I == 2)
 		return z;
-	static_assert(false);
 }
 
 template<std::floating_point T>
@@ -643,28 +642,28 @@ inline Vector3<T>& Vector3<T>::rotate(Axis axis, T angle) noexcept
 
 template<std::integral T>
 template<std::size_t I>
+	requires (I < 3)
 inline T& Vector3<T>::get() noexcept
 {
 	if constexpr (I == 0)
 		return x;
 	else if constexpr (I == 1)
 		return y;
-	else if constexpr (I == 2)
+	else //if constexpr (I == 2)
 		return z;
-	static_assert(false);
 }
 
 template<std::integral T>
 template<std::size_t I>
+	requires (I < 3)
 inline const T& Vector3<T>::get() const noexcept
 {
 	if constexpr (I == 0)
 		return x;
 	else if constexpr (I == 1)
 		return y;
-	else if constexpr (I == 2)
+	else //if constexpr (I == 2)
 		return z;
-	static_assert(false);
 }
 
 template<std::integral T>
@@ -767,27 +766,27 @@ inline void Vector3<float>::load(A& ar)
 }
 
 template<std::size_t I>
+	requires (I < 3)
 inline float& Vector3<float>::get() noexcept
 {
 	if constexpr (I == 0)
 		return x;
 	else if constexpr (I == 1)
 		return y;
-	else if constexpr (I == 2)
+	else //if constexpr (I == 2)
 		return z;
-	static_assert(false);
 }
 
 template<std::size_t I>
+	requires (I < 3)
 inline const float& Vector3<float>::get() const noexcept
 {
 	if constexpr (I == 0)
 		return x;
 	else if constexpr (I == 1)
 		return y;
-	else if constexpr (I == 2)
+	else //if constexpr (I == 2)
 		return z;
-	static_assert(false);
 }
 
 inline void Vector3<float>::setMagnitude(float magnitude) noexcept
@@ -795,6 +794,12 @@ inline void Vector3<float>::setMagnitude(float magnitude) noexcept
 	float m = getMagnitude(); 
 	if (m > 0.f) 
 		*this *= magnitude/m;
+}
+
+inline Axis Vector3<float>::getMajorAxis() const noexcept
+{
+	auto a = simd::abs(xyz); 
+	return (Axis)simd::asIndex(simd::equal(a, simd::hMax3(a))); 
 }
 
 inline Vector3<float>& Vector3<float>::normalize() noexcept
@@ -849,55 +854,51 @@ inline Vector3<float>& Vector3<float>::rotate(Axis axis, float angle) noexcept
 #endif /* SIMD_HAS_FLOAT4 */
 
 template<std::size_t I, typename T>
-	requires (std::floating_point<T> || std::integral<T>)
+	requires ((I < 3) && (std::floating_point<T> || std::integral<T>))
 inline T& get(Vector3<T>& v) noexcept
 {
 	if constexpr (I == 0)
 		return v.x;
 	else if constexpr (I == 1)
 		return v.y;
-	else if constexpr (I == 2)
+	else //if constexpr (I == 2)
 		return v.z;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires (std::floating_point<T> || std::integral<T>)
+	requires ((I < 3) && (std::floating_point<T> || std::integral<T>))
 inline const T& get(const Vector3<T>& v) noexcept
 {
 	if constexpr (I == 0)
 		return v.x;
 	else if constexpr (I == 1)
 		return v.y;
-	else if constexpr (I == 2)
+	else //if constexpr (I == 2)
 		return v.z;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires (std::floating_point<T> || std::integral<T>)
+	requires ((I < 3) && (std::floating_point<T> || std::integral<T>))
 inline T&& get(Vector3<T>&& v) noexcept
 {
 	if constexpr (I == 0)
 		return v.x;
 	else if constexpr (I == 1)
 		return v.y;
-	else if constexpr (I == 2)
+	else //if constexpr (I == 2)
 		return v.z;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires (std::floating_point<T> || std::integral<T>)
+	requires ((I < 3) && (std::floating_point<T> || std::integral<T>))
 inline const T&& get(const Vector3<T>&& v) noexcept
 {
 	if constexpr (I == 0)
 		return v.x;
 	else if constexpr (I == 1)
 		return v.y;
-	else if constexpr (I == 2)
+	else //if constexpr (I == 2)
 		return v.z;
-	static_assert(false);
 }
 
 template<typename T>
@@ -907,7 +908,7 @@ inline Vector3<T> abs(const Vector3<T>& v) noexcept
 	if constexpr (std::is_floating_point_v<T>)
 		return Vector3<T>(std::fabs(v.x), std::fabs(v.y), std::fabs(v.z));
 	else // integral
-		return Vector3<T>(abs(v.x), abs(v.y), abs(v.z));
+		return Vector3<T>(mathematics::abs(v.x), mathematics::abs(v.y), mathematics::abs(v.z));
 }
 
 template<typename T>
@@ -926,9 +927,9 @@ inline Vector3<T> abs(Vector3<T>&& v) noexcept
 	}
 	else // integral
 	{
-		v.x = abs(v.x);
-		v.y = abs(v.y);
-		v.z = abs(v.z);
+		v.x = mathematics::abs(v.x);
+		v.y = mathematics::abs(v.y);
+		v.z = mathematics::abs(v.z);
 	}
 	return v;
 }
@@ -951,7 +952,7 @@ template<typename T>
 	requires std::floating_point<T>
 inline Vector3<T> cross(const Vector3<T>& v1, const Vector3<T>& v2) noexcept
 {
-	return Vector3(v1.y*v2.z - v1.z*v2.y, v1.z*v2.x - v1.x*v2.z, v1.x*v2.y - v1.y*v2.x);
+	return Vector3<T>(v1.y*v2.z - v1.z*v2.y, v1.z*v2.x - v1.x*v2.z, v1.x*v2.y - v1.y*v2.x);
 }
 
 template<typename T>
