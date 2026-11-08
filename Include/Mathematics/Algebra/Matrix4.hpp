@@ -19,6 +19,7 @@
 #include <Simd/Intrinsics.hpp>
 #include <Simd/Functional.hpp>
 #endif
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "../Geometry/Axis.hpp"
 #include "../Transform/EulerOrder.hpp"
@@ -168,7 +169,7 @@ struct Matrix4
 	Matrix4& scale(const Vector3<T>& v) noexcept;
 	Matrix4& negate() noexcept;
 	Matrix4& transpose() noexcept;
-	Matrix4& invert() noexcept { setInverse(*this); }
+	Matrix4& invert() noexcept { return setInverse(*this); }
 
 	static const Matrix4 ZERO;
 	static const Matrix4 IDENTITY;
@@ -283,7 +284,7 @@ struct alignas(16) Matrix4<float>
 	bool approxEquals(const Matrix4& m, float tolerance) const noexcept;
 	bool isFinite() const noexcept;
 	const Vector4<float>& getRow(int i) const noexcept { return reinterpret_cast<const Vector4<float>&>((&row0)[i]); }
-	Vector4<float> getColumn(int i) const noexcept; // #TODO
+	Vector4<float> getColumn(int i) const noexcept { return Vector4<float>(getRow(0)[i], getRow(1)[i], getRow(2)[i], getRow(3)[i]); } // #TODO SIMD
 	float getTrace() const noexcept { return (m00 + m11 + m22 + m33); }
 	float getDeterminant() const noexcept;
 	bool isSingular() const noexcept { return (getDeterminant() == 0.f); }
@@ -357,8 +358,8 @@ struct alignas(16) Matrix4<float>
 	};
 };
 
-const Matrix4<float> Matrix4<float>::ZERO{};
-const Matrix4<float> Matrix4<float>::IDENTITY{ 1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 1.f };
+inline const Matrix4<float> Matrix4<float>::ZERO{};
+inline const Matrix4<float> Matrix4<float>::IDENTITY{ 1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 1.f };
 
 #endif /* SIMD_HAS_FLOAT4 */
 
@@ -436,7 +437,7 @@ template<typename T>
 	requires std::floating_point<T>
 inline constexpr Matrix4<T>::Matrix4(const AffineTransform<T>& m) noexcept : 
 	m00(m.m00), m01(m.m01), m02(m.m02), m03(), m10(m.m10), m11(m.m11), m12(m.m12), m13(),
-	m20(m.m20), m21(m.m21), m22(m.m22), m23(), m30(m.x), m31(m.y), m32(m.z), m33(1) 
+	m20(m.m20), m21(m.m21), m22(m.m22), m23(), m30(m.m30), m31(m.m31), m32(m.m32), m33(1) 
 {
 }
 
@@ -965,86 +966,37 @@ template<typename T>
 	requires std::floating_point<T>
 inline Matrix4<T>& Matrix4<T>::setInverse(const Matrix4<T>& m) noexcept
 {
-	T di = m.m00;
-	T d = T(1)/di;
-	T n00 = d;
-	T n10 = m.m10*(-d);
-	T n20 = m.m20*(-d);
-	T n30 = m.m30*(-d);
-	T n01 = m.m01*d;
-	T n02 = m.m02*d;
-	T n03 = m.m03*d;
-	T n11 = m.m11 + n10*n01*di;
-	T n12 = m.m12 + n10*n02*di;
-	T n13 = m.m13 + n10*n03*di;
-	T n21 = m.m21 + n20*n01*di;
-	T n22 = m.m22 + n20*n02*di;
-	T n23 = m.m23 + n20*n03*di;
-	T n31 = m.m31 + n30*n01*di;
-	T n32 = m.m32 + n30*n02*di;
-	T n33 = m.m33 + n30*n03*di;
-	di = n11;
-	d = T(1)/di;
-	n11 = d;
-	n01 *= -d;
-	n21 *= -d;
-	n31 *= -d;
-	n10 *= d;
-	n12 *= d;
-	n13 *= d;
-	n00 += n01*n10*di;
-	n02 += n01*n12*di;
-	n03 += n01*n13*di;
-	n20 += n21*n10*di;
-	n22 += n21*n12*di;
-	n23 += n21*n13*di;
-	n30 += n31*n10*di;
-	n32 += n31*n12*di;
-	n33 += n31*n13*di;
-	di = n22;
-	d = T(1)/di;
-	n22 = d;
-	n02 *= -d;
-	n12 *= -d;
-	n32 *= -d;
-	n20 *= d;
-	n21 *= d;
-	n23 *= d;
-	n00 += n02*n20*di;
-	n01 += n02*n21*di;
-	n03 += n02*n23*di;
-	n10 += n12*n20*di;
-	n11 += n12*n21*di;
-	n13 += n12*n23*di;
-	n30 += n32*n20*di;
-	n31 += n32*n21*di;
-	n33 += n32*n23*di;
-	di = n33;
-	d = T(1)/di;
-	n33 = d;
-	n03 *= -d;
-	n13 *= -d;
-	n23 *= -d;
-	n30 *= d;
-	n31 *= d;
-	n32 *= d;
-	m00 = n00 + n03*n30*di;
-	m01 = n01 + n03*n31*di;
-	m02 = n02 + n03*n32*di;
-	m03 = n03;
-	m10 = n10 + n13*n30*di;
-	m11 = n11 + n13*n31*di;
-	m12 = n12 + n13*n32*di;
-	m13 = n13;
-	m20 = n20 + n23*n30*di;
-	m21 = n21 + n23*n31*di;
-	m22 = n22 + n23*n32*di;
-	m23 = n23;
-	m30 = n30;
-	m31 = n31;
-	m32 = n32;
-	m33 = n33;
-	return *this;
+	// Laplace expansion using 2x2 sub-determinants of the upper (a) and lower (b) row pairs
+	
+	T a0 = m.m00*m.m11 - m.m01*m.m10;
+	T a1 = m.m00*m.m12 - m.m02*m.m10;
+	T a2 = m.m00*m.m13 - m.m03*m.m10;
+	T a3 = m.m01*m.m12 - m.m02*m.m11;
+	T a4 = m.m01*m.m13 - m.m03*m.m11;
+	T a5 = m.m02*m.m13 - m.m03*m.m12;
+	T b0 = m.m20*m.m31 - m.m21*m.m30;
+	T b1 = m.m20*m.m32 - m.m22*m.m30;
+	T b2 = m.m20*m.m33 - m.m23*m.m30;
+	T b3 = m.m21*m.m32 - m.m22*m.m31;
+	T b4 = m.m21*m.m33 - m.m23*m.m31;
+	T b5 = m.m22*m.m33 - m.m23*m.m32;
+	T n = T(1)/(a0*b5 - a1*b4 + a2*b3 + a3*b2 - a4*b1 + a5*b0);
+	return set((m.m11*b5 - m.m12*b4 + m.m13*b3)*n,
+		(-m.m01*b5 + m.m02*b4 - m.m03*b3)*n,
+		(m.m31*a5 - m.m32*a4 + m.m33*a3)*n,
+		(-m.m21*a5 + m.m22*a4 - m.m23*a3)*n,
+		(-m.m10*b5 + m.m12*b2 - m.m13*b1)*n,
+		(m.m00*b5 - m.m02*b2 + m.m03*b1)*n,
+		(-m.m30*a5 + m.m32*a2 - m.m33*a1)*n,
+		(m.m20*a5 - m.m22*a2 + m.m23*a1)*n,
+		(m.m10*b4 - m.m11*b2 + m.m13*b0)*n,
+		(-m.m00*b4 + m.m01*b2 - m.m03*b0)*n,
+		(m.m30*a4 - m.m31*a2 + m.m33*a0)*n,
+		(-m.m20*a4 + m.m21*a2 - m.m23*a0)*n,
+		(-m.m10*b3 + m.m11*b1 - m.m12*b0)*n,
+		(m.m00*b3 - m.m01*b1 + m.m02*b0)*n,
+		(-m.m30*a3 + m.m31*a1 - m.m32*a0)*n,
+		(m.m20*a3 - m.m21*a1 + m.m22*a0)*n);
 }
 
 template<typename T>
@@ -1088,6 +1040,18 @@ inline Matrix4<T>& Matrix4<T>::scale(const Vector3<T>& v) noexcept
 	m10 *= v.x; m11 *= v.y; m12 *= v.z;
 	m20 *= v.x; m21 *= v.y; m22 *= v.z;
 	m30 *= v.x; m31 *= v.y; m32 *= v.z;
+	return *this;
+}
+
+template<typename T>
+	requires std::floating_point<T>
+inline Matrix4<T>& Matrix4<T>::translate(const Vector3<T>& v) noexcept
+{
+	// Post-multiplication by a translation matrix (i.e. the translation is applied after this transformation)
+	m00 += m03*v.x; m01 += m03*v.y; m02 += m03*v.z;
+	m10 += m13*v.x; m11 += m13*v.y; m12 += m13*v.z;
+	m20 += m23*v.x; m21 += m23*v.y; m22 += m23*v.z;
+	m30 += m33*v.x; m31 += m33*v.y; m32 += m33*v.z;
 	return *this;
 }
 
@@ -1630,54 +1594,58 @@ inline Matrix4<float>& Matrix4<float>::setTranspose(const Matrix4<float>& m) noe
 
 inline Matrix4<float>& Matrix4<float>::setInverse(const Matrix4<float>& m) noexcept
 {
-	auto r2 = m.row2;
-	auto t = simd::mul(r2, m.row3);
+	// Intel AP-928 "Streaming SIMD Extensions - Inverse of 4x4 Matrix"
+
+	auto [c0, c1, r2, c3] = simd::transpose(m.row0, m.row1, m.row2, m.row3);
+	c1 = simd::swizzle<2, 3, 0, 1>(c1);
+	c3 = simd::swizzle<2, 3, 0, 1>(c3);
+	auto t = simd::mul(r2, c3);
 	t = simd::swizzle<1, 0, 3, 2>(t);
-	auto minor0 = simd::mul(m.row1, t);
-	auto minor1 = simd::mul(m.row0, t);
+	auto minor0 = simd::mul(c1, t);
+	auto minor1 = simd::mul(c0, t);
 	t = simd::swizzle<2, 3, 0, 1>(t);
-	minor0 = simd::sub(simd::mul(m.row1, t), minor0);
-	minor1 = simd::sub(simd::mul(m.row0, t), minor1);
+	minor0 = simd::sub(simd::mul(c1, t), minor0);
+	minor1 = simd::sub(simd::mul(c0, t), minor1);
 	minor1 = simd::swizzle<2, 3, 0, 1>(minor1);
-	t = simd::mul(m.row1, r2);
+	t = simd::mul(c1, r2);
 	t = simd::swizzle<1, 0, 3, 2>(t);
-	minor0 = simd::add(simd::mul(m.row3, t), minor0);
-	auto minor3 = simd::mul(m.row0, t);
+	minor0 = simd::add(simd::mul(c3, t), minor0);
+	auto minor3 = simd::mul(c0, t);
 	t = simd::swizzle<2, 3, 0, 1>(t);
-	minor0 = simd::sub(minor0, simd::mul(m.row3, t));
-	minor3 = simd::sub(simd::mul(m.row0, t), minor3);
+	minor0 = simd::sub(minor0, simd::mul(c3, t));
+	minor3 = simd::sub(simd::mul(c0, t), minor3);
 	minor3 = simd::swizzle<2, 3, 0, 1>(minor3);
-	t = simd::mul(simd::swizzle<2, 3, 0, 1>(m.row1), m.row3);
+	t = simd::mul(simd::swizzle<2, 3, 0, 1>(c1), c3);
 	t = simd::swizzle<1, 0, 3, 2>(t);
 	r2 = simd::swizzle<2, 3, 0, 1>(r2);
 	minor0 = simd::add(simd::mul(r2, t), minor0);
-	auto minor2 = simd::mul(m.row0, t);
+	auto minor2 = simd::mul(c0, t);
 	t = simd::swizzle<2, 3, 0, 1>(t);
 	minor0 = simd::sub(minor0, simd::mul(r2, t));
-	minor2 = simd::sub(simd::mul(m.row0, t), minor2);
+	minor2 = simd::sub(simd::mul(c0, t), minor2);
 	minor2 = simd::swizzle<2, 3, 0, 1>(minor2);
-	t = simd::mul(m.row0, m.row1);
+	t = simd::mul(c0, c1);
 	t = simd::swizzle<1, 0, 3, 2>(t);
-	minor2 = simd::add(simd::mul(m.row3, t), minor2);
+	minor2 = simd::add(simd::mul(c3, t), minor2);
 	minor3 = simd::sub(simd::mul(r2, t), minor3);
 	t = simd::swizzle<2, 3, 0, 1>(t);
-	minor2 = simd::sub(simd::mul(m.row3, t), minor2);
+	minor2 = simd::sub(simd::mul(c3, t), minor2);
 	minor3 = simd::sub(minor3, simd::mul(r2, t));
-	t = simd::mul(m.row0, m.row3);
+	t = simd::mul(c0, c3);
 	t = simd::swizzle<1, 0, 3, 2>(t);
 	minor1 = simd::sub(minor1, simd::mul(r2, t));
-	minor2 = simd::add(simd::mul(m.row1, t), minor2);
+	minor2 = simd::add(simd::mul(c1, t), minor2);
 	t = simd::swizzle<2, 3, 0, 1>(t);
 	minor1 = simd::add(simd::mul(r2, t), minor1);
-	minor2 = simd::sub(minor2, simd::mul(m.row1, t));
-	t = simd::mul(m.row0, r2);
+	minor2 = simd::sub(minor2, simd::mul(c1, t));
+	t = simd::mul(c0, r2);
 	t = simd::swizzle<1, 0, 3, 2>(t);
-	minor1 = simd::add(simd::mul(m.row3, t), minor1);
-	minor3 = simd::sub(minor3, simd::mul(m.row1, t));
+	minor1 = simd::add(simd::mul(c3, t), minor1);
+	minor3 = simd::sub(minor3, simd::mul(c1, t));
 	t = simd::swizzle<2, 3, 0, 1>(t);
-	minor1 = simd::sub(minor1, simd::mul(m.row3, t));
-	minor3 = simd::add(simd::mul(m.row1, t), minor3);
-	auto det = simd::mul(m.row0, minor0);
+	minor1 = simd::sub(minor1, simd::mul(c3, t));
+	minor3 = simd::add(simd::mul(c1, t), minor3);
+	auto det = simd::mul(c0, minor0);
 	det = simd::add(simd::swizzle<2, 3, 0, 1>(det), det);
 	det = simd::add(simd::swizzle<1, 0, 3, 2>(det), det);
 	//static const auto one = simd::set4(1.f);
@@ -1729,6 +1697,17 @@ inline Matrix4<float>& Matrix4<float>::scale(const Vector3<float>& v) noexcept
 	row1 = simd::mul(row1, t);
 	row2 = simd::mul(row2, t);
 	row3 = simd::mul(row3, t);
+	return *this;
+}
+
+inline Matrix4<float>& Matrix4<float>::translate(const Vector3<float>& v) noexcept
+{
+	// Post-multiplication by a translation matrix (i.e. the translation is applied after this transformation)
+	auto t = simd::insert3(v, Vector4<float>::ZERO);
+	row0 = simd::mulAdd(simd::wwww(row0), t, row0);
+	row1 = simd::mulAdd(simd::wwww(row1), t, row1);
+	row2 = simd::mulAdd(simd::wwww(row2), t, row2);
+	row3 = simd::mulAdd(simd::wwww(row3), t, row3);
 	return *this;
 }
 

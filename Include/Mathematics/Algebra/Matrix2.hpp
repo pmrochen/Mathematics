@@ -20,6 +20,7 @@
 #include <Simd/Intrinsics.hpp>
 #include <Simd/Functional.hpp>
 #endif
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "Vector2.hpp"
 
@@ -197,7 +198,7 @@ struct alignas(16) Matrix2<float>
 	bool hasApproxUniformScaling() const noexcept;
 	bool isFinite() const noexcept { return simd::all4(simd::isFinite(simd::pack2(row0, row1))); }
 	const Vector2<float>& getRow(int i) const noexcept { return reinterpret_cast<const Vector2<float>&>((&row0)[i]); }
-	Vector2<float> getColumn(int i) const noexcept; // #TODO
+	Vector2<float> getColumn(int i) const noexcept { return Vector2<float>(getRow(0)[i], getRow(1)[i]); } // #TODO SIMD
 	Vector2<float> getScaleComponent() const noexcept { return Vector2<float>((*this)[0].getMagnitude(), (*this)[1].getMagnitude()); }
 	float getTrace() const noexcept { return (m00 + m11); }
 	float getDeterminant() const noexcept { return (m00*m11 - m01*m10); }
@@ -243,8 +244,8 @@ struct alignas(16) Matrix2<float>
 	};
 };
 
-const Matrix2<float> Matrix2<float>::ZERO{};
-const Matrix2<float> Matrix2<float>::IDENTITY{ 1.f, 0.f, 0.f, 1.f };
+inline const Matrix2<float> Matrix2<float>::ZERO{};
+inline const Matrix2<float> Matrix2<float>::IDENTITY{ 1.f, 0.f, 0.f, 1.f };
 
 #endif /* SIMD_HAS_FLOAT4 */
 
@@ -1128,7 +1129,7 @@ template<typename T>
 	requires std::floating_point<T>
 inline Matrix2<T> adjoint(const Matrix2<T>& m) noexcept
 {
-	return Matrix2<T>(m.m11, -m.m10, -m.m01, m.m00);
+	return Matrix2<T>(m.m11, -m.m01, -m.m10, m.m00);
 }
 
 #if SIMD_HAS_FLOAT4

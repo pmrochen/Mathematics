@@ -19,6 +19,7 @@
 #include <Simd/Intrinsics.hpp>
 #include <Simd/Functional.hpp>
 #endif
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "../Geometry/Axis.hpp"
 #include "../Transform/EulerOrder.hpp"
@@ -249,7 +250,7 @@ struct alignas(16) Matrix3<float>
 	bool hasApproxUniformScaling() const noexcept;
 	bool isFinite() const noexcept;
 	const Vector3<float>& getRow(int i) const noexcept { return reinterpret_cast<const Vector3<float>&>((&row0)[i]); }
-	Vector3<float> getColumn(int i) const noexcept; // #TODO
+	Vector3<float> getColumn(int i) const noexcept { return Vector3<float>(getRow(0)[i], getRow(1)[i], getRow(2)[i]); } // #TODO SIMD
 	Vector3<float> getScaleComponent() const noexcept { return Vector3<float>((*this)[0].getMagnitude(), (*this)[1].getMagnitude(), (*this)[2].getMagnitude()); }
 	float getTrace() const noexcept { return (m00 + m11 + m22); }
 	float getDeterminant() const noexcept;
@@ -308,8 +309,8 @@ struct alignas(16) Matrix3<float>
 	};
 };
 
-const Matrix3<float> Matrix3<float>::ZERO{};
-const Matrix3<float> Matrix3<float>::IDENTITY{ 1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f };
+inline const Matrix3<float> Matrix3<float>::ZERO{};
+inline const Matrix3<float> Matrix3<float>::IDENTITY{ 1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f };
 
 #endif /* SIMD_HAS_FLOAT4 */
 
