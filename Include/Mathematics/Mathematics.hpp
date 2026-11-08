@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "Concepts.hpp"
 #include "Constants.hpp"
 #include "Scalar.hpp"
 #include "Geometry/Axis.hpp"

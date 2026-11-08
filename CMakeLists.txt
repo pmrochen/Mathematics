@@ -112,6 +112,7 @@ set(MATHEMATICS_HEADERS
 	Include/Mathematics/Geometry/Capsule.hpp
 	Include/Mathematics/Geometry/Circle2.hpp
 	Include/Mathematics/Geometry/Cone.hpp
+	Include/Mathematics/Concepts.hpp
 	Include/Mathematics/Constants.hpp
 	Include/Mathematics/Analysis/Containment.inl
 	Include/Mathematics/Geometry/Cylinder.hpp
