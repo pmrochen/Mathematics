@@ -17,6 +17,7 @@
 #include <iterator>
 #include <cstddef>
 #include <cmath>
+#include "../Concepts.hpp"
 #include "../Scalar.hpp"
 #include "../Algebra/Vector3.hpp"
 #include "../Algebra/Matrix3.hpp"
@@ -41,8 +42,8 @@ struct SymmetricFrustum
 
 	SymmetricFrustum() noexcept : origin(), basis(Identity()), halfDims(), depthRange(T()) {}
 	explicit SymmetricFrustum(Uninitialized) noexcept : origin(Uninitialized()), basis(Uninitialized()), halfDims(Uninitialized()), depthRange(Uninitialized()) {}
-	SymmetricFrustum(const Vector3<T>& origin, const Matrix3<T>& basis, const Vector3<T>& halfDims, const Interval<T>& depthRange) noexcept;
-	SymmetricFrustum(const Vector3<T>& origin, const Matrix3<T>& basis, const Vector3<T>& halfDims, T depthMin, T depthMax) noexcept;
+	SymmetricFrustum(const Vector3<T>& origin, const Matrix3<T>& basis, const Vector2<T>& halfDims, const Interval<T>& depthRange) noexcept;
+	SymmetricFrustum(const Vector3<T>& origin, const Matrix3<T>& basis, const Vector2<T>& halfDims, T depthMin, T depthMax) noexcept;
 
 	bool operator==(const SymmetricFrustum& frustum) const noexcept;
 	bool operator!=(const SymmetricFrustum& frustum) const noexcept { return !(*this == frustum); }
@@ -54,7 +55,7 @@ struct SymmetricFrustum
 	bool approxEquals(const SymmetricFrustum& frustum) const noexcept;
 	bool approxEquals(const SymmetricFrustum& frustum, T tolerance) const noexcept;
 	bool isFinite() const noexcept { return origin.isFinite() && basis.isFinite() && halfDims.isFinite() && depthRange.isFinite(); }
-	SymmetricFrustum& set(const Vector3<T>& origin, const Matrix3<T>& basis, const Vector3<T>& halfDims, const Interval<T>& depthRange) noexcept;
+	SymmetricFrustum& set(const Vector3<T>& origin, const Matrix3<T>& basis, const Vector2<T>& halfDims, const Interval<T>& depthRange) noexcept;
 	const Vector3<T>& getOrigin() const noexcept { return origin; }
 	void setOrigin(const Vector3<T>& origin) noexcept { this->origin = origin; }
 	const Matrix3<T>& getBasis() const noexcept { return basis; }
@@ -115,7 +116,7 @@ struct SymmetricFrustum
 
 template<typename T>
 	requires std::floating_point<T>
-inline SymmetricFrustum<T>::SymmetricFrustum(const Vector3<T>& origin, const Matrix3<T>& basis, const Vector3<T>& halfDims, 
+inline SymmetricFrustum<T>::SymmetricFrustum(const Vector3<T>& origin, const Matrix3<T>& basis, const Vector2<T>& halfDims, 
 	const Interval<T>& depthRange) noexcept : 
 	origin(origin), 
 	basis(basis), 
@@ -126,7 +127,7 @@ inline SymmetricFrustum<T>::SymmetricFrustum(const Vector3<T>& origin, const Mat
 
 template<typename T>
 	requires std::floating_point<T>
-inline SymmetricFrustum<T>::SymmetricFrustum(const Vector3<T>& origin, const Matrix3<T>& basis, const Vector3<T>& halfDims, 
+inline SymmetricFrustum<T>::SymmetricFrustum(const Vector3<T>& origin, const Matrix3<T>& basis, const Vector2<T>& halfDims, 
 	T depthMin, T depthMax) noexcept : 
 	origin(origin), 
 	basis(basis), 
@@ -176,7 +177,7 @@ inline bool SymmetricFrustum<T>::approxEquals(const SymmetricFrustum<T>& frustum
 
 template<typename T>
 	requires std::floating_point<T>
-inline SymmetricFrustum<T>& SymmetricFrustum<T>::set(const Vector3<T>& origin, const Matrix3<T>& basis, const Vector3<T>& halfDims,
+inline SymmetricFrustum<T>& SymmetricFrustum<T>::set(const Vector3<T>& origin, const Matrix3<T>& basis, const Vector2<T>& halfDims,
 	const Interval<T>& depthRange) noexcept
 { 
 	this->origin = origin; 
@@ -193,14 +194,14 @@ inline O SymmetricFrustum<T>::copyVertices(O target) const
 {
 	AffineTransform<T> m(basis, origin);
 	T depthRatio = depthRange.maximum/depthRange.minimum;
-	*target++ = transform(Vector3<T>(-halfDims, depthRange.minimum), m);
-	*target++ = transform(Vector3<T>(halfDims.x, -halfDims.y, depthRange.minimum), m);
-	*target++ = transform(Vector3<T>(-halfDims.x, halfDims.y, depthRange.minimum), m);
-	*target++ = transform(Vector3<T>(halfDims, depthRange.minimum), m);
-	*target++ = transform(Vector3<T>(-halfDims*depthRatio, depthRange.maximum), m);
-	*target++ = transform(Vector3<T>(halfDims.x*depthRatio, -halfDims.y*depthRatio, depthRange.maximum), m);
-	*target++ = transform(Vector3<T>(-halfDims.x*depthRatio, halfDims.y*depthRatio, depthRange.maximum), m);
-	*target++ = transform(Vector3<T>(halfDims*depthRatio, depthRange.maximum), m);
+	*target++ = ::mathematics::templates::transform(Vector3<T>(-halfDims, depthRange.minimum), m);
+	*target++ = ::mathematics::templates::transform(Vector3<T>(halfDims.x, -halfDims.y, depthRange.minimum), m);
+	*target++ = ::mathematics::templates::transform(Vector3<T>(-halfDims.x, halfDims.y, depthRange.minimum), m);
+	*target++ = ::mathematics::templates::transform(Vector3<T>(halfDims, depthRange.minimum), m);
+	*target++ = ::mathematics::templates::transform(Vector3<T>(-halfDims*depthRatio, depthRange.maximum), m);
+	*target++ = ::mathematics::templates::transform(Vector3<T>(halfDims.x*depthRatio, -halfDims.y*depthRatio, depthRange.maximum), m);
+	*target++ = ::mathematics::templates::transform(Vector3<T>(-halfDims.x*depthRatio, halfDims.y*depthRatio, depthRange.maximum), m);
+	*target++ = ::mathematics::templates::transform(Vector3<T>(halfDims*depthRatio, depthRange.maximum), m);
 	return target;
 }
 
@@ -210,14 +211,14 @@ inline std::vector<Vector3<T>> SymmetricFrustum<T>::getVertices() const
 {
 	AffineTransform<T> m(basis, origin);
 	T depthRatio = depthRange.maximum/depthRange.minimum;
-	return { transform(Vector3<T>(-halfDims, depthRange.minimum), m),
-		transform(Vector3<T>(halfDims.x, -halfDims.y, depthRange.minimum), m),
-		transform(Vector3<T>(-halfDims.x, halfDims.y, depthRange.minimum), m),
-		transform(Vector3<T>(halfDims, depthRange.minimum), m),
-		transform(Vector3<T>(-halfDims*depthRatio, depthRange.maximum), m),
-		transform(Vector3<T>(halfDims.x*depthRatio, -halfDims.y*depthRatio, depthRange.maximum), m),
-		transform(Vector3<T>(-halfDims.x*depthRatio, halfDims.y*depthRatio, depthRange.maximum), m),
-		transform(Vector3<T>(halfDims*depthRatio, depthRange.maximum), m) };
+	return { ::mathematics::templates::transform(Vector3<T>(-halfDims, depthRange.minimum), m),
+		::mathematics::templates::transform(Vector3<T>(halfDims.x, -halfDims.y, depthRange.minimum), m),
+		::mathematics::templates::transform(Vector3<T>(-halfDims.x, halfDims.y, depthRange.minimum), m),
+		::mathematics::templates::transform(Vector3<T>(halfDims, depthRange.minimum), m),
+		::mathematics::templates::transform(Vector3<T>(-halfDims*depthRatio, depthRange.maximum), m),
+		::mathematics::templates::transform(Vector3<T>(halfDims.x*depthRatio, -halfDims.y*depthRatio, depthRange.maximum), m),
+		::mathematics::templates::transform(Vector3<T>(-halfDims.x*depthRatio, halfDims.y*depthRatio, depthRange.maximum), m),
+		::mathematics::templates::transform(Vector3<T>(halfDims*depthRatio, depthRange.maximum), m) };
 }
 
 template<typename T>
@@ -265,10 +266,10 @@ template<std::output_iterator<HalfSpace<T>> O>
 inline O SymmetricFrustum<T>::copyHalfSpaces(O target) const
 {
 	AffineTransform<T> m(basis, origin);
-	Vector3<T> lb = transform(Vector3<T>(-halfDims, depthRange.minimum), m);
-	Vector3<T> rb = transform(Vector3<T>(halfDims.x, -halfDims.y, depthRange.minimum), m);
-	Vector3<T> lt = transform(Vector3<T>(-halfDims.x, halfDims.y, depthRange.minimum), m);
-	Vector3<T> rt = transform(Vector3<T>(halfDims, depthRange.minimum), m);
+	Vector3<T> lb = ::mathematics::templates::transform(Vector3<T>(-halfDims, depthRange.minimum), m);
+	Vector3<T> rb = ::mathematics::templates::transform(Vector3<T>(halfDims.x, -halfDims.y, depthRange.minimum), m);
+	Vector3<T> lt = ::mathematics::templates::transform(Vector3<T>(-halfDims.x, halfDims.y, depthRange.minimum), m);
+	Vector3<T> rt = ::mathematics::templates::transform(Vector3<T>(halfDims, depthRange.minimum), m);
 
 	bool flip = (basis.getDeterminant() < T(0));
 	*target++ = flip ? HalfSpace<T>(origin, lt, lb) : HalfSpace<T>(origin, lb, lt);
@@ -287,10 +288,10 @@ template<typename T>
 inline std::vector<HalfSpace<T>> SymmetricFrustum<T>::getHalfSpaces() const
 {
 	AffineTransform<T> m(basis, origin);
-	Vector3<T> lb = transform(Vector3<T>(-halfDims, depthRange.minimum), m);
-	Vector3<T> rb = transform(Vector3<T>(halfDims.x, -halfDims.y, depthRange.minimum), m);
-	Vector3<T> lt = transform(Vector3<T>(-halfDims.x, halfDims.y, depthRange.minimum), m);
-	Vector3<T> rt = transform(Vector3<T>(halfDims, depthRange.minimum), m);
+	Vector3<T> lb = ::mathematics::templates::transform(Vector3<T>(-halfDims, depthRange.minimum), m);
+	Vector3<T> rb = ::mathematics::templates::transform(Vector3<T>(halfDims.x, -halfDims.y, depthRange.minimum), m);
+	Vector3<T> lt = ::mathematics::templates::transform(Vector3<T>(-halfDims.x, halfDims.y, depthRange.minimum), m);
+	Vector3<T> rt = ::mathematics::templates::transform(Vector3<T>(halfDims, depthRange.minimum), m);
 
 	bool flip = (basis.getDeterminant() < T(0));
 	if (depthRange.maximum < std::numeric_limits<T>::max())
@@ -318,10 +319,10 @@ template<typename F>
 inline bool SymmetricFrustum<T>::enumerateHalfSpaces(F&& f) const
 {
 	AffineTransform<T> m(basis, origin);
-	Vector3<T> lb = transform(Vector3<T>(-halfDims, depthRange.minimum), m);
-	Vector3<T> rb = transform(Vector3<T>(halfDims.x, -halfDims.y, depthRange.minimum), m);
-	Vector3<T> lt = transform(Vector3<T>(-halfDims.x, halfDims.y, depthRange.minimum), m);
-	Vector3<T> rt = transform(Vector3<T>(halfDims, depthRange.minimum), m);
+	Vector3<T> lb = ::mathematics::templates::transform(Vector3<T>(-halfDims, depthRange.minimum), m);
+	Vector3<T> rb = ::mathematics::templates::transform(Vector3<T>(halfDims.x, -halfDims.y, depthRange.minimum), m);
+	Vector3<T> lt = ::mathematics::templates::transform(Vector3<T>(-halfDims.x, halfDims.y, depthRange.minimum), m);
+	Vector3<T> rt = ::mathematics::templates::transform(Vector3<T>(halfDims, depthRange.minimum), m);
 
 	bool flip = (basis.getDeterminant() < T(0));
 	if (!f(flip ? HalfSpace<T>(origin, lt, lb) : HalfSpace<T>(origin, lb, lt)))
@@ -458,7 +459,7 @@ template<typename T>
 	requires std::floating_point<T>
 inline bool SymmetricFrustum<T>::intersects(const OrientedBox<T>& box) const noexcept
 {
-	return intersections::testOrientedBoxSymmetricFrustum(box.origin, box.basis, box.halfDims, origin, basis, halfDims, 
+	return intersections::testOrientedBoxSymmetricFrustum(box.center, box.basis, box.halfDims, origin, basis, halfDims, 
 		depthRange.minimum, depthRange.maximum);
 }
 

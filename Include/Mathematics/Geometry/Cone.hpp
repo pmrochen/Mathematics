@@ -13,8 +13,9 @@
 #include <functional>
 #include <cstddef>
 #include <cmath>
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
-#include "Axis.hpp"
+//#include "Axis.hpp"
 #include "../Algebra/Vector3.hpp"
 #include "../Algebra/Matrix3.hpp"
 //#include "../Transform/AffineTransform.hpp"
@@ -46,7 +47,7 @@ struct Cone
 	// Properties
 	bool approxEquals(const Cone& cone) const noexcept;
 	bool approxEquals(const Cone& cone, T tolerance) const noexcept;
-	bool isFinite() const noexcept { return vertex.isFinite() && axis.isFinite() && height.isFinite() && radius.isFinite(); }
+	bool isFinite() const noexcept { return vertex.isFinite() && axis.isFinite() && std::isfinite(height) && std::isfinite(radius); }
 	Cone& set(const Vector3<T>& vertex, const Vector3<T>& axis, T height, T radius) noexcept;
 	//Cone& set(const Vector3<T>& vertex, Axis axis, T height, T radius) noexcept;
 	const Vector3<T>& getVertex() const noexcept { return vertex; }
@@ -113,7 +114,7 @@ template<typename T>
 	requires std::floating_point<T>
 inline Cone<T>::Cone(const Vector3<T>& vertex, const Vector3<T>& baseCenter, T radius) noexcept :
 	vertex(vertex),
-	axis(normalize(baseCenter - vertex)),
+	axis(templates::normalize(baseCenter - vertex)),
 	height(distance(vertex, baseCenter)),
 	radius(radius)
 {
@@ -184,7 +185,7 @@ template<typename T>
 	requires std::floating_point<T>
 inline void Cone<T>::setBaseCenter(const Vector3<T>& baseCenter) noexcept
 {
-	axis = normalize(baseCenter - vertex);
+	axis = templates::normalize(baseCenter - vertex);
 	height = distance(vertex, baseCenter);
 }
 

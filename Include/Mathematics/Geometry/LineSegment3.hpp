@@ -18,6 +18,7 @@
 #include <iterator>
 #include <cstddef>
 #include <cmath>
+#include "../Concepts.hpp"
 #include "../Algebra/Vector3.hpp"
 #include "../Algebra/Matrix3.hpp"
 #include "../Transform/AffineTransform.hpp"
@@ -109,7 +110,7 @@ struct LineSegment3
 	void setStart(const Vector3<T>& start) noexcept { this->start = start; }
 	const Vector3<T>& getEnd() const noexcept { return end; }
 	void setEnd(const Vector3<T>& end) noexcept { this->end = end; }
-	Vector3<T> getDirection() const noexcept { return normalize(end - start); }
+	Vector3<T> getDirection() const noexcept { return templates::normalize(end - start); }
 	T getLength() const noexcept { return distance(start, end); }
 	Vector3<T> getCenter() const noexcept { return lerp(start, end, T(0.5)); }
 
@@ -133,8 +134,8 @@ struct LineSegment3
 	bool intersects(const HalfSpace<T>& halfSpace) const noexcept;
 	bool intersects(const Plane<T>& plane) const noexcept { return findIntersection(plane).has_value(); }
 	bool intersects(const Triangle3<T>& triangle) const noexcept { return findIntersection(triangle).has_value(); }
-	bool intersects(const AxisAlignedBox& box) const noexcept { return findIntersection(box).has_value(); }
-	bool intersects(const OrientedBox& box) const noexcept { return findIntersection(box).has_value(); }
+	bool intersects(const AxisAlignedBox<T>& box) const noexcept { return findIntersection(box).has_value(); }
+	bool intersects(const OrientedBox<T>& box) const noexcept { return findIntersection(box).has_value(); }
 	bool intersects(const Sphere<T>& sphere) const noexcept { return findIntersection(sphere).has_value(); }
 	bool intersects(const Ellipsoid<T>& ellipsoid) const noexcept;
 	template<std::integral U> bool intersects(const TriangleMesh<T, U>* mesh) const noexcept;
@@ -168,21 +169,21 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const L
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool LineSegment3<T>::approxEquals(const LineSegment3<T>& segment) const
+inline bool LineSegment3<T>::approxEquals(const LineSegment3<T>& segment) const noexcept
 {
 	return start.approxEquals(segment.start) && end.approxEquals(segment.end);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool LineSegment3<T>::approxEquals(const LineSegment3<T>& segment, T tolerance) const
+inline bool LineSegment3<T>::approxEquals(const LineSegment3<T>& segment, T tolerance) const noexcept
 {
 	return start.approxEquals(segment.start, tolerance) && end.approxEquals(segment.end, tolerance);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-template<std::output_iterator<Vector2<T>> O>
+template<std::output_iterator<Vector3<T>> O>
 inline O LineSegment3<T>::copyEndpoints(O target) const
 {
 	*target++ = start;
@@ -192,7 +193,7 @@ inline O LineSegment3<T>::copyEndpoints(O target) const
 
 template<typename T>
 	requires std::floating_point<T>
-inline LineSegment3<T>& LineSegment3<T>::transform(const Matrix3<T>& matrix)
+inline LineSegment3<T>& LineSegment3<T>::transform(const Matrix3<T>& matrix) noexcept
 {
 	start *= matrix;
 	end *= matrix;
@@ -201,7 +202,7 @@ inline LineSegment3<T>& LineSegment3<T>::transform(const Matrix3<T>& matrix)
 
 template<typename T>
 	requires std::floating_point<T>
-inline LineSegment3<T>& LineSegment3<T>::transform(const AffineTransform<T>& transformation)
+inline LineSegment3<T>& LineSegment3<T>::transform(const AffineTransform<T>& transformation) noexcept
 {
 	start.transform(transformation);
 	end.transform(transformation);
@@ -260,14 +261,14 @@ namespace mathematics::templates {
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool LineSegment3<T>::intersects(const HalfSpace<T>& halfSpace) const
+inline bool LineSegment3<T>::intersects(const HalfSpace<T>& halfSpace) const noexcept
 {
 	return halfSpace.contains(start) || halfSpace.contains(end);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool LineSegment3<T>::intersects(const Ellipsoid<T>& ellipsoid) const
+inline bool LineSegment3<T>::intersects(const Ellipsoid<T>& ellipsoid) const noexcept
 {
 	return intersections::testLineSegmentEllipsoid(start, end, ellipsoid.center, ellipsoid.getMatrix());
 }
@@ -275,7 +276,7 @@ inline bool LineSegment3<T>::intersects(const Ellipsoid<T>& ellipsoid) const
 template<typename T>
 	requires std::floating_point<T>
 template<std::integral U> 
-bool LineSegment3<T>::intersects(const TriangleMesh<T, U>* mesh) const
+bool LineSegment3<T>::intersects(const TriangleMesh<T, U>* mesh) const noexcept
 {
 	if (!mesh)
 		return false;
@@ -321,10 +322,10 @@ bool LineSegment3<T>::intersects(const TriangleMesh<T, U>* mesh) const
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::optional<T> LineSegment3<T>::findIntersection(const Plane<T>& plane) const
+inline std::optional<T> LineSegment3<T>::findIntersection(const Plane<T>& plane) const noexcept
 {
 	auto result = intersections::findLinePlane<std::optional<T>>(start, end - start, plane.getNormal(), plane.d);
-	return (result.has_value() && (result.value() >= T(0)) && (result.value() <= T(1))) ? result : {};
+	return (result.has_value() && (result.value() >= T(0)) && (result.value() <= T(1))) ? result : std::nullopt;
 }
 
 //template<typename T>
@@ -341,18 +342,18 @@ inline std::optional<T> LineSegment3<T>::findIntersection(const Plane<T>& plane)
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::optional<T> LineSegment3<T>::findIntersection(const Triangle3<T>& triangle) const
+inline std::optional<T> LineSegment3<T>::findIntersection(const Triangle3<T>& triangle) const noexcept
 {
 	//return intersections::findLineSegmentTriangle<std::optional<T>>(start, end, triangle.vertices[0], triangle.vertices[1],
 	//	triangle.vertices[2]);
 	auto result = intersections::findLineTriangle<std::optional<T>>(start, end - start, triangle.vertices[0], triangle.vertices[1],
 		triangle.vertices[2]);
-	return (result.has_value() && (result.value() >= T(0)) && (result.value() <= T(1))) ? result : {};
+	return (result.has_value() && (result.value() >= T(0)) && (result.value() <= T(1))) ? result : std::nullopt;
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const AxisAlignedBox<T>& box) const
+inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const AxisAlignedBox<T>& box) const noexcept
 {
 	auto result = intersections::findLineAxisAlignedBox<std::optional<Interval<T>>>(start, end - start, box.minimum, box.maximum);
 	
@@ -360,7 +361,7 @@ inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const AxisAl
 	{
 		const Interval<T>& interval = result.value();
 		if (interval.minimum != interval.maximum)
-			return { std::in_place, std::max(interval.minimum, T(0)), std::min(interval.maximum, T(1)) };
+			return std::optional<Interval<T>>(std::in_place, std::max(interval.minimum, T(0)), std::min(interval.maximum, T(1)));
 		else
 			return result;
 	}
@@ -372,7 +373,7 @@ inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const AxisAl
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const OrientedBox<T>& box) const
+inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const OrientedBox<T>& box) const noexcept
 {
 	auto result = intersections::findLineOrientedBox<std::optional<Interval<T>>>(start, end - start, box.center, box.basis, box.halfDims);
 	
@@ -380,7 +381,7 @@ inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const Orient
 	{
 		const Interval<T>& interval = result.value();
 		if (interval.minimum != interval.maximum)
-			return { std::in_place, std::max(interval.minimum, T(0)), std::min(interval.maximum, T(1)) };
+			return std::optional<Interval<T>>(std::in_place, std::max(interval.minimum, T(0)), std::min(interval.maximum, T(1)));
 		else
 			return result;
 	}
@@ -392,7 +393,7 @@ inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const Orient
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const Sphere<T>& sphere) const
+inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const Sphere<T>& sphere) const noexcept
 {
 	auto result = intersections::findLineNSphere<std::optional<Interval<T>>>(start, end - start, sphere.center, sphere.radius);
 
@@ -400,7 +401,7 @@ inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const Sphere
 	{
 		const Interval<T>& interval = result.value();
 		if (interval.minimum != interval.maximum)
-			return { std::in_place, std::max(interval.minimum, T(0)), std::min(interval.maximum, T(1)) };
+			return std::optional<Interval<T>>(std::in_place, std::max(interval.minimum, T(0)), std::min(interval.maximum, T(1)));
 		else
 			return result;
 	}
@@ -412,7 +413,7 @@ inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const Sphere
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const Ellipsoid<T>& ellipsoid) const
+inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const Ellipsoid<T>& ellipsoid) const noexcept
 {
 	return intersections::findLineSegmentEllipsoid<std::optional<Interval<T>>>(start, end, ellipsoid.center, ellipsoid.getMatrix());
 }
@@ -420,7 +421,7 @@ inline std::optional<Interval<T>> LineSegment3<T>::findIntersection(const Ellips
 template<typename T>
 	requires std::floating_point<T>
 template<std::integral U> 
-std::vector<T> LineSegment3<T>::findIntersections(const TriangleMesh<T, U>* mesh) const
+std::vector<T> LineSegment3<T>::findIntersections(const TriangleMesh<T, U>* mesh) const noexcept
 {
 	std::vector<T> intersections;
 	if (!mesh)

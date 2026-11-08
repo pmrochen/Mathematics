@@ -14,6 +14,7 @@
 #include <utility>
 #include <cstddef>
 #include <cmath>
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "../Algebra/Vector2.hpp"
 #include "AxisAlignedRectangle.hpp"
@@ -42,7 +43,7 @@ struct Circle2
 	// Properties
 	bool approxEquals(const Circle2& circle) const noexcept;
 	bool approxEquals(const Circle2& circle, T tolerance) const noexcept;
-	bool isFinite() const noexcept { return center.isFinite() && radius.isFinite(); }
+	bool isFinite() const noexcept { return center.isFinite() && std::isfinite(radius); }
 	Circle2& set(const Vector2<T>& center, T radius) noexcept { this->center = center; this->radius = radius; return *this; }
 	const Vector2<T>& getCenter() const noexcept { return center; }
 	void setCenter(const Vector2<T>& center) noexcept { this->center = center; }
@@ -90,7 +91,7 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const C
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Circle2<T>::approxEquals(const Circle2<T>& circle) const
+inline bool Circle2<T>::approxEquals(const Circle2<T>& circle) const noexcept
 {
 	return center.approxEquals(circle.center) && 
 		(std::fabs(circle.radius - radius) < Constants<T>::TOLERANCE);
@@ -98,7 +99,7 @@ inline bool Circle2<T>::approxEquals(const Circle2<T>& circle) const
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Circle2<T>::approxEquals(const Circle2<T>& circle, T tolerance) const
+inline bool Circle2<T>::approxEquals(const Circle2<T>& circle, T tolerance) const noexcept
 {
 	return center.approxEquals(circle.center, tolerance) && 
 		(std::fabs(circle.radius - radius) < tolerance);
@@ -106,7 +107,7 @@ inline bool Circle2<T>::approxEquals(const Circle2<T>& circle, T tolerance) cons
 
 template<typename T>
 	requires std::floating_point<T>
-inline AxisAlignedRectangle<T> Circle2<T>::getCircumscribedRectangle() const
+inline AxisAlignedRectangle<T> Circle2<T>::getCircumscribedRectangle() const noexcept
 {
 	Vector2<T> halfDims(radius);
 	return AxisAlignedRectangle<T>(center - halfDims, center + halfDims);
@@ -114,7 +115,7 @@ inline AxisAlignedRectangle<T> Circle2<T>::getCircumscribedRectangle() const
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Circle2<T>::intersects(const Circle2<T>& circle) const
+inline bool Circle2<T>::intersects(const Circle2<T>& circle) const noexcept
 {
 	T d = circle.radius + radius;
 	return (distanceSquared(circle.center, center) <= d*d);
@@ -155,7 +156,7 @@ namespace mathematics::templates {
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Circle2<T>::intersects(const AxisAlignedRectangle<T>& rectangle) const
+inline bool Circle2<T>::intersects(const AxisAlignedRectangle<T>& rectangle) const noexcept
 {
 	return intersections::testAxisAlignedRectangleCircle(rectangle.minimum, rectangle.maximum, center, radius);
 }

@@ -13,6 +13,7 @@
 #include <functional>
 #include <cstddef>
 #include <cmath>
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "Axis.hpp"
 #include "../Algebra/Vector3.hpp"
@@ -45,7 +46,7 @@ struct Capsule
 	// Properties
 	bool approxEquals(const Capsule& capsule) const noexcept;
 	bool approxEquals(const Capsule& capsule, T tolerance) const noexcept;
-	bool isFinite() const noexcept { return center.isFinite() && axis.isFinite() && height.isFinite() && radius.isFinite(); }
+	bool isFinite() const noexcept { return center.isFinite() && axis.isFinite() && std::isfinite(height) && std::isfinite(radius); }
 	Capsule& set(const Vector3<T>& center, const Vector3<T>& axis, T height, T radius) noexcept;
 	Capsule& set(const Vector3<T>& center, Axis axis, T height, T radius) noexcept;
 	const Vector3<T>& getCenter() const noexcept { return center; }
@@ -79,7 +80,7 @@ struct Capsule
 
 template<typename T>
 	requires std::floating_point<T>
-inline Capsule<T>::Capsule(const Vector3<T>& center, const Vector3<T>& axis, T height, T radius) : 
+inline Capsule<T>::Capsule(const Vector3<T>& center, const Vector3<T>& axis, T height, T radius) noexcept : 
 	center(center), 
 	axis(axis), 
 	height(height), 
@@ -89,7 +90,7 @@ inline Capsule<T>::Capsule(const Vector3<T>& center, const Vector3<T>& axis, T h
 
 template<typename T>
 	requires std::floating_point<T>
-inline Capsule<T>::Capsule(const Vector3<T>& center, Axis axis, T height, T radius) : 
+inline Capsule<T>::Capsule(const Vector3<T>& center, Axis axis, T height, T radius) noexcept : 
 	center(center), 
 	axis(axis), 
 	height(height), 
@@ -99,9 +100,9 @@ inline Capsule<T>::Capsule(const Vector3<T>& center, Axis axis, T height, T radi
 
 template<typename T>
 	requires std::floating_point<T>
-inline Capsule<T>::Capsule(const Vector3<T>& point0, const Vector3<T>& point1, T radius) :
+inline Capsule<T>::Capsule(const Vector3<T>& point0, const Vector3<T>& point1, T radius) noexcept :
 	center((point0 + point1)*T(0.5)),
-	axis(normalize(point1 - point0)),
+	axis(templates::normalize(point1 - point0)),
 	height(distance(point0, point1)),
 	radius(radius)
 {
@@ -109,7 +110,7 @@ inline Capsule<T>::Capsule(const Vector3<T>& point0, const Vector3<T>& point1, T
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Capsule<T>::operator==(const Capsule<T>& capsule) const
+inline bool Capsule<T>::operator==(const Capsule<T>& capsule) const noexcept
 { 
 	return (center == capsule.center) && (axis == capsule.axis) && (height == capsule.height) && (radius == capsule.radius);
 }
@@ -131,16 +132,16 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const C
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Capsule<T>::approxEquals(const Capsule<T>& capsule) const
+inline bool Capsule<T>::approxEquals(const Capsule<T>& capsule) const noexcept
 {
 	return center.approxEquals(capsule.center) && axis.approxEquals(capsule.axis) && 
 		(std::fabs(capsule.height - height) < Constants<T>::TOLERANCE) &&
-		(std::fabs(capsule.radius - radius) < Constants<T>::TOLERANCE)
+		(std::fabs(capsule.radius - radius) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Capsule<T>::approxEquals(const Capsule<T>& capsule, T tolerance) const
+inline bool Capsule<T>::approxEquals(const Capsule<T>& capsule, T tolerance) const noexcept
 {
 	return center.approxEquals(capsule.center, tolerance) && axis.approxEquals(capsule.axis, tolerance) &&
 		(std::fabs(capsule.height - height) < tolerance) && (std::fabs(capsule.radius - radius) < tolerance);
@@ -148,7 +149,7 @@ inline bool Capsule<T>::approxEquals(const Capsule<T>& capsule, T tolerance) con
 
 template<typename T>
 	requires std::floating_point<T>
-inline Capsule<T>& Capsule<T>::set(const Vector3<T>& center, const Vector3<T>& axis, T height, T radius)
+inline Capsule<T>& Capsule<T>::set(const Vector3<T>& center, const Vector3<T>& axis, T height, T radius) noexcept
 { 
 	this->center = center; 
 	this->axis = axis;
@@ -159,7 +160,7 @@ inline Capsule<T>& Capsule<T>::set(const Vector3<T>& center, const Vector3<T>& a
 
 template<typename T>
 	requires std::floating_point<T>
-inline Capsule<T>& Capsule<T>::set(const Vector3<T>& center, Axis axis, T height, T radius)
+inline Capsule<T>& Capsule<T>::set(const Vector3<T>& center, Axis axis, T height, T radius) noexcept
 {
 	this->center = center;
 	this->axis = Vector3<T>(axis);
@@ -170,7 +171,7 @@ inline Capsule<T>& Capsule<T>::set(const Vector3<T>& center, Axis axis, T height
 
 template<typename T>
 	requires std::floating_point<T>
-inline OrientedBox<T> Capsule<T>::getCircumscribedBox() const
+inline OrientedBox<T> Capsule<T>::getCircumscribedBox() const noexcept
 {
 	Matrix3<T> matrix(axis);
 	return { center, Matrix3<T>(matrix[0], matrix[2], -matrix[1]), Vector3<T>(radius, height*T(0.5) + radius, radius) };
@@ -178,7 +179,7 @@ inline OrientedBox<T> Capsule<T>::getCircumscribedBox() const
 
 template<typename T>
 	requires std::floating_point<T>
-inline Capsule<T> Capsule<T>::normalize()
+inline Capsule<T>& Capsule<T>::normalize() noexcept
 {
 	T m = axis.getMagnitude();
 	if (m > T(0))

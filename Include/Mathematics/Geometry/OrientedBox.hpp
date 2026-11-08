@@ -16,6 +16,7 @@
 #include <iterator>
 #include <cstddef>
 #include <cmath>
+#include "../Concepts.hpp"
 #include "../Algebra/Vector3.hpp"
 #include "../Algebra/Matrix3.hpp"
 #include "../Transform/AffineTransform.hpp"
@@ -142,7 +143,7 @@ inline OrientedBox<T>::OrientedBox(const AxisAlignedBox<T>& box, const Matrix3<T
 template<typename T>
 	requires std::floating_point<T>
 inline OrientedBox<T>::OrientedBox(const AxisAlignedBox<T>& box, const AffineTransform<T>& transformation, bool orthogonal) noexcept :
-	center(transform(box.getCenter(), transformation)),
+	center(::mathematics::templates::transform(box.getCenter(), transformation)),
 	basis(transformation.getBasis()),
 	halfDims(box.getHalfDimensions())
 {
@@ -219,14 +220,14 @@ template<std::output_iterator<Vector3<T>> O>
 inline O OrientedBox<T>::copyVertices(O target) const
 {
 	AffineTransform<T> m(basis, center);
-	*target++ = transform(-halfDims, m);
-	*target++ = transform(Vector3<T>(halfDims.x, -halfDims.y, -halfDims.z), m);
-	*target++ = transform(Vector3<T>(-halfDims.x, halfDims.y, -halfDims.z), m);
-	*target++ = transform(Vector3<T>(halfDims.x, halfDims.y, -halfDims.z), m);
-	*target++ = transform(Vector3<T>(-halfDims.x, -halfDims.y, halfDims.z), m);
-	*target++ = transform(Vector3<T>(halfDims.x, -halfDims.y, halfDims.z), m);
-	*target++ = transform(Vector3<T>(-halfDims.x, halfDims.y, halfDims.z), m);
-	*target++ = transform(halfDims, m);
+	*target++ = ::mathematics::templates::transform(-halfDims, m);
+	*target++ = ::mathematics::templates::transform(Vector3<T>(halfDims.x, -halfDims.y, -halfDims.z), m);
+	*target++ = ::mathematics::templates::transform(Vector3<T>(-halfDims.x, halfDims.y, -halfDims.z), m);
+	*target++ = ::mathematics::templates::transform(Vector3<T>(halfDims.x, halfDims.y, -halfDims.z), m);
+	*target++ = ::mathematics::templates::transform(Vector3<T>(-halfDims.x, -halfDims.y, halfDims.z), m);
+	*target++ = ::mathematics::templates::transform(Vector3<T>(halfDims.x, -halfDims.y, halfDims.z), m);
+	*target++ = ::mathematics::templates::transform(Vector3<T>(-halfDims.x, halfDims.y, halfDims.z), m);
+	*target++ = ::mathematics::templates::transform(halfDims, m);
 	return target;
 }
 
@@ -235,10 +236,10 @@ template<typename T>
 inline std::vector<Vector3<T>> OrientedBox<T>::getVertices() const
 {
 	AffineTransform<T> m(basis, center);
-	return { transform(-halfDims, m), transform(Vector3<T>(halfDims.x, -halfDims.y, -halfDims.z), m),
-		transform(Vector3<T>(-halfDims.x, halfDims.y, -halfDims.z), m), transform(Vector3<T>(halfDims.x, halfDims.y, -halfDims.z), m),
-		transform(Vector3<T>(-halfDims.x, -halfDims.y, halfDims.z), m), transform(Vector3<T>(halfDims.x, -halfDims.y, halfDims.z), m),
-		transform(Vector3<T>(-halfDims.x, halfDims.y, halfDims.z), m), transform(halfDims, m) };
+	return { ::mathematics::templates::transform(-halfDims, m), ::mathematics::templates::transform(Vector3<T>(halfDims.x, -halfDims.y, -halfDims.z), m),
+		::mathematics::templates::transform(Vector3<T>(-halfDims.x, halfDims.y, -halfDims.z), m), ::mathematics::templates::transform(Vector3<T>(halfDims.x, halfDims.y, -halfDims.z), m),
+		::mathematics::templates::transform(Vector3<T>(-halfDims.x, -halfDims.y, halfDims.z), m), ::mathematics::templates::transform(Vector3<T>(halfDims.x, -halfDims.y, halfDims.z), m),
+		::mathematics::templates::transform(Vector3<T>(-halfDims.x, halfDims.y, halfDims.z), m), ::mathematics::templates::transform(halfDims, m) };
 }
 
 template<typename T>
@@ -310,8 +311,8 @@ template<typename T>
 	requires std::floating_point<T>
 inline AxisAlignedBox<T> OrientedBox<T>::getCircumscribedBox() const noexcept
 {
-	Vector3<T> halfDims = abs(halfDims.x*basis[0]) + abs(halfDims.y*basis[1]) + abs(halfDims.z*basis[2]);
-	return { center - halfDims, center + halfDims };
+	Vector3<T> halfExtents = abs(halfDims.x*basis[0]) + abs(halfDims.y*basis[1]) + abs(halfDims.z*basis[2]);
+	return { center - halfExtents, center + halfExtents };
 }
 
 template<typename T>

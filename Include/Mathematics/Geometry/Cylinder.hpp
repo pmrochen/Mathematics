@@ -13,6 +13,7 @@
 #include <functional>
 #include <cstddef>
 #include <cmath>
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "Axis.hpp"
 #include "../Algebra/Vector3.hpp"
@@ -45,7 +46,7 @@ struct Cylinder
 	// Properties
 	bool approxEquals(const Cylinder& cylinder) const noexcept;
 	bool approxEquals(const Cylinder& cylinder, T tolerance) const noexcept;
-	bool isFinite() const noexcept { return center.isFinite() && axis.isFinite() && height.isFinite() && radius.isFinite(); }
+	bool isFinite() const noexcept { return center.isFinite() && axis.isFinite() && std::isfinite(height) && std::isfinite(radius); }
 	Cylinder& set(const Vector3<T>& center, const Vector3<T>& axis, T height, T radius) noexcept;
 	Cylinder& set(const Vector3<T>& center, Axis axis, T height, T radius) noexcept;
 	const Vector3<T>& getCenter() const noexcept { return center; }
@@ -80,7 +81,7 @@ struct Cylinder
 
 template<typename T>
 	requires std::floating_point<T>
-inline Cylinder<T>::Cylinder(const Vector3<T>& center, const Vector3<T>& axis, T height, T radius) : 
+inline Cylinder<T>::Cylinder(const Vector3<T>& center, const Vector3<T>& axis, T height, T radius) noexcept : 
 	center(center), 
 	axis(axis), 
 	height(height), 
@@ -90,7 +91,7 @@ inline Cylinder<T>::Cylinder(const Vector3<T>& center, const Vector3<T>& axis, T
 
 template<typename T>
 	requires std::floating_point<T>
-inline Cylinder<T>::Cylinder(const Vector3<T>& center, Axis axis, T height, T radius) : 
+inline Cylinder<T>::Cylinder(const Vector3<T>& center, Axis axis, T height, T radius) noexcept : 
 	center(center), 
 	axis(axis), 
 	height(height), 
@@ -100,9 +101,9 @@ inline Cylinder<T>::Cylinder(const Vector3<T>& center, Axis axis, T height, T ra
 
 template<typename T>
 	requires std::floating_point<T>
-inline Cylinder<T>::Cylinder(const Vector3<T>& point0, const Vector3<T>& point1, T radius) :
+inline Cylinder<T>::Cylinder(const Vector3<T>& point0, const Vector3<T>& point1, T radius) noexcept :
 	center((point0 + point1)*T(0.5)),
-	axis(normalize(point1 - point0)),
+	axis(templates::normalize(point1 - point0)),
 	height(distance(point0, point1)),
 	radius(radius)
 {
@@ -110,7 +111,7 @@ inline Cylinder<T>::Cylinder(const Vector3<T>& point0, const Vector3<T>& point1,
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Cylinder<T>::operator==(const Cylinder<T>& cylinder) const
+inline bool Cylinder<T>::operator==(const Cylinder<T>& cylinder) const noexcept
 { 
 	return (center == cylinder.center) && (axis == cylinder.axis) && (height == cylinder.height) && (radius == cylinder.radius);
 }
@@ -132,16 +133,16 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const C
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Cylinder<T>::approxEquals(const Cylinder<T>& cylinder) const
+inline bool Cylinder<T>::approxEquals(const Cylinder<T>& cylinder) const noexcept
 {
 	return center.approxEquals(cylinder.center) && axis.approxEquals(cylinder.axis) && 
 		(std::fabs(cylinder.height - height) < Constants<T>::TOLERANCE) &&
-		(std::fabs(cylinder.radius - radius) < Constants<T>::TOLERANCE)
+		(std::fabs(cylinder.radius - radius) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Cylinder<T>::approxEquals(const Cylinder<T>& cylinder, T tolerance) const
+inline bool Cylinder<T>::approxEquals(const Cylinder<T>& cylinder, T tolerance) const noexcept
 {
 	return center.approxEquals(cylinder.center, tolerance) && axis.approxEquals(cylinder.axis, tolerance) &&
 		(std::fabs(cylinder.height - height) < tolerance) && (std::fabs(cylinder.radius - radius) < tolerance);
@@ -149,7 +150,7 @@ inline bool Cylinder<T>::approxEquals(const Cylinder<T>& cylinder, T tolerance) 
 
 template<typename T>
 	requires std::floating_point<T>
-inline Cylinder<T>& Cylinder<T>::set(const Vector3<T>& center, const Vector3<T>& axis, T height, T radius)
+inline Cylinder<T>& Cylinder<T>::set(const Vector3<T>& center, const Vector3<T>& axis, T height, T radius) noexcept
 { 
 	this->center = center; 
 	this->axis = axis;
@@ -160,7 +161,7 @@ inline Cylinder<T>& Cylinder<T>::set(const Vector3<T>& center, const Vector3<T>&
 
 template<typename T>
 	requires std::floating_point<T>
-inline Cylinder<T>& Cylinder<T>::set(const Vector3<T>& center, Axis axis, T height, T radius)
+inline Cylinder<T>& Cylinder<T>::set(const Vector3<T>& center, Axis axis, T height, T radius) noexcept
 {
 	this->center = center;
 	this->axis = Vector3<T>(axis);
@@ -171,7 +172,7 @@ inline Cylinder<T>& Cylinder<T>::set(const Vector3<T>& center, Axis axis, T heig
 
 template<typename T>
 	requires std::floating_point<T>
-inline OrientedBox<T> Cylinder<T>::getCircumscribedBox() const
+inline OrientedBox<T> Cylinder<T>::getCircumscribedBox() const noexcept
 {
 	Matrix3<T> matrix(axis);
 	return { center, Matrix3<T>(matrix[0], matrix[2], -matrix[1]), Vector3<T>(radius, height*T(0.5), radius) };
@@ -179,7 +180,7 @@ inline OrientedBox<T> Cylinder<T>::getCircumscribedBox() const
 
 template<typename T>
 	requires std::floating_point<T>
-inline Cylinder<T> Cylinder<T>::normalize()
+inline Cylinder<T>& Cylinder<T>::normalize() noexcept
 {
 	T m = axis.getMagnitude();
 	if (m > T(0))
@@ -230,7 +231,7 @@ namespace mathematics::templates {
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Cylinder<T>::contains(const Vector3<T>& point) const
+inline bool Cylinder<T>::contains(const Vector3<T>& point) const noexcept
 {
 	return containment::testCylinderPoint(center, axis, height, radius, point);
 }

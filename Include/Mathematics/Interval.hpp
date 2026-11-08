@@ -16,6 +16,7 @@
 #include <optional>
 #include <cstddef>
 #include <cmath>
+#include "Concepts.hpp"
 #include "Constants.hpp"
 #include "Scalar.hpp"
 
@@ -54,7 +55,7 @@ struct Interval
 	bool isApproxZero() const noexcept;
 	bool approxEquals(const Interval& interval) const noexcept;
 	bool approxEquals(const Interval& interval, T tolerance) const noexcept;
-	bool isFinite() const noexcept { return minimum.isFinite() && maximum.isFinite(); }
+	bool isFinite() const noexcept { return std::isfinite(minimum) && std::isfinite(maximum); }
 	Interval& clear() noexcept { minimum = std::numeric_limits<T>::infinity(); maximum = -std::numeric_limits<T>::infinity(); return *this; }
 	Interval& setZero() noexcept { minimum = T(); maximum = T(); return *this; }
 	Interval& set(T minimum, T maximum) noexcept { this->minimum = minimum; this->maximum = maximum; return *this; }
@@ -69,7 +70,7 @@ struct Interval
 	void setCenter(T center) noexcept;
 
 	// Interpolation
-	T interpolate(T t) const noexcept { return lerp(minimum, maximum, t); }
+	T interpolate(T t) const noexcept { return mathematics::lerp(minimum, maximum, t); }
 
 	// Transformation
 	Interval& translate(T offset) noexcept;
@@ -230,17 +231,17 @@ inline std::optional<Interval<T>> Interval<T>::findIntersection(const Interval& 
 	{
 		if (minimum < interval.maximum)
 		{
-			return { std::in_place, (minimum < interval.minimum) ? interval.minimum : minimum,
-				(maximum > interval.maximum) ? interval.maximum : maximum };
+			return std::optional<Interval<T>>(std::in_place, (minimum < interval.minimum) ? interval.minimum : minimum,
+				(maximum > interval.maximum) ? interval.maximum : maximum);
 		}
 		else
 		{
-			return { std::in_place, minimum };
+			return std::optional<Interval<T>>(std::in_place, minimum);
 		}
 	}
 	else
 	{
-		return { std::in_place, maximum };
+		return std::optional<Interval<T>>(std::in_place, maximum);
 	}
 }
 

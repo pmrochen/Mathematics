@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cmath>
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "../Algebra/Vector2.hpp"
 
@@ -130,21 +131,21 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const A
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool AxisAlignedRectangle<T>::approxEquals(const AxisAlignedRectangle<T>& rectangle) const
+inline bool AxisAlignedRectangle<T>::approxEquals(const AxisAlignedRectangle<T>& rectangle) const noexcept
 {
 	return minimum.approxEquals(rectangle.minimum) && maximum.approxEquals(rectangle.maximum);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool AxisAlignedRectangle<T>::approxEquals(const AxisAlignedRectangle<T>& rectangle, T tolerance) const
+inline bool AxisAlignedRectangle<T>::approxEquals(const AxisAlignedRectangle<T>& rectangle, T tolerance) const noexcept
 {
 	return minimum.approxEquals(rectangle.minimum, tolerance) && maximum.approxEquals(rectangle.maximum, tolerance);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline void AxisAlignedRectangle<T>::setDimensions(const Vector2<T>& dimensions)
+inline void AxisAlignedRectangle<T>::setDimensions(const Vector2<T>& dimensions) noexcept
 {
 	Vector2<T> center = (minimum + maximum)*T(0.5);
 	Vector2<T> halfDims = T(0.5)*dimensions;
@@ -154,7 +155,7 @@ inline void AxisAlignedRectangle<T>::setDimensions(const Vector2<T>& dimensions)
 
 template<typename T>
 	requires std::floating_point<T>
-inline void AxisAlignedRectangle<T>::setHalfDimensions(const Vector2<T>& halfDims)
+inline void AxisAlignedRectangle<T>::setHalfDimensions(const Vector2<T>& halfDims) noexcept
 {
 	Vector2<T> center = (minimum + maximum)*T(0.5);
 	minimum = center - halfDims;
@@ -163,7 +164,7 @@ inline void AxisAlignedRectangle<T>::setHalfDimensions(const Vector2<T>& halfDim
 
 template<typename T>
 	requires std::floating_point<T>
-inline void AxisAlignedRectangle<T>::setCenter(const Vector2<T>& center)
+inline void AxisAlignedRectangle<T>::setCenter(const Vector2<T>& center) noexcept
 {
 	Vector2<T> diff = center - (minimum + maximum)*T(0.5);
 	minimum += diff;
@@ -172,7 +173,7 @@ inline void AxisAlignedRectangle<T>::setCenter(const Vector2<T>& center)
 
 template<typename T>
 	requires std::floating_point<T>
-inline T AxisAlignedRectangle<T>::getPerimeter() const
+inline T AxisAlignedRectangle<T>::getPerimeter() const noexcept
 {
 	Vector2<T> dim = maximum - minimum;
 	return T(2)*(dim.x + dim.y);
@@ -180,7 +181,7 @@ inline T AxisAlignedRectangle<T>::getPerimeter() const
 
 template<typename T>
 	requires std::floating_point<T>
-inline T AxisAlignedRectangle<T>::getArea() const
+inline T AxisAlignedRectangle<T>::getArea() const noexcept
 {
 	Vector2<T> dim = maximum - minimum;
 	return dim.x*dim.y;
@@ -200,14 +201,14 @@ inline O AxisAlignedRectangle<T>::copyVertices(O target) const
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::array<Vector2<T>, 4> AxisAlignedRectangle<T>::getVertices() const
+inline std::array<Vector2<T>, 4> AxisAlignedRectangle<T>::getVertices() const noexcept
 {
 	return { minimum, Vector2<T>(maximum.x, minimum.y), Vector2<T>(minimum.x, maximum.y), maximum };
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::scaleAroundCenter(T factor)
+inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::scaleAroundCenter(T factor) noexcept
 {
 	Vector2<T> center = (minimum + maximum)*T(0.5);
 	minimum = (minimum - center)*factor + center;
@@ -217,7 +218,7 @@ inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::scaleAroundCenter(T fac
 
 template<typename T>
 	requires std::floating_point<T>
-inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::setUnion(const AxisAlignedRectangle<T>& a, const AxisAlignedRectangle<T>& b)
+inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::setUnion(const AxisAlignedRectangle<T>& a, const AxisAlignedRectangle<T>& b) noexcept
 {
 	minimum.setMinimum(a.minimum, b.minimum);
 	maximum.setMaximum(a.maximum, b.maximum);
@@ -226,7 +227,7 @@ inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::setUnion(const AxisAlig
 
 template<typename T>
 	requires std::floating_point<T>
-inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::setIntersection(const AxisAlignedRectangle<T>& a, const AxisAlignedRectangle<T>& b)
+inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::setIntersection(const AxisAlignedRectangle<T>& a, const AxisAlignedRectangle<T>& b) noexcept
 {
 	minimum.setMaximum(a.minimum, b.minimum);
 	maximum.setMinimum(a.maximum, b.maximum);
@@ -235,7 +236,7 @@ inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::setIntersection(const A
 
 template<typename T>
 	requires std::floating_point<T>
-inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::extendBy(const Vector2<T>& point)
+inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::extendBy(const Vector2<T>& point) noexcept
 {
 	minimum.setMinimum(minimum, point);
 	maximum.setMaximum(maximum, point);
@@ -244,21 +245,21 @@ inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::extendBy(const Vector2<
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool AxisAlignedRectangle<T>::contains(const Vector2<T>& point) const
+inline bool AxisAlignedRectangle<T>::contains(const Vector2<T>& point) const noexcept
 {
 	return minimum.allLessThanEqual(point) && maximum.allGreaterThanEqual(point);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool AxisAlignedRectangle<T>::contains(const AxisAlignedRectangle<T>& rectangle) const
+inline bool AxisAlignedRectangle<T>::contains(const AxisAlignedRectangle<T>& rectangle) const noexcept
 {
 	return minimum.allLessThanEqual(rectangle.minimum) && maximum.allGreaterThanEqual(rectangle.maximum);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool AxisAlignedRectangle<T>::intersects(const AxisAlignedRectangle<T>& rectangle) const
+inline bool AxisAlignedRectangle<T>::intersects(const AxisAlignedRectangle<T>& rectangle) const noexcept
 {
 	return minimum.allLessThanEqual(rectangle.maximum) && maximum.allGreaterThanEqual(rectangle.minimum);
 }
@@ -300,7 +301,7 @@ namespace mathematics::templates {
 	
 template<typename T>
 	requires std::floating_point<T>
-inline Circle2<T> AxisAlignedRectangle<T>::getCircumscribedCircle() const
+inline Circle2<T> AxisAlignedRectangle<T>::getCircumscribedCircle() const noexcept
 {
 	Vector2<T> center = (minimum + maximum)*T(0.5);
 	return Circle2<T>(center, distance(center, maximum));
@@ -308,7 +309,7 @@ inline Circle2<T> AxisAlignedRectangle<T>::getCircumscribedCircle() const
 
 template<typename T>
 	requires std::floating_point<T>
-inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::extendBy(const Circle2<T>& circle)
+inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::extendBy(const Circle2<T>& circle) noexcept
 {
 	Vector2<T> radius(circle.radius);
 	setUnion(*this, AxisAlignedRectangle<T>(circle.center - radius, circle.center + radius));
@@ -317,7 +318,7 @@ inline AxisAlignedRectangle<T>& AxisAlignedRectangle<T>::extendBy(const Circle2<
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool AxisAlignedRectangle<T>::contains(const Circle2<T>& circle) const
+inline bool AxisAlignedRectangle<T>::contains(const Circle2<T>& circle) const noexcept
 {
 	Vector2<T> radius(circle.radius);
 	return minimum.allLessThanEqual(circle.center - radius) && maximum.allGreaterThanEqual(circle.center + radius);
@@ -325,7 +326,7 @@ inline bool AxisAlignedRectangle<T>::contains(const Circle2<T>& circle) const
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool AxisAlignedRectangle<T>::intersects(const Circle2<T>& circle) const
+inline bool AxisAlignedRectangle<T>::intersects(const Circle2<T>& circle) const noexcept
 {
 	return intersections::testAxisAlignedRectangleCircle(minimum, maximum, circle.center, circle.radius);
 }

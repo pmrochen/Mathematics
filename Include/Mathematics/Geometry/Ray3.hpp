@@ -16,6 +16,7 @@
 #include <vector>
 #include <cstddef>
 #include <cmath>
+#include "../Concepts.hpp"
 #include "../Algebra/Vector3.hpp"
 #include "../Algebra/Matrix3.hpp"
 #include "../Transform/AffineTransform.hpp"
@@ -150,21 +151,21 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const R
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Ray3<T>::approxEquals(const Ray3<T>& ray) const
+inline bool Ray3<T>::approxEquals(const Ray3<T>& ray) const noexcept
 {
 	return origin.approxEquals(ray.origin) && direction.approxEquals(ray.direction);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Ray3<T>::approxEquals(const Ray3<T>& ray, T tolerance) const
+inline bool Ray3<T>::approxEquals(const Ray3<T>& ray, T tolerance) const noexcept
 {
 	return origin.approxEquals(ray.origin, tolerance) && direction.approxEquals(ray.direction, tolerance);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline Ray3<T>& Ray3<T>::transform(const Matrix3<T>& matrix)
+inline Ray3<T>& Ray3<T>::transform(const Matrix3<T>& matrix) noexcept
 {
 	origin *= matrix;
 	direction *= matrix;
@@ -173,7 +174,7 @@ inline Ray3<T>& Ray3<T>::transform(const Matrix3<T>& matrix)
 
 template<typename T>
 	requires std::floating_point<T>
-inline Ray3<T>& Ray3<T>::transform(const AffineTransform<T>& transformation)
+inline Ray3<T>& Ray3<T>::transform(const AffineTransform<T>& transformation) noexcept
 {
 	origin.transform(transformation);
 	direction *= transformation.getBasis();
@@ -258,7 +259,7 @@ namespace mathematics::templates {
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Ray3<T>::intersects(const Ellipsoid<T>& ellipsoid) const
+inline bool Ray3<T>::intersects(const Ellipsoid<T>& ellipsoid) const noexcept
 {
 	return intersections::testRayEllipsoid(origin, direction, ellipsoid.center, ellipsoid.getMatrix());
 }
@@ -266,7 +267,7 @@ inline bool Ray3<T>::intersects(const Ellipsoid<T>& ellipsoid) const
 template<typename T>
 	requires std::floating_point<T>
 template<std::integral U> 
-bool Ray3<T>::intersects(const TriangleMesh<T, U>* mesh) const
+bool Ray3<T>::intersects(const TriangleMesh<T, U>* mesh) const noexcept
 {
 	if (!mesh)
 		return false;
@@ -310,10 +311,10 @@ bool Ray3<T>::intersects(const TriangleMesh<T, U>* mesh) const
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::optional<T> Ray3<T>::findIntersection(const Plane<T>& plane) const
+inline std::optional<T> Ray3<T>::findIntersection(const Plane<T>& plane) const noexcept
 {
 	auto result = intersections::findLinePlane<std::optional<T>>(origin, direction, plane.getNormal(), plane.d);
-	return (result.has_value() && (result.value() >= T(0))) ? result : {};
+	return (result.has_value() && (result.value() >= T(0))) ? result : std::nullopt;
 }
 
 //template<typename T>
@@ -330,18 +331,18 @@ inline std::optional<T> Ray3<T>::findIntersection(const Plane<T>& plane) const
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::optional<T> Ray3<T>::findIntersection(const Triangle3<T>& triangle) const
+inline std::optional<T> Ray3<T>::findIntersection(const Triangle3<T>& triangle) const noexcept
 {
 	//return intersections::findRayTriangle<std::optional<T>>(origin, direction, triangle.vertices[0], triangle.vertices[1], 
 	//	triangle.vertices[2]);
 	auto result = intersections::findLineTriangle<std::optional<T>>(origin, direction, triangle.vertices[0], triangle.vertices[1],
 		triangle.vertices[2]);
-	return (result.has_value() && (result.value() >= T(0))) ? result : {};
+	return (result.has_value() && (result.value() >= T(0))) ? result : std::nullopt;
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::optional<Interval<T>> Ray3<T>::findIntersection(const AxisAlignedBox<T>& box) const
+inline std::optional<Interval<T>> Ray3<T>::findIntersection(const AxisAlignedBox<T>& box) const noexcept
 {
 	auto result = intersections::findLineAxisAlignedBox<std::optional<Interval<T>>>(origin, direction, box.minimum, box.maximum);
 
@@ -349,7 +350,7 @@ inline std::optional<Interval<T>> Ray3<T>::findIntersection(const AxisAlignedBox
 	{
 		const Interval<T>& interval = result.value();
 		if (interval.minimum != interval.maximum)
-			return { std::in_place, std::max(interval.minimum, T(0)), interval.maximum };
+			return std::optional<Interval<T>>(std::in_place, std::max(interval.minimum, T(0)), interval.maximum);
 		else
 			return result;
 	}
@@ -361,7 +362,7 @@ inline std::optional<Interval<T>> Ray3<T>::findIntersection(const AxisAlignedBox
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::optional<Interval<T>> Ray3<T>::findIntersection(const OrientedBox<T>& box) const
+inline std::optional<Interval<T>> Ray3<T>::findIntersection(const OrientedBox<T>& box) const noexcept
 {
 	auto result = intersections::findLineOrientedBox<std::optional<Interval<T>>>(origin, direction, box.center, box.basis, box.halfDims);
 
@@ -369,7 +370,7 @@ inline std::optional<Interval<T>> Ray3<T>::findIntersection(const OrientedBox<T>
 	{
 		const Interval<T>& interval = result.value();
 		if (interval.minimum != interval.maximum)
-			return { std::in_place, std::max(interval.minimum, T(0)), interval.maximum };
+			return std::optional<Interval<T>>(std::in_place, std::max(interval.minimum, T(0)), interval.maximum);
 		else
 			return result;
 	}
@@ -381,7 +382,7 @@ inline std::optional<Interval<T>> Ray3<T>::findIntersection(const OrientedBox<T>
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Sphere<T>& sphere) const
+inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Sphere<T>& sphere) const noexcept
 {
 	auto result = intersections::findLineNSphere<std::optional<Interval<T>>>(origin, direction, sphere.center, sphere.radius);
 	
@@ -389,7 +390,7 @@ inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Sphere<T>& sph
 	{
 		const Interval<T>& interval = result.value();
 		if (interval.minimum != interval.maximum)
-			return { std::in_place, std::max(interval.minimum, T(0)), interval.maximum };
+			return std::optional<Interval<T>>(std::in_place, std::max(interval.minimum, T(0)), interval.maximum);
 		else
 			return result;
 	}
@@ -402,7 +403,7 @@ inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Sphere<T>& sph
 template<typename T>
 	requires std::floating_point<T>
 template<Normalization U>
-inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Sphere<T>& sphere) const
+inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Sphere<T>& sphere) const noexcept
 {
 	std::optional<Interval<T>> result;
 	if constexpr (std::is_same_v<U, Normalized>)
@@ -414,7 +415,7 @@ inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Sphere<T>& sph
 	{
 		const Interval<T>& interval = result.value();
 		if (interval.minimum != interval.maximum)
-			return { std::in_place, std::max(interval.minimum, T(0)), interval.maximum };
+			return std::optional<Interval<T>>(std::in_place, std::max(interval.minimum, T(0)), interval.maximum);
 		else
 			return result;
 	}
@@ -426,7 +427,7 @@ inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Sphere<T>& sph
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Ellipsoid<T>& ellipsoid) const
+inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Ellipsoid<T>& ellipsoid) const noexcept
 {
 	return intersections::findRayEllipsoid<std::optional<Interval<T>>>(origin, direction, ellipsoid.center, ellipsoid.getMatrix());
 }
@@ -434,7 +435,7 @@ inline std::optional<Interval<T>> Ray3<T>::findIntersection(const Ellipsoid<T>& 
 template<typename T>
 	requires std::floating_point<T>
 template<std::integral U> 
-std::vector<T> Ray3<T>::findIntersections(const TriangleMesh<T, U>* mesh) const
+std::vector<T> Ray3<T>::findIntersections(const TriangleMesh<T, U>* mesh) const noexcept
 {
 	std::vector<T> intersections;
 	if (!mesh)

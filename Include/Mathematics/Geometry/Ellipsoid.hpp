@@ -13,6 +13,7 @@
 #include <functional>
 #include <cstddef>
 #include <cmath>
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "../Algebra/Vector3.hpp"
 #include "../Algebra/Matrix3.hpp"
@@ -107,7 +108,7 @@ inline Ellipsoid<T>::Ellipsoid(const Sphere<T>& sphere, const Matrix3<T>& orient
 template<typename T>
 	requires std::floating_point<T>
 inline Ellipsoid<T>::Ellipsoid(const Sphere<T>& sphere, const AffineTransform<T>& transformation, bool orthogonal) noexcept :
-	center(transform(sphere.center, transformation)),
+	center(::mathematics::templates::transform(sphere.center, transformation)),
 	basis(transformation.getBasis()),
 	radii(sphere.radius)
 {

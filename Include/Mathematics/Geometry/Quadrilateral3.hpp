@@ -17,6 +17,7 @@
 #include <iterator>
 #include <cstddef>
 #include <cmath>
+#include "../Concepts.hpp"
 #include "../Algebra/Vector3.hpp"
 #include "../Algebra/Matrix3.hpp"
 #include "../Transform/AffineTransform.hpp"
@@ -87,21 +88,21 @@ struct Quadrilateral3
 
 template<typename T>
 	requires std::floating_point<T>
-inline Quadrilateral3<T>::Quadrilateral3(Uninitialized) : 
+inline Quadrilateral3<T>::Quadrilateral3(Uninitialized) noexcept : 
 	vertices{ { Uninitialized() }, { Uninitialized() }, { Uninitialized() }, { Uninitialized() } }
 {
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline Quadrilateral3<T>::Quadrilateral3(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3) :
+inline Quadrilateral3<T>::Quadrilateral3(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3) noexcept :
 	vertices{ v0, v1, v2, v3 }
 {
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Quadrilateral3<T>::operator==(const Quadrilateral3<T>& quad) const
+inline bool Quadrilateral3<T>::operator==(const Quadrilateral3<T>& quad) const noexcept
 { 
 	return (vertices[0] == quad.vertices[0]) && (vertices[1] == quad.vertices[1]) && (vertices[2] == quad.vertices[2]) &&
 		(vertices[3] == quad.vertices[3]);
@@ -124,14 +125,14 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const Q
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Quadrilateral3<T>::isApproxZero() const
+inline bool Quadrilateral3<T>::isApproxZero() const noexcept
 {
 	return vertices[0].isApproxZero() && vertices[1].isApproxZero() && vertices[2].isApproxZero() && vertices[3].isApproxZero();
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Quadrilateral3<T>::approxEquals(const Quadrilateral3<T>& quad) const
+inline bool Quadrilateral3<T>::approxEquals(const Quadrilateral3<T>& quad) const noexcept
 {
 	return vertices[0].approxEquals(quad.vertices[0]) &&
 		vertices[1].approxEquals(quad.vertices[1]) &&
@@ -141,7 +142,7 @@ inline bool Quadrilateral3<T>::approxEquals(const Quadrilateral3<T>& quad) const
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Quadrilateral3<T>::approxEquals(const Quadrilateral3<T>& quad, T tolerance) const
+inline bool Quadrilateral3<T>::approxEquals(const Quadrilateral3<T>& quad, T tolerance) const noexcept
 {
 	return vertices[0].approxEquals(quad.vertices[0], tolerance) &&
 		vertices[1].approxEquals(quad.vertices[1], tolerance) &&
@@ -151,14 +152,14 @@ inline bool Quadrilateral3<T>::approxEquals(const Quadrilateral3<T>& quad, T tol
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Quadrilateral3<T>::isFinite() const
+inline bool Quadrilateral3<T>::isFinite() const noexcept
 { 
 	return vertices[0].isFinite() && vertices[1].isFinite() && vertices[2].isFinite() && vertices[3].isFinite();
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline Quadrilateral3<T>& Quadrilateral3<T>::setZero()
+inline Quadrilateral3<T>& Quadrilateral3<T>::setZero() noexcept
 {
 	vertices[0].setZero();
 	vertices[1].setZero();
@@ -169,7 +170,7 @@ inline Quadrilateral3<T>& Quadrilateral3<T>::setZero()
 
 template<typename T>
 	requires std::floating_point<T>
-inline Quadrilateral3<T>& Quadrilateral3<T>::set(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3)
+inline Quadrilateral3<T>& Quadrilateral3<T>::set(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3) noexcept
 {
 	vertices[0] = v0;
 	vertices[1] = v1;
@@ -180,7 +181,7 @@ inline Quadrilateral3<T>& Quadrilateral3<T>::set(const Vector3<T>& v0, const Vec
 
 template<typename T>
 	requires std::floating_point<T>
-inline T Quadrilateral3<T>::getPerimeter() const
+inline T Quadrilateral3<T>::getPerimeter() const noexcept
 {
 	return distance(vertices[0], vertices[1]) + distance(vertices[1], vertices[2]) + distance(vertices[2], vertices[3]) +
 		distance(vertices[3], vertices[0]);
@@ -188,7 +189,7 @@ inline T Quadrilateral3<T>::getPerimeter() const
 
 template<typename T>
 	requires std::floating_point<T>
-inline T Quadrilateral3<T>::getArea() const
+inline T Quadrilateral3<T>::getArea() const noexcept
 {
 	return cross(vertices[2] - vertices[0], vertices[3] - vertices[1]).getMagnitude()*T(0.5);
 }
@@ -216,7 +217,7 @@ inline O Quadrilateral3<T>::copyVertices(O target) const
 
 template<typename T>
 	requires std::floating_point<T>
-inline typename Quadrilateral3<T>::TupleType Quadrilateral3<T>::getVertices() const
+inline typename Quadrilateral3<T>::TupleType Quadrilateral3<T>::getVertices() const noexcept
 { 
 	return { vertices[0], vertices[1], vertices[2], vertices[3] }; 
 }
@@ -224,22 +225,22 @@ inline typename Quadrilateral3<T>::TupleType Quadrilateral3<T>::getVertices() co
 template<typename T>
 	requires std::floating_point<T>
 /*static*/ inline Vector3<T> Quadrilateral3<T>::computeNormal(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, 
-	const Vector3<T>& v3)
+	const Vector3<T>& v3) noexcept
 {
-	return normalize(cross(v1 - v0, v2 - v0) + cross(v2 - v0, v3 - v0));
+	return templates::normalize(cross(v1 - v0, v2 - v0) + cross(v2 - v0, v3 - v0));
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline Vector3<T> Quadrilateral3<T>::getNormal() const
+inline Vector3<T> Quadrilateral3<T>::getNormal() const noexcept
 {
-	return normalize(cross(vertices[1] - vertices[0], vertices[2] - vertices[0]) + 
+	return templates::normalize(cross(vertices[1] - vertices[0], vertices[2] - vertices[0]) + 
 		cross(vertices[2] - vertices[0], vertices[3] - vertices[0]));
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline Quadrilateral3<T>& Quadrilateral3<T>::translate(const Vector3<T>& offset)
+inline Quadrilateral3<T>& Quadrilateral3<T>::translate(const Vector3<T>& offset) noexcept
 {
 	vertices[0] += offset;
 	vertices[1] += offset;
@@ -250,7 +251,7 @@ inline Quadrilateral3<T>& Quadrilateral3<T>::translate(const Vector3<T>& offset)
 
 template<typename T>
 	requires std::floating_point<T>
-inline Quadrilateral3<T>& Quadrilateral3<T>::transform(const Matrix3<T>& matrix)
+inline Quadrilateral3<T>& Quadrilateral3<T>::transform(const Matrix3<T>& matrix) noexcept
 {
 	vertices[0] *= matrix;
 	vertices[1] *= matrix;
@@ -261,7 +262,7 @@ inline Quadrilateral3<T>& Quadrilateral3<T>::transform(const Matrix3<T>& matrix)
 
 template<typename T>
 	requires std::floating_point<T>
-inline Quadrilateral3<T>& Quadrilateral3<T>::transform(const AffineTransform<T>& transformation)
+inline Quadrilateral3<T>& Quadrilateral3<T>::transform(const AffineTransform<T>& transformation) noexcept
 {
 	vertices[0].transform(transformation);
 	vertices[1].transform(transformation);
@@ -272,7 +273,7 @@ inline Quadrilateral3<T>& Quadrilateral3<T>::transform(const AffineTransform<T>&
 
 template<typename T>
 	requires std::floating_point<T>
-inline Quadrilateral3<T>& Quadrilateral3<T>::flip()
+inline Quadrilateral3<T>& Quadrilateral3<T>::flip() noexcept
 {
 	std::swap(vertices[0], vertices[3]);
 	std::swap(vertices[1], vertices[2]);
@@ -317,9 +318,9 @@ namespace mathematics::templates {
 
 template<typename T>
 	requires std::floating_point<T>
-inline AxisAlignedBox<T> Quadrilateral3<T>::getCircumscribedBox() const
+inline AxisAlignedBox<T> Quadrilateral3<T>::getCircumscribedBox() const noexcept
 {
-	return { min(min(min(vertex0_, vertex1_), vertex2_), vertex3_), max(max(max(vertex0_, vertex1_), vertex2_), vertex3_) };
+	return { min(min(min(vertices[0], vertices[1]), vertices[2]), vertices[3]), max(max(max(vertices[0], vertices[1]), vertices[2]), vertices[3]) };
 }
 
 } // namespace mathematics::templates

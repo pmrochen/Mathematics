@@ -14,6 +14,7 @@
 #include <utility>
 #include <cstddef>
 #include <cmath>
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "../Algebra/Vector3.hpp"
 #include "HalfSpace.hpp"
@@ -62,7 +63,7 @@ struct Sphere
 	// Properties
 	bool approxEquals(const Sphere& sphere) const noexcept;
 	bool approxEquals(const Sphere& sphere, T tolerance) const noexcept;
-	bool isFinite() const noexcept { return center.isFinite() && radius.isFinite(); }
+	bool isFinite() const noexcept { return center.isFinite() && std::isfinite(radius); }
 	Sphere& set(const Vector3<T>& center, T radius) noexcept { this->center = center; this->radius = radius; return *this; }
 	const Vector3<T>& getCenter() const noexcept { return center; }
 	void setCenter(const Vector3<T>& center) noexcept { this->center = center; }
@@ -212,7 +213,9 @@ template<typename T>
 	requires std::floating_point<T>
 inline Sphere<T>& Sphere<T>::transform(const Matrix3<T>& matrix, bool orthogonal) noexcept
 {
-	if (!orthogonal)
+	if (orthogonal)
+		center *= matrix;
+	else
 		*this = Sphere<T>(Ellipsoid<T>(*this, matrix, orthogonal));
 	return *this;
 }

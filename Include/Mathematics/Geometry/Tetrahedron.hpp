@@ -17,6 +17,7 @@
 #include <iterator>
 #include <cstddef>
 #include <cmath>
+#include "../Concepts.hpp"
 #include "../Algebra/Vector3.hpp"
 #include "../Algebra/Matrix3.hpp"
 #include "../Transform/AffineTransform.hpp"
@@ -81,21 +82,21 @@ struct Tetrahedron
 
 template<typename T>
 	requires std::floating_point<T>
-inline Tetrahedron<T>::Tetrahedron(Uninitialized) :
+inline Tetrahedron<T>::Tetrahedron(Uninitialized) noexcept :
 	vertices{ { Uninitialized() }, { Uninitialized() }, { Uninitialized() }, { Uninitialized() } }
 {
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline Tetrahedron<T>::Tetrahedron(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3) :
+inline Tetrahedron<T>::Tetrahedron(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3) noexcept :
 	vertices{ v0, v1, v2, v3 }
 {
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Tetrahedron<T>::operator==(const Tetrahedron<T>& tetrahedron) const
+inline bool Tetrahedron<T>::operator==(const Tetrahedron<T>& tetrahedron) const noexcept
 { 
 	return (vertices[0] == tetrahedron.vertices[0]) && (vertices[1] == tetrahedron.vertices[1]) && (vertices[2] == tetrahedron.vertices[2]) &&
 		(vertices[3] == tetrahedron.vertices[3]);
@@ -118,14 +119,14 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const T
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Tetrahedron<T>::isApproxZero() const
+inline bool Tetrahedron<T>::isApproxZero() const noexcept
 {
 	return vertices[0].isApproxZero() && vertices[1].isApproxZero() && vertices[2].isApproxZero() && vertices[3].isApproxZero();
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Tetrahedron<T>::approxEquals(const Tetrahedron<T>& tetrahedron) const
+inline bool Tetrahedron<T>::approxEquals(const Tetrahedron<T>& tetrahedron) const noexcept
 {
 	return vertices[0].approxEquals(tetrahedron.vertices[0]) &&
 		vertices[1].approxEquals(tetrahedron.vertices[1]) &&
@@ -135,7 +136,7 @@ inline bool Tetrahedron<T>::approxEquals(const Tetrahedron<T>& tetrahedron) cons
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Tetrahedron<T>::approxEquals(const Tetrahedron<T>& tetrahedron, T tolerance) const
+inline bool Tetrahedron<T>::approxEquals(const Tetrahedron<T>& tetrahedron, T tolerance) const noexcept
 {
 	return vertices[0].approxEquals(tetrahedron.vertices[0], tolerance) &&
 		vertices[1].approxEquals(tetrahedron.vertices[1], tolerance) &&
@@ -145,14 +146,14 @@ inline bool Tetrahedron<T>::approxEquals(const Tetrahedron<T>& tetrahedron, T to
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Tetrahedron<T>::isFinite() const
+inline bool Tetrahedron<T>::isFinite() const noexcept
 { 
 	return vertices[0].isFinite() && vertices[1].isFinite() && vertices[2].isFinite() && vertices[3].isFinite();
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline Tetrahedron<T>& Tetrahedron<T>::setZero()
+inline Tetrahedron<T>& Tetrahedron<T>::setZero() noexcept
 {
 	vertices[0].setZero();
 	vertices[1].setZero();
@@ -163,7 +164,7 @@ inline Tetrahedron<T>& Tetrahedron<T>::setZero()
 
 template<typename T>
 	requires std::floating_point<T>
-inline Tetrahedron<T>& Tetrahedron<T>::set(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3)
+inline Tetrahedron<T>& Tetrahedron<T>::set(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2, const Vector3<T>& v3) noexcept
 {
 	vertices[0] = v0;
 	vertices[1] = v1;
@@ -174,14 +175,14 @@ inline Tetrahedron<T>& Tetrahedron<T>::set(const Vector3<T>& v0, const Vector3<T
 
 template<typename T>
 	requires std::floating_point<T>
-inline Vector3<T> Tetrahedron<T>::getCentroid() const
+inline Vector3<T> Tetrahedron<T>::getCentroid() const noexcept
 {
 	return (vertices[0] + vertices[1] + vertices[2] + vertices[3])*T(0.25);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline T Tetrahedron<T>::getVolume() const
+inline T Tetrahedron<T>::getVolume() const noexcept
 {
 	return std::fabs(dot(vertices[0] - vertices[3], cross(vertices[1] - vertices[3], vertices[2] - vertices[3])))/T(6);
 }
@@ -190,7 +191,7 @@ template<typename T>
 	requires std::floating_point<T>
 inline void Tetrahedron<T>::setVertex(int index, const Vector3<T>& vertex)
 {
-	if ((unsigned int)index >= 3u)
+	if ((unsigned int)index >= 4u)
 		throw std::out_of_range("Tetrahedron::setVertex() : index");
 	vertices[index] = vertex;
 }
@@ -209,14 +210,14 @@ inline O Tetrahedron<T>::copyVertices(O target) const
 
 template<typename T>
 	requires std::floating_point<T>
-inline typename Tetrahedron<T>::TupleType Tetrahedron<T>::getVertices() const
+inline typename Tetrahedron<T>::TupleType Tetrahedron<T>::getVertices() const noexcept
 {
 	return { vertices[0], vertices[1], vertices[2], vertices[3] };
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline Tetrahedron<T>& Tetrahedron<T>::translate(const Vector3<T>& offset)
+inline Tetrahedron<T>& Tetrahedron<T>::translate(const Vector3<T>& offset) noexcept
 {
 	vertices[0] += offset;
 	vertices[1] += offset;
@@ -227,7 +228,7 @@ inline Tetrahedron<T>& Tetrahedron<T>::translate(const Vector3<T>& offset)
 
 template<typename T>
 	requires std::floating_point<T>
-inline Tetrahedron<T>& Tetrahedron<T>::transform(const Matrix3<T>& matrix)
+inline Tetrahedron<T>& Tetrahedron<T>::transform(const Matrix3<T>& matrix) noexcept
 {
 	vertices[0] *= matrix;
 	vertices[1] *= matrix;
@@ -238,7 +239,7 @@ inline Tetrahedron<T>& Tetrahedron<T>::transform(const Matrix3<T>& matrix)
 
 template<typename T>
 	requires std::floating_point<T>
-inline Tetrahedron<T>& Tetrahedron<T>::transform(const AffineTransform<T>& transformation)
+inline Tetrahedron<T>& Tetrahedron<T>::transform(const AffineTransform<T>& transformation) noexcept
 {
 	vertices[0].transform(transformation);
 	vertices[1].transform(transformation);
@@ -285,9 +286,9 @@ namespace mathematics::templates {
 
 template<typename T>
 	requires std::floating_point<T>
-inline AxisAlignedBox<T> Tetrahedron<T>::getCircumscribedBox() const
+inline AxisAlignedBox<T> Tetrahedron<T>::getCircumscribedBox() const noexcept
 {
-	return { min(min(min(vertex0_, vertex1_), vertex2_), vertex3_), max(max(max(vertex0_, vertex1_), vertex2_), vertex3_) };
+	return { min(min(min(vertices[0], vertices[1]), vertices[2]), vertices[3]), max(max(max(vertices[0], vertices[1]), vertices[2]), vertices[3]) };
 }
 
 } // namespace mathematics::templates
