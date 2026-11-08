@@ -19,6 +19,7 @@
 #include <Simd/Intrinsics.hpp>
 #include <Simd/Functional.hpp>
 #endif
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "../Scalar.hpp"
 #include "../Geometry/Axis.hpp"
@@ -144,22 +145,22 @@ struct AffineTransform
 	AffineTransform& setRotation(const YawPitchRoll<T>& r) noexcept;
 	AffineTransform& setRotation(const Euler<T>& e) noexcept;
 	AffineTransform& setRotation(const Quaternion<T>& q) noexcept;
-	AffineTransform& setRotationTranslation(Axis axis, T angle, const Vector3<T>& t) noexcept { return setRotation(axis, angle).setOrigin(t); }
-	AffineTransform& setRotationTranslation(const Vector3<T>& axis, T angle, const Vector3<T>& t) noexcept { return setRotation(axis, angle).setOrigin(t); }
-	AffineTransform& setRotationTranslation(const YawPitchRoll<T>& r, const Vector3<T>& t) noexcept { return setRotation(r).setOrigin(t); }
-	AffineTransform& setRotationTranslation(const Euler<T>& e, const Vector3<T>& t) noexcept { return setRotation(e).setOrigin(t); }
-	AffineTransform& setRotationTranslation(const Quaternion<T>& q, const Vector3<T>& t) noexcept { return setRotation(q).setOrigin(t); }
+	AffineTransform& setRotationTranslation(Axis axis, T angle, const Vector3<T>& t) noexcept { setRotation(axis, angle).setOrigin(t); return *this; }
+	AffineTransform& setRotationTranslation(const Vector3<T>& axis, T angle, const Vector3<T>& t) noexcept { setRotation(axis, angle).setOrigin(t); return *this; }
+	AffineTransform& setRotationTranslation(const YawPitchRoll<T>& r, const Vector3<T>& t) noexcept { setRotation(r).setOrigin(t); return *this; }
+	AffineTransform& setRotationTranslation(const Euler<T>& e, const Vector3<T>& t) noexcept { setRotation(e).setOrigin(t); return *this; }
+	AffineTransform& setRotationTranslation(const Quaternion<T>& q, const Vector3<T>& t) noexcept { setRotation(q).setOrigin(t); return *this; }
 	AffineTransform& setScalingRotation(const Vector3<T>& s, Axis axis, T angle) noexcept { return setRotation(axis, angle).preScale(s); }
 	AffineTransform& setScalingRotation(const Vector3<T>& s, const Vector3<T>& axis, T angle) noexcept { return setRotation(axis, angle).preScale(s); }
 	AffineTransform& setScalingRotation(const Vector3<T>& s, const YawPitchRoll<T>& r) noexcept { return setRotation(r).preScale(s); }
 	AffineTransform& setScalingRotation(const Vector3<T>& s, const Euler<T>& e) noexcept { return setRotation(e).preScale(s); }
 	AffineTransform& setScalingRotation(const Vector3<T>& s, const Quaternion<T>& q) noexcept { return setRotation(q).preScale(s); }
 	AffineTransform& setScalingTranslation(const Vector3<T>& s, const Vector3<T>& t) noexcept;
-	AffineTransform& setScalingRotationTranslation(const Vector3<T>& s, Axis axis, T angle, const Vector3<T>& t) noexcept { return setRotation(axis, angle).preScale(s).setOrigin(t); }
-	AffineTransform& setScalingRotationTranslation(const Vector3<T>& s, const Vector3<T>& axis, T angle, const Vector3<T>& t) noexcept { return setRotation(axis, angle).preScale(s).setOrigin(t); }
-	AffineTransform& setScalingRotationTranslation(const Vector3<T>& s, const YawPitchRoll<T>& r, const Vector3<T>& t) noexcept { return setRotation(r).preScale(s).setOrigin(t); }
-	AffineTransform& setScalingRotationTranslation(const Vector3<T>& s, const Euler<T>& e, const Vector3<T>& t) noexcept { return setRotation(e).preScale(s).setOrigin(t); }
-	AffineTransform& setScalingRotationTranslation(const Vector3<T>& s, const Quaternion<T>& q, const Vector3<T>& t) noexcept { return setRotation(q).preScale(s).setOrigin(t); }
+	AffineTransform& setScalingRotationTranslation(const Vector3<T>& s, Axis axis, T angle, const Vector3<T>& t) noexcept { setRotation(axis, angle).preScale(s).setOrigin(t); return *this; }
+	AffineTransform& setScalingRotationTranslation(const Vector3<T>& s, const Vector3<T>& axis, T angle, const Vector3<T>& t) noexcept { setRotation(axis, angle).preScale(s).setOrigin(t); return *this; }
+	AffineTransform& setScalingRotationTranslation(const Vector3<T>& s, const YawPitchRoll<T>& r, const Vector3<T>& t) noexcept { setRotation(r).preScale(s).setOrigin(t); return *this; }
+	AffineTransform& setScalingRotationTranslation(const Vector3<T>& s, const Euler<T>& e, const Vector3<T>& t) noexcept { setRotation(e).preScale(s).setOrigin(t); return *this; }
+	AffineTransform& setScalingRotationTranslation(const Vector3<T>& s, const Quaternion<T>& q, const Vector3<T>& t) noexcept { setRotation(q).preScale(s).setOrigin(t); return *this; }
 	AffineTransform& setShearing(T xy, T xz, T yx, T yz, T zx, T zy) noexcept;
 	AffineTransform& setReflection(const Plane<T>& plane) noexcept;
 	AffineTransform& setInverse(const AffineTransform& m) noexcept;
@@ -286,7 +287,7 @@ struct alignas(16) AffineTransform<float>
 	bool hasApproxUniformScaling() const noexcept { return getBasis().hasApproxUniformScaling(); }
 	bool isFinite() const noexcept;
 	const Vector3<float>& getRow(int i) const noexcept { return reinterpret_cast<const Vector3<float>&>((&row0)[i]); }
-	Vector4<float> getColumn(int i) const noexcept; // #TODO
+	Vector4<float> getColumn(int i) const noexcept { return Vector4<float>(getRow(0)[i], getRow(1)[i], getRow(2)[i], getRow(3)[i]); } // #TODO SIMD
 	Vector3<float> getScaleComponent() const noexcept { return getBasis().getScaleComponent(); }
 	//Vector3<float>& getOrigin() noexcept { return reinterpret_cast<Vector3<float>&>(row3); }
 	const Vector3<float>& getOrigin() const noexcept { return reinterpret_cast<const Vector3<float>&>(row3); }
@@ -369,8 +370,8 @@ struct alignas(16) AffineTransform<float>
 	};
 };
 
-const AffineTransform<float> AffineTransform<float>::ZERO{};
-const AffineTransform<float> AffineTransform<float>::IDENTITY{ 1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f };
+inline const AffineTransform<float> AffineTransform<float>::ZERO{};
+inline const AffineTransform<float> AffineTransform<float>::IDENTITY{ 1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f };
 
 #endif /* SIMD_HAS_FLOAT4 */
 
