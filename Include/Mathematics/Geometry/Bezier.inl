@@ -33,7 +33,7 @@ inline float evaluate(float x0, float x1, float x2, float x3, float t) noexcept
 	float c = 3.f*(x1 - x0);
 	float b = 3.f*(x2 - x1) - c;
 	float a = x3 - x0 - c - b;
-	return simd::dot4(simd::float4(a, b, c, x0), simd::float4(t3, t2, t, 1.f));
+	return simd::extract(simd::dot4(simd::set4(a, b, c, x0), simd::set4(t3, t2, t, 1.f)));
 }
 
 #endif /* SIMD_HAS_FLOAT4 */
