@@ -16,6 +16,7 @@
 #include <iterator>
 #include <cstddef>
 #include <cmath>
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "../Algebra/Vector2.hpp"
 #include "../Interval.hpp"
@@ -103,7 +104,7 @@ struct Line2
 	template<Normalization U> T getDistanceTo(const Vector2<T>& point) const noexcept { return distance(getClosestPoint<U>(point), point); }
 	T getSignedDistanceTo(const Vector2<T>& point) const noexcept;												// normalized line
 	//template<Normalization U> T getSignedDistanceTo(const Vector2<T>& point) const noexcept; // #TODO
-	T getDistanceTo(const Line2& line) const noexcept { return std::fabs(getSignedDistance(line)); }			// normalized line
+	T getDistanceTo(const Line2& line) const noexcept { return std::fabs(getSignedDistanceTo(line)); }			// normalized line
 	//template<Normalization U> T getDistanceTo(const Line2& line) const noexcept; // #TODO
 	T getSignedDistanceTo(const Line2& line) const noexcept;													// normalized line
 	//template<Normalization U> T getSignedDistanceTo(const Line2& line) const noexcept; // #TODO
@@ -132,7 +133,7 @@ struct Line2
 
 template<typename T>
 	requires std::floating_point<T>
-inline Line2<T>::Line2(const Vector2<T>& origin, T inclinationAngle) : 
+inline Line2<T>::Line2(const Vector2<T>& origin, T inclinationAngle) noexcept : 
 	origin(origin), 
 	direction(std::cos(inclinationAngle), std::sin(inclinationAngle))
 {
@@ -155,36 +156,36 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const L
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Line2<T>::approxEquals(const Line2<T>& line) const
+inline bool Line2<T>::approxEquals(const Line2<T>& line) const noexcept
 { 
 	return origin.approxEquals(line.origin) && direction.approxEquals(line.direction); 
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Line2<T>::approxEquals(const Line2<T>& line, T tolerance) const
+inline bool Line2<T>::approxEquals(const Line2<T>& line, T tolerance) const noexcept
 { 
 	return origin.approxEquals(line.origin, tolerance) && direction.approxEquals(line.direction, tolerance); 
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Line2<T>::isParallel(const Line2<T>& line) const
+inline bool Line2<T>::isParallel(const Line2<T>& line) const noexcept
 {
 	return (std::fabs(cross(direction, line.direction)) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Line2<T>::isCoincident(const Line2<T>& line) const
+inline bool Line2<T>::isCoincident(const Line2<T>& line) const noexcept
 {
 	return (std::fabs(cross(direction, line.direction)) < Constants<T>::TOLERANCE) &&
-		(std::fabs(cross(normalize(line.origin - origin), direction)) < Constants<T>::TOLERANCE);
+		(std::fabs(cross(templates::normalize(line.origin - origin), direction)) < Constants<T>::TOLERANCE);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline Line2<T>& Line2<T>::transform(const Matrix2<T>& matrix)
+inline Line2<T>& Line2<T>::transform(const Matrix2<T>& matrix) noexcept
 {
 	origin *= matrix;
 	direction *= matrix;
@@ -193,7 +194,7 @@ inline Line2<T>& Line2<T>::transform(const Matrix2<T>& matrix)
 
 template<typename T>
 	requires std::floating_point<T>
-inline Vector2<T> Line2<T>::getClosestPoint(const Vector2<T>& point) const
+inline Vector2<T> Line2<T>::getClosestPoint(const Vector2<T>& point) const noexcept
 {
 	return dot(point - origin, direction)*direction + origin;
 }
@@ -201,7 +202,7 @@ inline Vector2<T> Line2<T>::getClosestPoint(const Vector2<T>& point) const
 template<typename T>
 	requires std::floating_point<T>
 template<Normalization U>
-inline Vector2<T> Line2<T>::getClosestPoint(const Vector2<T>& point) const
+inline Vector2<T> Line2<T>::getClosestPoint(const Vector2<T>& point) const noexcept
 {
 	if constexpr (std::is_same_v<U, Normalized>)
 		return dot(point - origin, direction)*direction + origin;
@@ -211,14 +212,14 @@ inline Vector2<T> Line2<T>::getClosestPoint(const Vector2<T>& point) const
 
 template<typename T>
 	requires std::floating_point<T>
-inline T Line2<T>::getSignedDistanceTo(const Vector2<T>& point) const
+inline T Line2<T>::getSignedDistanceTo(const Vector2<T>& point) const noexcept
 {
 	return cross(origin - point, direction);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline T Line2<T>::getSignedDistanceTo(const Line2& line) const
+inline T Line2<T>::getSignedDistanceTo(const Line2& line) const noexcept
 {
 	return (std::fabs(cross(direction, line.direction)) < Constants<T>::TOLERANCE) ?
 		cross((origin + dot(line.origin - origin, direction)*direction) - line.origin, direction) :
@@ -227,10 +228,10 @@ inline T Line2<T>::getSignedDistanceTo(const Line2& line) const
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Line2<T>::intersects(const Line2& line) const
+inline bool Line2<T>::intersects(const Line2& line) const noexcept
 {
 	return !(std::fabs(cross(direction, line.direction)) < Constants<T>::TOLERANCE) ||
-		(std::fabs(cross(normalize(line.origin - origin), direction)) < Constants<T>::TOLERANCE);
+		(std::fabs(cross(templates::normalize(line.origin - origin), direction)) < Constants<T>::TOLERANCE);
 }
 
 //template<typename T>
@@ -242,7 +243,7 @@ inline bool Line2<T>::intersects(const Line2& line) const
 //	if constexpr (std::is_same_v<U, T>)
 //		return result;
 //	else //if constexpr (std::is_same_v<U, Vector3<T>>)
-//		return result.has_value() ? std::optional<U>(line.evaluate(result.value())) : std::optional<U>();
+//		return result.has_value() ? std::optional<U>(evaluate(result.value())) : std::optional<U>();
 //}
 //
 //template<typename T>
@@ -254,7 +255,7 @@ inline bool Line2<T>::intersects(const Line2& line) const
 //	if constexpr (std::is_same_v<U, T>)
 //		return result;
 //	else //if constexpr (std::is_same_v<U, Vector3<T>>)
-//		return result.has_value() ? std::optional<U>(segment.evaluate(result.value())) : std::optional<U>();
+//		return result.has_value() ? std::optional<U>(evaluate(result.value())) : std::optional<U>();
 //}
 
 template<typename T>
@@ -314,20 +315,20 @@ namespace mathematics::templates {
 
 template<typename T>
 	requires std::floating_point<T>
-inline Line2<T>::Line2(const Ray2<T>& ray) : origin(ray.origin), direction(ray.direction)
+inline Line2<T>::Line2(const Ray2<T>& ray) noexcept : origin(ray.origin), direction(ray.direction)
 {
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline const Ray2<T>& Line2<T>::asRay() const
+inline const Ray2<T>& Line2<T>::asRay() const noexcept
 { 
 	return reinterpret_cast<const Ray2<T>&>(*this);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline bool Line2<T>::intersects(const Circle2<T>& circle) const
+inline bool Line2<T>::intersects(const Circle2<T>& circle) const noexcept
 {
 	return intersections::testLineNSphere(origin, direction, circle.center, circle.radius);
 }
@@ -335,7 +336,7 @@ inline bool Line2<T>::intersects(const Circle2<T>& circle) const
 template<typename T>
 	requires std::floating_point<T>
 template<Normalization U>
-inline bool Line2<T>::intersects(const Circle2<T>& circle) const
+inline bool Line2<T>::intersects(const Circle2<T>& circle) const noexcept
 {
 	if constexpr (std::is_same_v<U, Normalized>)
 		return intersections::testNormalizedLineNSphere(origin, direction, circle.center, circle.radius);
@@ -345,35 +346,43 @@ inline bool Line2<T>::intersects(const Circle2<T>& circle) const
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::optional<T> Line2<T>::findIntersection(const Line2& line) const
+inline std::optional<T> Line2<T>::findIntersection(const Line2& line) const noexcept
 {
 	return intersections::findLineLine<std::optional<T>>(origin, direction, line.origin, line.direction);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::optional<T> Line2<T>::findIntersection(const Ray2& ray) const
+inline std::optional<T> Line2<T>::findIntersection(const Ray2<T>& ray) const noexcept
 {
-	return intersections::findLineRay<std::optional<T>>(origin, direction, ray.origin, ray.direction);
+	auto result = intersections::findLineRay<std::optional<std::pair<T, T>>>(origin, direction, ray.origin, ray.direction);
+	if (result.has_value())
+		return { result.value().first };
+	else
+		return std::nullopt;
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::optional<T> Line2<T>::findIntersection(const LineSegment2<T>& segment) const
+inline std::optional<T> Line2<T>::findIntersection(const LineSegment2<T>& segment) const noexcept
 {
-	return intersections::findLineLineSegment<std::optional<T>>(origin, direction, segment.start, segment.end);
+	auto result = intersections::findLineLineSegment<std::optional<std::pair<T, T>>>(origin, direction, segment.start, segment.end);
+	if (result.has_value())
+		return { result.value().first };
+	else
+		return std::nullopt;
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::optional<Interval<T>> Line2<T>::findIntersection(const AxisAlignedRectangle& rectangle) const
+inline std::optional<Interval<T>> Line2<T>::findIntersection(const AxisAlignedRectangle<T>& rectangle) const noexcept
 {
 	return intersections::findLineAxisAlignedRectangle<std::optional<Interval<T>>>(origin, direction, rectangle.minimum, rectangle.maximum);
 }
 
 template<typename T>
 	requires std::floating_point<T>
-inline std::optional<Interval<T>> Line2<T>::findIntersection(const Circle2<T>& circle) const
+inline std::optional<Interval<T>> Line2<T>::findIntersection(const Circle2<T>& circle) const noexcept
 {
 	return intersections::findLineNSphere<std::optional<Interval<T>>>(origin, direction, circle.center, circle.radius);
 }
@@ -381,7 +390,7 @@ inline std::optional<Interval<T>> Line2<T>::findIntersection(const Circle2<T>& c
 template<typename T>
 	requires std::floating_point<T>
 template<Normalization U>
-inline std::optional<Interval<T>> Line2<T>::findIntersection(const Circle2<T>& circle) const
+inline std::optional<Interval<T>> Line2<T>::findIntersection(const Circle2<T>& circle) const noexcept
 {
 	if constexpr (std::is_same_v<U, Normalized>)
 		return intersections::findNormalizedLineNSphere<std::optional<Interval<T>>>(origin, direction, circle.center, circle.radius);

@@ -10,6 +10,8 @@
 #include <concepts>
 #include <optional>
 #include <algorithm>
+#include <utility>
+#include <tuple>
 #include <cmath>
 #if MATHEMATICS_HAS_SIMD
 #include <Simd/Intrinsics.hpp>
@@ -20,6 +22,7 @@
 #include "../Algebra/Vector3.hpp"
 #include "../Algebra/Vector4.hpp"
 #include "../Algebra/Matrix3.hpp"
+#include "../Interval.hpp"
 #include "Distances.inl"
 
 namespace mathematics::intersections {
@@ -28,22 +31,23 @@ using templates::Vector2;
 using templates::Vector3;
 using templates::Vector4;
 using templates::Matrix3;
+using templates::Interval;
 
 namespace detail {
 
-//template <template <typename...> class, template<typename...> class>
+//template<template<typename...> class, template<typename...> class>
 //struct IsSameTemplate : public std::false_type {};
 //
-//template <template <typename...> class T>
+//template<template<typename...> class T>
 //struct IsSameTemplate<T, T> : public std::true_type {};
 
-template <typename T>
+template<typename T>
 struct IsOptional : public std::false_type {};
 
-template <typename T>
+template<typename T>
 struct IsOptional<std::optional<T>> : public std::true_type {};
 
-template <typename T>
+template<typename T>
 	requires (std::floating_point<T> /*|| std::integral<T>*/)
 struct FloatIntTypeConverter;
 
@@ -102,6 +106,8 @@ inline O infinity() noexcept
 {
 	if constexpr (IsOptional<O>::value)
 		return {};
+	else if constexpr (std::is_same_v<O, std::pair<T, T>> || std::is_same_v<O, std::tuple<T, T>>)
+		return { std::numeric_limits<T>::infinity(), std::numeric_limits<T>::infinity() };
 	else
 		return { std::numeric_limits<T>::infinity() };
 }
@@ -111,7 +117,7 @@ template<typename O, typename T>
 inline O interval(T value) noexcept
 {
 	if constexpr (IsOptional<O>::value)
-		return { std::in_place, value };
+		return O(std::in_place, value);
 	else
 		return { value };
 }
@@ -121,7 +127,7 @@ template<typename O, typename T>
 inline O interval(T minimum, T maximum) noexcept
 {
 	if constexpr (IsOptional<O>::value)
-		return { std::in_place, minimum, maximum };
+		return O(std::in_place, minimum, maximum);
 	else
 		return { minimum, maximum };
 }
@@ -135,7 +141,7 @@ inline O intervalChecked(T minimum, T maximum) noexcept
 		if (minimum > maximum)
 			return {};
 		else
-			return { std::in_place, minimum, maximum };
+			return O(std::in_place, minimum, maximum);
 	}
 	else
 		return { minimum, maximum };
@@ -303,10 +309,12 @@ inline O findLineLine(const Vector2<T>& originA, const Vector2<T>& directionA, c
 	{
 		if (!(std::fabs(cross(normalize(diff), directionA)) < Constants<T>::TOLERANCE))
 			return detail::infinity<O, T>();
-		return { T(0) }; // collinear
+		return O(T(0)); // collinear
 	}
 
-	return { cross(diff, directionB)/d1CrossD2 };
+	T t = cross(diff, directionB)/d1CrossD2;
+	//T u = cross(diff, directionA)/d1CrossD2;
+	return O(t);
 }
 
 template<typename O, typename T>
@@ -322,12 +330,13 @@ inline O findLineRay(const Vector2<T>& originA, const Vector2<T>& directionA, co
 	{
 		if (!(std::fabs(cross(normalize(diff), directionB)) < Constants<T>::TOLERANCE))
 			return detail::infinity<O, T>();
-		return { T(0) }; // collinear
+		return O({ T(0), T(0) }); // collinear
 	}
 
-	T t = cross(diff, directionA)/d2CrossD1;
-	if (t >= T(0))
-		return { t };
+	T t = cross(diff, directionB)/d2CrossD1;
+	T u = cross(diff, directionA)/d2CrossD1;
+	if (u >= T(0))
+		return O({ t, u });
 	return detail::infinity<O, T>();
 }
 
@@ -337,19 +346,21 @@ inline O findLineLineSegment(const Vector2<T>& origin, const Vector2<T>& directi
 {
 	// http://www.geometrictools.com/
 
+	const Vector2<T>& directionA = direction;
 	Vector2<T> directionB = end - start;
 	Vector2<T> diff = origin - start;
-	T d2CrossD1 = cross(directionB, direction);
+	T d2CrossD1 = cross(directionB, directionA);
 	if (std::fabs(d2CrossD1) < Constants<T>::TOLERANCE)
 	{
 		if (!(std::fabs(cross(normalize(diff), directionB)) < Constants<T>::TOLERANCE))
 			return detail::infinity<O, T>();
-		return { T(0) }; // collinear
+		return O({ T(0), T(0) }); // collinear
 	}
 
-	T t = cross(diff, direction)/d2CrossD1;
-	if ((t >= T(0)) && (t <= T(1)))
-		return { t };
+	T t = cross(diff, directionB)/d2CrossD1;
+	T u = cross(diff, directionA)/d2CrossD1;
+	if ((u >= T(0)) && (u <= T(1)))
+		return O({ t, u });
 	return detail::infinity<O, T>();
 }
 
@@ -375,14 +386,14 @@ inline O findLineSegmentLineSegment(const Vector2<T>& startA, const Vector2<T>& 
 		if (d1DotD2 < T(0))
 			std::swap(t0, t1);
 		if ((t0 <= T(1)) && (t1 >= T(0)))
-			return std::optional<T>(std::max(t0, T(0)));
+			return O(std::max(t0, T(0)));
 		return detail::infinity<O, T>();
 	}
 
 	T t = cross(diff, directionB)/d1CrossD2;
 	T u = cross(diff, directionA)/d1CrossD2;
 	if ((t >= T(0)) && (t <= T(1)) && (u >= T(0)) && (u <= T(1)))
-		return std::optional<T>(t);
+		return O(t);
 	return detail::infinity<O, T>();
 }
 
@@ -820,7 +831,7 @@ inline O findRayEllipsoid(const Vector3<T>& origin, const Vector3<T>& direction,
 		if (t0 >= T(0))
 			return detail::interval<O>(t0, t1);
 		else if (t1 >= T(0))
-			return detail::interval<O>(t1);
+			return detail::interval<O>(T(0), t1); // the origin is inside the ellipsoid
 		else
 			return {};
 	}
@@ -858,12 +869,12 @@ inline bool testLineSegmentEllipsoid(const Vector3<T>& start, const Vector3<T>& 
 	constexpr T E = T(0.5);
 	if (a1 >= T(0))
 	{
-		if (((a0 + E*(T(-2)*a1 + a2*E)) <= T(0)) || ((a1 - a2*E) < T(0)))
+		if (((a0 + E*(T(-2)*a1 + a2*E)) <= T(0)) || ((a1 - a2*E) < T(0))) // Q(-E) <= 0 or the minimum of Q lies within the segment
 			return true;
 	}
 	else
 	{
-		if (((a0 + E*(T(2)*a1 + a2*E)) <= T(0)) || ((a1 + a2*E) < T(0)))
+		if (((a0 + E*(T(2)*a1 + a2*E)) <= T(0)) || ((a1 + a2*E) > T(0))) // Q(E) <= 0 or the minimum of Q lies within the segment
 			return true;
 	}
 

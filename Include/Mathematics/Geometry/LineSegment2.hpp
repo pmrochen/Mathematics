@@ -236,8 +236,11 @@ template<typename T>
 	requires std::floating_point<T>
 inline std::optional<T> LineSegment2<T>::findIntersection(const Line2<T>& line) const noexcept
 {
-	return intersections::findLineLineSegment<std::optional<T>>(line.origin, line.direction, start, end);
-
+	auto result = intersections::findLineLineSegment<std::optional<std::pair<T, T>>>(line.origin, line.direction, start, end);
+	if (result.has_value())
+		return { result.value().second };
+	else
+		return std::nullopt;
 }
 
 template<typename T>

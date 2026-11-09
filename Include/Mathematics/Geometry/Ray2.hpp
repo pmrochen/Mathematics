@@ -230,7 +230,11 @@ template<typename T>
 	requires std::floating_point<T>
 inline std::optional<T> Ray2<T>::findIntersection(const Line2<T>& line) const noexcept
 {
-	return intersections::findLineRay<std::optional<T>>(line.origin, line.direction, origin, direction);
+	auto result = intersections::findLineRay<std::optional<std::pair<T, T>>>(line.origin, line.direction, origin, direction);
+	if (result.has_value())
+		return { result.value().second };
+	else
+		return std::nullopt;
 }
 
 template<typename T>
