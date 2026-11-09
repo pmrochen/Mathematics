@@ -20,6 +20,7 @@
 #include <Simd/Intrinsics.hpp>
 #include <Simd/Functional.hpp>
 #endif
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "../Algebra/Vector3.hpp"
 #include "../Algebra/Matrix3.hpp"
@@ -79,8 +80,8 @@ struct HalfSpace
 	template<typename A> void load(A& ar) { ar(a, b, c, d); }
 	template<typename A> void save(A& ar) const { ar(a, b, c, d); }
 
-	template<std::size_t I> T& get() noexcept;
-	template<std::size_t I> const T& get() const noexcept;
+	template<std::size_t I> requires (I < 4) T& get() noexcept;
+	template<std::size_t I> requires (I < 4) const T& get() const noexcept;
 
 	const Plane<T>& asPlane() const noexcept;
 
@@ -166,12 +167,10 @@ struct alignas(16) HalfSpace<float>
 	template<typename A> void load(A& ar);
 	template<typename A> void save(A& ar) const { ar(a, b, c, d); }
 
-	template<std::size_t I> float& get() noexcept;
-	template<std::size_t I> const float& get() const noexcept;
-	template<typename U> U& get() noexcept;				// intentionally undefined
-	template<typename U> const U& get() const noexcept;	// intentionally undefined
-	template<> simd::float4& get() noexcept { return abcd; }
-	template<> const simd::float4& get() const noexcept { return abcd; }
+	template<std::size_t I> requires (I < 4) float& get() noexcept;
+	template<std::size_t I> requires (I < 4) const float& get() const noexcept;
+	template<typename U> requires std::same_as<U, simd::float4> simd::float4& as() noexcept { return abcd; }
+	template<typename U> requires std::same_as<U, simd::float4> const simd::float4& as() const noexcept { return abcd; }
 
 	const Plane<float> asPlane() const noexcept;
 
@@ -221,7 +220,7 @@ struct alignas(16) HalfSpace<float>
 	};
 };
 
-const HalfSpace<float> HalfSpace<float>::EMPTY{};
+inline const HalfSpace<float> HalfSpace<float>::EMPTY{};
 
 #endif /* SIMD_HAS_FLOAT4 */
 
@@ -252,6 +251,7 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const H
 template<typename T>
 	requires std::floating_point<T>
 template<std::size_t I>
+	requires (I < 4)
 inline T& HalfSpace<T>::get() noexcept
 {
 	if constexpr (I == 0)
@@ -260,14 +260,14 @@ inline T& HalfSpace<T>::get() noexcept
 		return b;
 	else if constexpr (I == 2)
 		return c;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return d;
-	static_assert(false);
 }
 
 template<typename T>
 	requires std::floating_point<T>
 template<std::size_t I>
+	requires (I < 4)
 inline const T& HalfSpace<T>::get() const noexcept
 {
 	if constexpr (I == 0)
@@ -276,9 +276,8 @@ inline const T& HalfSpace<T>::get() const noexcept
 		return b;
 	else if constexpr (I == 2)
 		return c;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return d;
-	static_assert(false);
 }
 
 template<typename T>
@@ -309,22 +308,22 @@ template<typename T>
 	requires std::floating_point<T>
 inline HalfSpace<T>& HalfSpace<T>::transform(const Matrix3<T>& matrix, bool orthogonal) noexcept
 {
-	if (orthogonal)
-		set(getNormal()*matrix, -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
-	else
-		set(normalize(getNormal()*inverseTranspose(matrix)), -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
-	return *this;
+	Vector3<T> point = (getNormal()*(-getConstant()))*matrix;
+	Vector3<T> normal = orthogonal ? 
+		getNormal()*matrix : 
+		::mathematics::templates::normalize(getNormal()*inverseTranspose(matrix));
+	return set(normal, -dot(normal, point));
 }
 
 template<typename T>
 	requires std::floating_point<T>
 inline HalfSpace<T>& HalfSpace<T>::transform(const AffineTransform<T>& transformation, bool orthogonal) noexcept
 {
-	if (orthogonal)
-		set(getNormal()*transformation.getBasis(), -dot(getNormal(), transform(getNormal()*(-getConstant()), transformation)));
-	else
-		set(normalize(getNormal()*inverseTranspose(transformation.getBasis())), -dot(getNormal(), transform(getNormal()*(-getConstant()), transformation)));
-	return *this;
+	Vector3<T> point = ::mathematics::templates::transform(getNormal()*(-getConstant()), transformation);
+	Vector3<T> normal = orthogonal ? 
+		getNormal()*transformation.getBasis() :
+		::mathematics::templates::normalize(getNormal()*inverseTranspose(transformation.getBasis()));
+	return set(normal, -dot(normal, point));
 }
 
 template<typename T>
@@ -381,6 +380,7 @@ inline void HalfSpace<float>::load(A& ar)
 }
 
 template<std::size_t I>
+	requires (I < 4)
 inline float& HalfSpace<float>::get() noexcept
 {
 	if constexpr (I == 0)
@@ -389,12 +389,12 @@ inline float& HalfSpace<float>::get() noexcept
 		return b;
 	else if constexpr (I == 2)
 		return c;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return d;
-	static_assert(false);
 }
 
 template<std::size_t I>
+	requires (I < 4)
 inline const float& HalfSpace<float>::get() const noexcept
 {
 	if constexpr (I == 0)
@@ -403,9 +403,8 @@ inline const float& HalfSpace<float>::get() const noexcept
 		return b;
 	else if constexpr (I == 2)
 		return c;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return d;
-	static_assert(false);
 }
 
 inline HalfSpace<float>& HalfSpace<float>::translate(const Vector3<float>& offset) noexcept
@@ -416,20 +415,20 @@ inline HalfSpace<float>& HalfSpace<float>::translate(const Vector3<float>& offse
 
 inline HalfSpace<float>& HalfSpace<float>::transform(const Matrix3<float>& matrix, bool orthogonal) noexcept
 {
-	if (orthogonal)
-		set(getNormal()*matrix, -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
-	else
-		set(::mathematics::templates::normalize(getNormal()*inverseTranspose(matrix)), -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
-	return *this;
+	Vector3<float> point = (getNormal()*(-getConstant()))*matrix;
+	Vector3<float> normal = orthogonal ? 
+		getNormal()*matrix : 
+		::mathematics::templates::normalize(getNormal()*inverseTranspose(matrix));
+	return set(normal, -dot(normal, point));
 }
 
 inline HalfSpace<float>& HalfSpace<float>::transform(const AffineTransform<float>& transformation, bool orthogonal) noexcept
 {
-	if (orthogonal)
-		set(getNormal()*transformation.getBasis(), -dot(getNormal(), ::mathematics::templates::transform(getNormal()*(-getConstant()), transformation)));
-	else
-		set(::mathematics::templates::normalize(getNormal()*inverseTranspose(transformation.getBasis())), -dot(getNormal(), ::mathematics::templates::transform(getNormal()*(-getConstant()), transformation)));
-	return *this;
+	Vector3<float> point = ::mathematics::templates::transform(getNormal()*(-getConstant()), transformation);
+	Vector3<float> normal = orthogonal ? 
+		getNormal()*transformation.getBasis() :
+		::mathematics::templates::normalize(getNormal()*inverseTranspose(transformation.getBasis()));
+	return set(normal, -dot(normal, point));
 }
 
 inline HalfSpace<float>& HalfSpace<float>::normalize() noexcept
@@ -449,7 +448,7 @@ inline HalfSpace<float>& HalfSpace<float>::normalize() noexcept
 #endif /* SIMD_HAS_FLOAT4 */
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 4) && std::floating_point<T>)
 inline T& get(HalfSpace<T>& h) noexcept
 {
 	if constexpr (I == 0)
@@ -458,13 +457,12 @@ inline T& get(HalfSpace<T>& h) noexcept
 		return h.b;
 	else if constexpr (I == 2)
 		return h.c;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return h.d;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 4) && std::floating_point<T>)
 inline const T& get(const HalfSpace<T>& h) noexcept
 {
 	if constexpr (I == 0)
@@ -473,13 +471,12 @@ inline const T& get(const HalfSpace<T>& h) noexcept
 		return h.b;
 	else if constexpr (I == 2)
 		return h.c;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return h.d;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 4) && std::floating_point<T>)
 inline T&& get(HalfSpace<T>&& h) noexcept
 {
 	if constexpr (I == 0)
@@ -488,13 +485,12 @@ inline T&& get(HalfSpace<T>&& h) noexcept
 		return h.b;
 	else if constexpr (I == 2)
 		return h.c;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return h.d;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 4) && std::floating_point<T>)
 inline const T&& get(HalfSpace<T>&& h) noexcept
 {
 	if constexpr (I == 0)
@@ -503,9 +499,8 @@ inline const T&& get(HalfSpace<T>&& h) noexcept
 		return h.b;
 	else if constexpr (I == 2)
 		return h.c;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return h.d;
-	static_assert(false);
 }
 
 template<typename T>

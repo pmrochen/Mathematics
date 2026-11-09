@@ -21,6 +21,7 @@
 #include <Simd/Intrinsics.hpp>
 #include <Simd/Functional.hpp>
 #endif
+#include "../Concepts.hpp"
 #include "../Constants.hpp"
 #include "../Algebra/Vector3.hpp"
 #include "../Algebra/Matrix3.hpp"
@@ -81,8 +82,8 @@ struct Plane
 	template<typename A> void load(A& ar) { ar(a, b, c, d); }
 	template<typename A> void save(A& ar) const { ar(a, b, c, d); }
 
-	template<std::size_t I> T& get() noexcept;
-	template<std::size_t I> const T& get() const noexcept;
+	template<std::size_t I> requires (I < 4) T& get() noexcept;
+	template<std::size_t I> requires (I < 4) const T& get() const noexcept;
 
 	const HalfSpace<T>& asHalfSpace() const noexcept { return reinterpret_cast<const HalfSpace<T>&>(*this); }
 
@@ -172,12 +173,10 @@ struct alignas(16) Plane<float>
 	template<typename A> void load(A& ar);
 	template<typename A> void save(A& ar) const { ar(a, b, c, d); }
 
-	template<std::size_t I> float& get() noexcept;
-	template<std::size_t I> const float& get() const noexcept;
-	template<typename U> U& get() noexcept;				// intentionally undefined
-	template<typename U> const U& get() const noexcept;	// intentionally undefined
-	template<> simd::float4& get() noexcept { return abcd; }
-	template<> const simd::float4& get() const noexcept { return abcd; }
+	template<std::size_t I> requires (I < 4) float& get() noexcept;
+	template<std::size_t I> requires (I < 4) const float& get() const noexcept;
+	template<typename U> requires std::same_as<U, simd::float4> simd::float4& as() noexcept { return abcd; }
+	template<typename U> requires std::same_as<U, simd::float4> const simd::float4& as() const noexcept { return abcd; }
 
 	const HalfSpace<float> asHalfSpace() const noexcept { return HalfSpace<float>(abcd); }
 
@@ -234,7 +233,7 @@ struct alignas(16) Plane<float>
 	};
 };
 
-const Plane<float> Plane<float>::EMPTY{};
+inline const Plane<float> Plane<float>::EMPTY{};
 
 #endif /* SIMD_HAS_FLOAT4 */
 
@@ -265,6 +264,7 @@ inline std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& s, const P
 template<typename T>
 	requires std::floating_point<T>
 template<std::size_t I>
+	requires (I < 4)
 inline T& Plane<T>::get() noexcept
 {
 	if constexpr (I == 0)
@@ -273,14 +273,14 @@ inline T& Plane<T>::get() noexcept
 		return b;
 	else if constexpr (I == 2)
 		return c;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return d;
-	static_assert(false);
 }
 
 template<typename T>
 	requires std::floating_point<T>
 template<std::size_t I>
+	requires (I < 4)
 inline const T& Plane<T>::get() const noexcept
 {
 	if constexpr (I == 0)
@@ -289,9 +289,8 @@ inline const T& Plane<T>::get() const noexcept
 		return b;
 	else if constexpr (I == 2)
 		return c;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return d;
-	static_assert(false);
 }
 
 template<typename T>
@@ -322,22 +321,22 @@ template<typename T>
 	requires std::floating_point<T>
 inline Plane<T>& Plane<T>::transform(const Matrix3<T>& matrix, bool orthogonal) noexcept
 {
-	if (orthogonal)
-		set(getNormal()*matrix, -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
-	else
-		set(mathematics::templates::normalize(getNormal()*inverseTranspose(matrix)), -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
-	return *this;
+	Vector3<T> point = (getNormal()*(-getConstant()))*matrix;
+	Vector3<T> normal = orthogonal ? 
+		getNormal()*matrix : 
+		::mathematics::templates::normalize(getNormal()*inverseTranspose(matrix));
+	return set(normal, -dot(normal, point));
 }
 
 template<typename T>
 	requires std::floating_point<T>
 inline Plane<T>& Plane<T>::transform(const AffineTransform<T>& transformation, bool orthogonal) noexcept
 {
-	if (orthogonal)
-		set(getNormal()*transformation.getBasis(), -dot(getNormal(), mathematics::templates::transform(getNormal()*(-getConstant()), transformation)));
-	else
-		set(mathematics::templates::normalize(getNormal()*inverseTranspose(transformation.getBasis())), -dot(getNormal(), mathematics::templates::transform(getNormal()*(-getConstant()), transformation)));
-	return *this;
+	Vector3<T> point = ::mathematics::templates::transform(getNormal()*(-getConstant()), transformation);
+	Vector3<T> normal = orthogonal ? 
+		getNormal()*transformation.getBasis() :
+		::mathematics::templates::normalize(getNormal()*inverseTranspose(transformation.getBasis()));
+	return set(normal, -dot(normal, point));
 }
 
 template<typename T>
@@ -408,6 +407,7 @@ inline void Plane<float>::load(A& ar)
 }
 
 template<std::size_t I>
+	requires (I < 4)
 inline float& Plane<float>::get() noexcept
 {
 	if constexpr (I == 0)
@@ -416,12 +416,12 @@ inline float& Plane<float>::get() noexcept
 		return b;
 	else if constexpr (I == 2)
 		return c;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return d;
-	static_assert(false);
 }
 
 template<std::size_t I>
+	requires (I < 4)
 inline const float& Plane<float>::get() const noexcept
 {
 	if constexpr (I == 0)
@@ -430,9 +430,8 @@ inline const float& Plane<float>::get() const noexcept
 		return b;
 	else if constexpr (I == 2)
 		return c;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return d;
-	static_assert(false);
 }
 
 inline Plane<float>& Plane<float>::translate(const Vector3<float>& offset) noexcept
@@ -443,20 +442,20 @@ inline Plane<float>& Plane<float>::translate(const Vector3<float>& offset) noexc
 
 inline Plane<float>& Plane<float>::transform(const Matrix3<float>& matrix, bool orthogonal) noexcept
 {
-	if (orthogonal)
-		set(getNormal()*matrix, -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
-	else
-		set(mathematics::templates::normalize(getNormal()*inverseTranspose(matrix)), -dot(getNormal(), (getNormal()*(-getConstant()))*matrix));
-	return *this;
+	Vector3<float> point = (getNormal()*(-getConstant()))*matrix;
+	Vector3<float> normal = orthogonal ? 
+		getNormal()*matrix : 
+		::mathematics::templates::normalize(getNormal()*inverseTranspose(matrix));
+	return set(normal, -dot(normal, point));
 }
 
 inline Plane<float>& Plane<float>::transform(const AffineTransform<float>& transformation, bool orthogonal) noexcept
 {
-	if (orthogonal)
-		set(getNormal()*transformation.getBasis(), -dot(getNormal(), mathematics::templates::transform(getNormal()*(-getConstant()), transformation)));
-	else
-		set(mathematics::templates::normalize(getNormal()*inverseTranspose(transformation.getBasis())), -dot(getNormal(), mathematics::templates::transform(getNormal()*(-getConstant()), transformation)));
-	return *this;
+	Vector3<float> point = ::mathematics::templates::transform(getNormal()*(-getConstant()), transformation);
+	Vector3<float> normal = orthogonal ? 
+		getNormal()*transformation.getBasis() :
+		::mathematics::templates::normalize(getNormal()*inverseTranspose(transformation.getBasis()));
+	return set(normal, -dot(normal, point));
 }
 
 inline Plane<float>& Plane<float>::normalize() noexcept
@@ -486,7 +485,7 @@ inline bool Plane<float>::contains(const Vector3<float>& point) const noexcept
 #endif /* SIMD_HAS_FLOAT4 */
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 4) && std::floating_point<T>)
 inline T& get(Plane<T>& p) noexcept
 {
 	if constexpr (I == 0)
@@ -495,13 +494,12 @@ inline T& get(Plane<T>& p) noexcept
 		return p.b;
 	else if constexpr (I == 2)
 		return p.c;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return p.d;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 4) && std::floating_point<T>)
 inline const T& get(const Plane<T>& p) noexcept
 {
 	if constexpr (I == 0)
@@ -510,13 +508,12 @@ inline const T& get(const Plane<T>& p) noexcept
 		return p.b;
 	else if constexpr (I == 2)
 		return p.c;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return p.d;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 4) && std::floating_point<T>)
 inline T&& get(Plane<T>&& p) noexcept
 {
 	if constexpr (I == 0)
@@ -525,13 +522,12 @@ inline T&& get(Plane<T>&& p) noexcept
 		return p.b;
 	else if constexpr (I == 2)
 		return p.c;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return p.d;
-	static_assert(false);
 }
 
 template<std::size_t I, typename T>
-	requires std::floating_point<T>
+	requires ((I < 4) && std::floating_point<T>)
 inline const T&& get(const Plane<T>&& p) noexcept
 {
 	if constexpr (I == 0)
@@ -540,9 +536,8 @@ inline const T&& get(const Plane<T>&& p) noexcept
 		return p.b;
 	else if constexpr (I == 2)
 		return p.c;
-	else if constexpr (I == 3)
+	else //if constexpr (I == 3)
 		return p.d;
-	static_assert(false);
 }
 
 template<typename T>
