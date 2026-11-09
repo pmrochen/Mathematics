@@ -13,15 +13,21 @@
 #include <tuple>
 #include <cstddef>
 #include <cmath>
-#include <malloc.h>
+#if defined(_WIN32)
+#include <malloc.h>	// alloca (MSVC, MinGW)
+#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
+#include <stdlib.h>	// alloca (BSD)
+#else
+#include <alloca.h>	// alloca (Linux, macOS, Emscripten)
+#endif
 
 namespace mathematics::triangulation {
 namespace detail {
 
 template<std::random_access_iterator I>
-inline typename std::tuple_element<0, typename std::iterator_traits<I>::value_type>::type computeSignedPolygonArea(I firstVertex, I lastVertex) noexcept
+inline typename std::tuple_element<0, std::iter_value_t<I>>::type computeSignedPolygonArea(I firstVertex, I lastVertex) noexcept
 {
-	using VectorType = typename std::iterator_traits<I>::value_type;
+	using VectorType = std::iter_value_t<I>;
 	using ScalarType = typename std::tuple_element<0, VectorType>::type;
 
 	std::ptrdiff_t nVertices = std::distance(firstVertex, lastVertex);
@@ -36,10 +42,10 @@ inline typename std::tuple_element<0, typename std::iterator_traits<I>::value_ty
 }
 
 template<std::random_access_iterator I, std::random_access_iterator J>
+	requires std::integral<std::iter_value_t<J>>
 inline bool snip(I firstVertex, I lastVertex, J firstIndex, std::ptrdiff_t u, std::ptrdiff_t v, std::ptrdiff_t w) noexcept
 {
-	static_assert(std::is_integral_v<typename std::iterator_traits<J>::value_type>);
-	using VectorType = typename std::iterator_traits<I>::value_type;
+	using VectorType = std::iter_value_t<I>;
 	using ScalarType = typename std::tuple_element<0, VectorType>::type;
 
     const VectorType& a = firstVertex[firstIndex[u]];
@@ -68,12 +74,12 @@ inline bool snip(I firstVertex, I lastVertex, J firstIndex, std::ptrdiff_t u, st
 
 } // namespace detail
 
-template<std::random_access_iterator I, std::integral U, std::output_iterator<U> O>
+template<std::integral U = std::size_t, std::random_access_iterator I, std::output_iterator<U> O>
 std::pair<O, bool> triangulate(I firstVertex, I lastVertex, O outIndex)
 {
-	using VectorType = typename std::iterator_traits<I>::value_type;
+	using VectorType = std::iter_value_t<I>;
 	using ScalarType = typename std::tuple_element<0, VectorType>::type;
-	//using IndexType = typename std::iterator_traits<O>::value_type;
+	//using IndexType = std::iter_value_t<O>;
 
 	std::ptrdiff_t nVertices = std::distance(firstVertex, lastVertex);
 	if (nVertices <= 3)
@@ -89,7 +95,7 @@ std::pair<O, bool> triangulate(I firstVertex, I lastVertex, O outIndex)
 	//U* vertexIndices = (nVertices > BUFFER_SIZE) ? new U[nVertices] : indexBuffer;
 	U* vertexIndices = (U*)alloca(nVertices*sizeof(U));
 
-	bool reverse = (computeSignedPolygonArea(firstVertex, lastVertex) < ScalarType(0));
+	bool reverse = (detail::computeSignedPolygonArea(firstVertex, lastVertex) < ScalarType(0));
 	if (reverse)
 	{
 		for (std::ptrdiff_t i = 0; i < nVertices; i++)
@@ -136,7 +142,7 @@ std::pair<O, bool> triangulate(I firstVertex, I lastVertex, O outIndex)
 		if (w >= nVerticesRemaining)
 			w = 0;
 
-		if (snip(firstVertex, firstVertex + nVerticesRemaining, vertexIndices, u, v, w))
+		if (detail::snip(firstVertex, firstVertex + nVerticesRemaining, vertexIndices, u, v, w))
 		{
 			// Output triangle
 			if (reverse)

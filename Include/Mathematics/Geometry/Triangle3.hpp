@@ -19,7 +19,14 @@
 #include <iterator>
 #include <cstddef>
 #include <cmath>
-#include <malloc.h>
+#if defined(_WIN32)
+#include <malloc.h>	// alloca (MSVC, MinGW)
+#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
+#include <stdlib.h>	// alloca (BSD)
+#else
+#include <alloca.h>	// alloca (Linux, macOS, Emscripten)
+#endif
+#include "../Concepts.hpp"
 #include "../Algebra/Vector3.hpp"
 #include "../Algebra/Matrix3.hpp"
 #include "../Transform/AffineTransform.hpp"
@@ -103,15 +110,15 @@ struct Triangle3
 	Triangle3& translate(const Vector3<T>& offset) noexcept;
 	Triangle3& transform(const Matrix3<T>& matrix) noexcept;
 	Triangle3& transform(const AffineTransform<T>& transformation) noexcept;
-	Triangle3& flip() noexcept { std::swap(vertices[0], vertices[2]); }
+	Triangle3& flip() noexcept { std::swap(vertices[0], vertices[2]); return *this; }
 
 	// Split (returns 1 or 3 triangles)
 	//std::vector<Triangle3<T>> split(const Plane<T>& plane); // #TODO
 
 	// Triangulation (returns (vertices - 2)*3 indices)
-	template<std::random_access_iterator I, std::integral U, std::output_iterator<U> O>
+	template<std::integral U = std::size_t, std::random_access_iterator I, std::output_iterator<U> O>
 	static std::pair<O, bool> triangulate(I firstVertex, I lastVertex, O outIndex);
-	template<std::random_access_iterator I, std::integral U, std::random_access_iterator J, std::output_iterator<U> O>
+	template<std::integral U = std::size_t, std::random_access_iterator I, std::random_access_iterator J, std::output_iterator<U> O>
 	static std::pair<O, bool> triangulate(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex);
 
 	// Evaluation (u + v + w = 1)
@@ -245,14 +252,14 @@ template<typename T>
 	requires std::floating_point<T>
 /*static*/ inline Vector3<T> Triangle3<T>::computeNormal(const Vector3<T>& v0, const Vector3<T>& v1, const Vector3<T>& v2) noexcept
 {
-	return normalize(cross(v1 - v0, v2 - v0));
+	return templates::normalize(cross(v1 - v0, v2 - v0));
 }
 
 template<typename T>
 	requires std::floating_point<T>
 inline Vector3<T> Triangle3<T>::getNormal() const noexcept
 {
-	return normalize(cross(vertices[1] - vertices[0], vertices[2] - vertices[0]));
+	return templates::normalize(cross(vertices[1] - vertices[0], vertices[2] - vertices[0]));
 }
 
 template<typename T>
@@ -262,7 +269,7 @@ template<typename T>
 {
 	Vector3<T> e1 = v1 - v0;
 	Vector3<T> e2 = v2 - v0;
-	Vector3<T> normal = normalize(cross(e1, e2));
+	Vector3<T> normal = templates::normalize(cross(e1, e2));
 
 	Vector2<T> delta1 = uv1 - uv0;
 	Vector2<T> delta2 = uv2 - uv0;
@@ -272,8 +279,8 @@ template<typename T>
 	Vector3<T> bitangent{ Uninitialized() };
 	if (/*!_isnan(d) &&*/ (d != T(0)))
 	{
-		tangent = normalize(e1*(delta2.y/d) + e2*(-delta1.y/d));
-		bitangent = normalize(e1*(-delta2.x/d) + e2*(delta1.x/d));
+		tangent = templates::normalize(e1*(delta2.y/d) + e2*(-delta1.y/d));
+		bitangent = templates::normalize(e1*(-delta2.x/d) + e2*(delta1.x/d));
 		if (weightedByArea)
 		{
 			T area = std::fabs(d)*T(0.5);
@@ -366,11 +373,14 @@ template<typename T>
 	requires std::floating_point<T>
 inline Vector3<T> Triangle3<T>::getBarycentricCoords(const Vector3<T>& point) const noexcept
 {
+	// Signed areas relative to the triangle normal, so that points outside of the triangle get negative coordinates
 	Vector3<T> edge1 = vertices[1] - vertices[0];
 	Vector3<T> edge2 = vertices[2] - vertices[0];
-	T m = T(1)/cross(edge1, edge2).getMagnitudeSquared();
-	T v = std::sqrt(cross(edge2, point - vertices[2]).getMagnitudeSquared()*m);
-	T w = std::sqrt(cross(edge1, point - vertices[1]).getMagnitudeSquared()*m);
+	Vector3<T> normal = cross(edge1, edge2);
+	Vector3<T> diff = point - vertices[0];
+	T m = T(1)/normal.getMagnitudeSquared();
+	T v = dot(cross(diff, edge2), normal)*m;
+	T w = dot(cross(edge1, diff), normal)*m;
 	return Vector3<T>(T(1) - v - w, v, w);
 }
 
@@ -381,15 +391,16 @@ inline bool Triangle3<T>::intersects(const HalfSpace<T>& halfSpace) const noexce
 	return halfSpace.contains(vertices[0]) || halfSpace.contains(vertices[1]) || halfSpace.contains(vertices[2]);
 }
 
-//template<typename T>
-//	requires std::floating_point<T>
-//inline bool Triangle3<T>::intersects(const Plane<T>& plane) const noexcept // #TODO Check if all vertices are on one side
-//{
-//	T d0 = plane.getSignedDistanceTo(vertices[0]);
-//	T d1 = plane.getSignedDistanceTo(vertices[1]);
-//	T d2 = plane.getSignedDistanceTo(vertices[2]);
-//	return !(((d0 < T(0)) && (d1 < T(0)) && (d2 < T(0))) || ((d0 > T(0)) && (d1 > T(0)) && (d2 > T(0))));
-//}
+template<typename T>
+	requires std::floating_point<T>
+inline bool Triangle3<T>::intersects(const Plane<T>& plane) const noexcept
+{
+	// The triangle does not intersect the plane only if all vertices lie strictly on one side of it
+	T d0 = plane.getSignedDistanceTo(vertices[0]);
+	T d1 = plane.getSignedDistanceTo(vertices[1]);
+	T d2 = plane.getSignedDistanceTo(vertices[2]);
+	return !(((d0 < T(0)) && (d1 < T(0)) && (d2 < T(0))) || ((d0 > T(0)) && (d1 > T(0)) && (d2 > T(0))));
+}
 
 } // namespace templates
 
@@ -447,7 +458,7 @@ inline Sphere<T> Triangle3<T>::getCircumscribedSphere() const noexcept
 
 template<typename T>
 	requires std::floating_point<T>
-template<std::random_access_iterator I, std::integral U, std::output_iterator<U> O>
+template<std::integral U, std::random_access_iterator I, std::output_iterator<U> O>
 /*static*/ std::pair<O, bool> Triangle3<T>::triangulate(I firstVertex, I lastVertex, O outIndex)
 {
 	std::ptrdiff_t nVertices = std::distance(firstVertex, lastVertex);
@@ -486,9 +497,9 @@ template<std::random_access_iterator I, std::integral U, std::output_iterator<U>
 	Vector3<T> e1 = firstVertex[1] - firstVertex[0];
 	Vector3<T> e2 = firstVertex[nVertices - 1] - firstVertex[0];
 	Matrix3<T> basis{ Uninitialized() };
-	basis[0] = normalize(e1);
-	basis[2] = normalize(cross(e1, e2));
-	basis[1] = normalize(cross(basis[2], basis[0]));
+	basis[0] = templates::normalize(e1);
+	basis[2] = templates::normalize(cross(e1, e2));
+	basis[1] = templates::normalize(cross(basis[2], basis[0]));
 	basis.transpose();
 
 	Vector2<T>* vertices2 = (Vector2<T>*)alloca(nVertices*sizeof(Vector2<T>));
@@ -500,7 +511,7 @@ template<std::random_access_iterator I, std::integral U, std::output_iterator<U>
 
 template<typename T>
 	requires std::floating_point<T>
-template<std::random_access_iterator I, std::integral U, std::random_access_iterator J, std::output_iterator<U> O>
+template<std::integral U, std::random_access_iterator I, std::random_access_iterator J, std::output_iterator<U> O>
 /*static*/ std::pair<O, bool> Triangle3<T>::triangulate(I firstVertex, I lastVertex, J firstIndex, J lastIndex, O outIndex)
 {
 	std::ptrdiff_t nIndices = std::distance(firstIndex, lastIndex);
@@ -530,7 +541,7 @@ template<std::random_access_iterator I, std::integral U, std::random_access_iter
 		}
 	}
 
-	if (nVertices == 4) // Split along the shortest diagonal
+	if (nIndices == 4) // Split along the shortest diagonal
 	{
 		if (distanceSquared(firstVertex[firstIndex[0]], firstVertex[firstIndex[2]]) <= distanceSquared(firstVertex[firstIndex[1]], firstVertex[firstIndex[3]]))
 		{
@@ -557,9 +568,9 @@ template<std::random_access_iterator I, std::integral U, std::random_access_iter
 	Vector3<T> e1 = firstVertex[firstIndex[1]] - firstVertex[firstIndex[0]];
 	Vector3<T> e2 = firstVertex[firstIndex[nIndices - 1]] - firstVertex[firstIndex[0]];
 	Matrix3<T> basis{ Uninitialized() };
-	basis[0] = normalize(e1);
-	basis[2] = normalize(cross(e1, e2));
-	basis[1] = normalize(cross(basis[2], basis[0]));
+	basis[0] = templates::normalize(e1);
+	basis[2] = templates::normalize(cross(e1, e2));
+	basis[1] = templates::normalize(cross(basis[2], basis[0]));
 	basis.transpose();
 
 	Vector2<T>* vertices2 = (Vector2<T>*)alloca(nIndices*sizeof(Vector2<T>));
