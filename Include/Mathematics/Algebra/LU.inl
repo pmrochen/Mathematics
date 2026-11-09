@@ -19,9 +19,14 @@ namespace mathematics::lu {
 template<int Order, std::floating_point T>
 using Decomposition = std::pair<std::array<T, Order*Order>, std::array<int, Order>>;
 
+// Returns no value if the matrix is singular, i.e. if a pivot relative to the largest element of its row (implicit
+// scaling) does not exceed the tolerance. The default tolerance only rejects matrices that are singular up to rounding.
 template<typename M, int Order = M::DIMENSION, std::floating_point T = typename M::Real>
-std::optional<Decomposition<Order, T>> decompose(const M& matrix) noexcept
+std::optional<Decomposition<Order, T>> decompose(const M& matrix,
+	std::type_identity_t<T> tolerance = T(Order)*std::numeric_limits<T>::epsilon()) noexcept
 {
+	// https://numerical.recipes/
+
 	std::array<T, Order*Order> a;
 	if constexpr (std::is_same_v<M, std::array<T, Order*Order>>)
 	{
@@ -37,7 +42,6 @@ std::optional<Decomposition<Order, T>> decompose(const M& matrix) noexcept
 	}
 
 	T vv[Order];
-	T d = T(1);
 	for (int i = 0; i < Order; i++)
 	{
 		T big = T(0);
@@ -49,15 +53,15 @@ std::optional<Decomposition<Order, T>> decompose(const M& matrix) noexcept
 		}
 
 		if (big == T(0))
-			return {}; //throw std::runtime_error("mathematics::lu::decompose() : Singular matrix");
+			return {}; // the matrix is singular
 
 		vv[i] = T(1)/big;
 	}
 
 	std::array<int, Order> index;
-	int iMax = -1;
 	for (int j = 0; j < Order; j++)
 	{
+		int iMax = j;
 		for (int i = 0; i < j; i++)
 		{
 			T sum = a[i*Order + j];
@@ -82,17 +86,17 @@ std::optional<Decomposition<Order, T>> decompose(const M& matrix) noexcept
 			}
 		}
 
+		if (!(big > tolerance)) // relative pivot too small (also rejects NaN)
+			return {};
+
 		if (j != iMax)
 		{
 			for (int k = 0; k < Order; k++)
 				std::swap(a[iMax*Order + k], a[j*Order + k]);
-			d = -d;
 			vv[iMax] = vv[j];
 		}
 
 		index[j] = iMax;
-		if (a[j*Order + j] == T(0))
-			a[j*Order + j] = std::numeric_limits<T>::min();
 
 		if (j != (Order - 1))
 		{
@@ -102,15 +106,29 @@ std::optional<Decomposition<Order, T>> decompose(const M& matrix) noexcept
 		}
 	}
 
-	if (d != T(0)) 
-		return { { a, index } };
-	else
-		return {};
+	return { { a, index } };
+}
+
+template<std::size_t Order, std::floating_point T> // std::size_t, so that Order is deducible from the decomposition
+T determinant(const std::pair<std::array<T, Order*Order>, std::array<int, Order>>& decomposition) noexcept
+{
+	const auto& [a, index] = decomposition;
+	T det = T(1);
+	for (int i = 0; i < int(Order); i++)
+	{
+		det *= a[i*int(Order) + i];
+		if (index[i] != i) // each recorded row swap flips the sign
+			det = -det;
+	}
+
+	return det;
 }
 
 template<typename V, int Order = V::NUM_COMPONENTS, std::floating_point T = typename V::Real>
-V solve(const Decomposition<Order, T>& decomposition, const V& vector) noexcept
+V solve(const std::type_identity_t<Decomposition<Order, T>>& decomposition, const V& vector) noexcept
 {
+	// https://numerical.recipes/
+
 	const auto& [a, index] = decomposition;
 	std::array<T, Order> b;
 	for (int i = 0; i < Order; i++)
@@ -147,17 +165,17 @@ V solve(const Decomposition<Order, T>& decomposition, const V& vector) noexcept
 	if constexpr (std::is_same_v<V, std::array<T, Order>>)
 		return b;
 	else
-		return { &b[0] };
+		return V(&b[0]);
 }
 
 template<typename V, int Order = V::NUM_COMPONENTS, std::floating_point T = typename V::Real>
-V solve(const Decomposition<Order, T>& decomposition) noexcept
+V solve(const std::type_identity_t<Decomposition<Order, T>>& decomposition) noexcept
 {
 	return solve<V, Order, T>(decomposition, V::ZERO);
 }
 
 template<typename M, int Order = M::DIMENSION, std::floating_point T = typename M::Real>
-M inverse(const Decomposition<Order, T>& decomposition) noexcept
+M inverse(const std::type_identity_t<Decomposition<Order, T>>& decomposition) noexcept
 {
 	std::array<T, Order*Order> a;
 	std::array<T, Order> col;
@@ -174,7 +192,7 @@ M inverse(const Decomposition<Order, T>& decomposition) noexcept
 	if constexpr (std::is_same_v<M, std::array<T, Order*Order>>)
 		return a;
 	else
-		return { &a[0] };
+		return M(&a[0]);
 }
 
 } // namespace mathematics::lu

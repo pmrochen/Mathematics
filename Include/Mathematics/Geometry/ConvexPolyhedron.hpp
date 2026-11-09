@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <cmath>
 #include "../Constants.hpp"
 #include "../Algebra/Vector3.hpp"
@@ -99,10 +100,12 @@ public:
 	std::vector<Plane<T>> getPlanes() const { return { halfSpaces.begin(), halfSpaces.end() }; }
 
 	// Vertices
-	std::vector<Vector3<T>> computeVertices(T tolerance = Constants<T>::TOLERANCE*T(1000)) const;
+	// tolerance: containment slack of the computed vertices; pivotTolerance: plane triples whose intersection is too
+	// ill-conditioned (e.g. nearly parallel planes) do not generate a vertex, see lu::decompose()
+	std::vector<Vector3<T>> computeVertices(T tolerance = Constants<T>::TOLERANCE*T(1000), T pivotTolerance = std::sqrt(std::numeric_limits<T>::epsilon())) const;
 
 	// Bounding box
-	AxisAlignedBox<T> computeAxisAlignedBoundingBox(T tolerance = Constants<T>::TOLERANCE*T(1000)) const noexcept;
+	AxisAlignedBox<T> computeAxisAlignedBoundingBox(T tolerance = Constants<T>::TOLERANCE*T(1000), T pivotTolerance = std::sqrt(std::numeric_limits<T>::epsilon())) const noexcept;
 
 	// Transformation
 	void translate(const Vector3<T>& offset) noexcept;
@@ -319,7 +322,10 @@ template<typename T>
 template<std::output_iterator<Plane<T>> O> 
 inline O ConvexPolyhedron<T>::copyPlanes(O target) const
 {
-	return std::copy(halfSpaces.begin(), halfSpaces.end(), target);
+	//return std::copy(halfSpaces.begin(), halfSpaces.end(), target);
+	for (const HalfSpace<T>& h : halfSpaces)
+		*target++ = Plane<T>(h);
+	return target;
 }
 
 template<typename T>
@@ -349,7 +355,11 @@ void ConvexPolyhedron<T>::transform(const Matrix3<T>& matrix, bool orthogonal) n
 	{
 		Matrix3<T> normalMatrix = inverseTranspose(matrix);
 		for (HalfSpace<T>& h : halfSpaces)
-			h.set(normalize(h.getNormal()*normalMatrix), -dot(h.getNormal(), (h.getNormal()*(-h.getConstant()))*matrix));
+		{
+			Vector3<T> point = (h.getNormal()*(-h.getConstant()))*matrix;
+			Vector3<T> normal = ::mathematics::templates::normalize(h.getNormal()*normalMatrix);
+			h.set(normal, -dot(normal, point));
+		}
 	}
 }
 
@@ -373,7 +383,11 @@ void ConvexPolyhedron<T>::transform(const AffineTransform<T>& transformation, bo
 	{
 		Matrix3<T> normalMatrix = inverseTranspose(transformation.getBasis());
 		for (HalfSpace<T>& h : halfSpaces)
-			h.set(normalize(h.getNormal()*normalMatrix), -dot(h.getNormal(), transform(h.getNormal()*(-h.getConstant()), transformation)));
+		{
+			Vector3<T> point = ::mathematics::templates::transform(h.getNormal()*(-h.getConstant()), transformation);
+			Vector3<T> normal = ::mathematics::templates::normalize(h.getNormal()*normalMatrix);
+			h.set(normal, -dot(normal, point));
+		}
 	}
 }
 
@@ -512,7 +526,7 @@ namespace mathematics::templates {
 
 template<typename T>
 	requires std::floating_point<T>
-std::vector<Vector3<T>> ConvexPolyhedron<T>::computeVertices(T tolerance) const
+std::vector<Vector3<T>> ConvexPolyhedron<T>::computeVertices(T tolerance, T pivotTolerance) const
 {
 	// http://www.gamedev.net/page/resources/_/technical/game-programming/shadow-caster-volumes-for-the-culling-of-potential-shadow-casters-r2330
 
@@ -526,7 +540,7 @@ std::vector<Vector3<T>> ConvexPolyhedron<T>::computeVertices(T tolerance) const
             for (++i2; i2 != halfSpaces.end(); ++i2)
 			{ 
                 // Test if the planes intersect at a point
-				auto d = lu::decompose(Matrix3<T>(i0->getNormal(), i1->getNormal(), i2->getNormal()));
+				auto d = lu::decompose(Matrix3<T>(i0->getNormal(), i1->getNormal(), i2->getNormal()), pivotTolerance);
                 if (d.has_value())
 				{ 
 					Vector3<T> point = lu::solve(d.value(), Vector3<T>(-i0->d, -i1->d, -i2->d));
@@ -559,7 +573,7 @@ std::vector<Vector3<T>> ConvexPolyhedron<T>::computeVertices(T tolerance) const
 
 template<typename T>
 	requires std::floating_point<T>
-AxisAlignedBox<T> ConvexPolyhedron<T>::computeAxisAlignedBoundingBox(T tolerance) const noexcept
+AxisAlignedBox<T> ConvexPolyhedron<T>::computeAxisAlignedBoundingBox(T tolerance, T pivotTolerance) const noexcept
 {
 	// http://www.gamedev.net/page/resources/_/technical/game-programming/shadow-caster-volumes-for-the-culling-of-potential-shadow-casters-r2330
 
@@ -573,7 +587,7 @@ AxisAlignedBox<T> ConvexPolyhedron<T>::computeAxisAlignedBoundingBox(T tolerance
             for (++i2; i2 != halfSpaces.end(); ++i2)
 			{ 
                 // Test if the planes intersect at a point 
-				auto d = lu::decompose(Matrix3<T>(i0->getNormal(), i1->getNormal(), i2->getNormal()));
+				auto d = lu::decompose(Matrix3<T>(i0->getNormal(), i1->getNormal(), i2->getNormal()), pivotTolerance);
                 if (d.has_value())
 				{ 
 					Vector3<T> point = lu::solve(d.value(), Vector3<T>(-i0->d, -i1->d, -i2->d));
