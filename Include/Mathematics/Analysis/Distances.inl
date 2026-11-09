@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include "../Concepts.hpp"
 #include "../Scalar.hpp"
 #include "../Algebra/Vector2.hpp"
 #include "../Algebra/Vector3.hpp"
@@ -397,7 +398,7 @@ T getPointSymmetricFrustumSquared(const Vector3<T>& point, const Vector3<T>& ori
 				udDot = uMin*test.y + depthMin*test.z;
 				if (udDot >= maxUDDot)
 				{
-					closest.set(test.x, uMax, depthMax);
+					closest.set(std::min(test.x, rMax), uMax, depthMax); // UF-edge (clamped to the RUF-vertex)
 				}
 				else if (udDot >= minUDDot)
 				{
@@ -418,7 +419,7 @@ T getPointSymmetricFrustumSquared(const Vector3<T>& point, const Vector3<T>& ori
 				rdDot = rMin*test.x + depthMin*test.z;
 				if (rdDot >= maxRDDot)
 				{
-					closest.set(rMax, test.y, depthMax);
+					closest.set(rMax, std::min(test.y, uMax), depthMax); // RF-edge (clamped to the RUF-vertex)
 				}
 				else if (rdDot >= minRDDot)
 				{
@@ -440,7 +441,7 @@ T getPointSymmetricFrustumSquared(const Vector3<T>& point, const Vector3<T>& ori
 					rdDot = rMin*test.x + depthMin*test.z;
 					if (rdDot >= maxRDDot)
 					{
-						closest.set(rMax, test.y, depthMax);
+						closest.set(rMax, std::min(test.y, uMax), depthMax); // RF-edge (clamped to the RUF-vertex)
 					}
 					else if (rdDot >= minRDDot)
 					{
@@ -461,7 +462,7 @@ T getPointSymmetricFrustumSquared(const Vector3<T>& point, const Vector3<T>& ori
 						udDot = uMin*test.y + depthMin*test.z;
 						if (udDot >= maxUDDot)
 						{
-							closest.set(test.x, uMax, depthMax);
+							closest.set(std::min(test.x, rMax), uMax, depthMax); // UF-edge (clamped to the RUF-vertex)
 						}
 						else if (udDot >= minUDDot)
 						{
@@ -509,7 +510,7 @@ T getPointSymmetricFrustumSquared(const Vector3<T>& point, const Vector3<T>& ori
 				udDot = uMin*test.y + depthMin*test.z;
 				if (udDot >= maxUDDot)
 				{
-					closest.set(test.x, uMax, depthMax);
+					closest.set(std::min(test.x, rMax), uMax, depthMax); // UF-edge (clamped to the RUF-vertex)
 				}
 				else
 				{
@@ -525,7 +526,7 @@ T getPointSymmetricFrustumSquared(const Vector3<T>& point, const Vector3<T>& ori
 				rdDot = rMin*test.x + depthMin*test.z;
 				if (rdDot >= maxRDDot)
 				{
-					closest.set(rMax, test.y, depthMax);
+					closest.set(rMax, std::min(test.y, uMax), depthMax); // RF-edge (clamped to the RUF-vertex)
 				}
 				else
 				{
@@ -542,7 +543,7 @@ T getPointSymmetricFrustumSquared(const Vector3<T>& point, const Vector3<T>& ori
 					rdDot = rMin*test.x + depthMin*test.z;
 					if (rdDot >= maxRDDot)
 					{
-						closest.set(rMax, test.y, depthMax);
+						closest.set(rMax, std::min(test.y, uMax), depthMax); // RF-edge (clamped to the RUF-vertex)
 					}
 					else
 					{
@@ -558,7 +559,7 @@ T getPointSymmetricFrustumSquared(const Vector3<T>& point, const Vector3<T>& ori
 						udDot = uMin*test.y + depthMin*test.z;
 						if (udDot >= maxUDDot)
 						{
-							closest.set(test.x, uMax, depthMax);
+							closest.set(std::min(test.x, rMax), uMax, depthMax); // UF-edge (clamped to the RUF-vertex)
 						}
 						else
 						{
