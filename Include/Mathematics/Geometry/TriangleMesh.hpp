@@ -71,7 +71,8 @@ public:
 	static TriangleMesh* from(const AxisAlignedBox<T>& box);
 	static TriangleMesh* from(const OrientedBox<T>& box);
 	static TriangleMesh* from(const SymmetricFrustum<T>& frustum);
-	static TriangleMesh* from(const ConvexPolyhedron<T>* convexPolyhedron, T tolerance = Constants<T>::TOLERANCE*T(1000));
+	static TriangleMesh* from(const ConvexPolyhedron<T>* convexPolyhedron, T tolerance = Constants<T>::TOLERANCE*T(1000),
+		T pivotTolerance = std::sqrt(std::numeric_limits<T>::epsilon())); // see ConvexPolyhedron::computeVertices()
 	static TriangleMesh* makeTetrahedron(T edgeLength);
 	static TriangleMesh* makeBox(const Vector3<T>& dimensions);
 #if MATHEMATICS_HAS_QUICKHULL
@@ -218,8 +219,8 @@ template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
 inline TriangleMesh<T, U>::TriangleMesh(const Vector3<T>* vertices, std::size_t nVertices, const U* indices, std::size_t nIndices) :
 	//refCount_(), 
-	vertices(vertices + nVertices), 
-	indices(indices + nIndices) 
+	vertices(vertices, vertices + nVertices), 
+	indices(indices, indices + nIndices) 
 {
 }
 
@@ -228,8 +229,8 @@ template<typename T, typename U>
 template<std::integral V> 
 inline TriangleMesh<T, U>::TriangleMesh(const Vector3<T>* vertices, std::size_t nVertices, const V* indices, std::size_t nIndices) :
 	//refCount_(), 
-	vertices(vertices + nVertices), 
-	indices(indices + nIndices) 
+	vertices(vertices, vertices + nVertices), 
+	indices(indices, indices + nIndices) 
 {
 }
 
@@ -263,7 +264,7 @@ inline TriangleMesh<T, U>::TriangleMesh(std::vector<Vector3<T>>&& vertices, std:
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-TriangleMesh<T, U>::TriangleMesh(const Triangle<T>* triangles, std::size_t nTriangles) :
+TriangleMesh<T, U>::TriangleMesh(const Triangle3<T>* triangles, std::size_t nTriangles) :
 	//refCount_(), 
 	vertices(), 
 	indices()
@@ -282,7 +283,7 @@ TriangleMesh<T, U>::TriangleMesh(const Triangle<T>* triangles, std::size_t nTria
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-TriangleMesh<T, U>::TriangleMesh(const std::vector<Triangle<T>>& triangles) :
+TriangleMesh<T, U>::TriangleMesh(const std::vector<Triangle3<T>>& triangles) :
 	//refCount_(), 
 	vertices(), 
 	indices()
@@ -340,7 +341,7 @@ template<typename T, typename U>
 /*static*/ inline TriangleMesh<T, U>* TriangleMesh<T, U>::from(const AxisAlignedBox<T>& box)
 {
 	TriangleMesh<T, U>* mesh = new TriangleMesh<T, U>(box.getVertices());
-	auto [first, last] = box.getPrimitives<U>(3);
+	auto [first, last] = box.template getPrimitives<U>(3);
 	mesh->indices.assign(first, last);
 	return mesh;
 }
@@ -350,7 +351,7 @@ template<typename T, typename U>
 /*static*/ inline TriangleMesh<T, U>* TriangleMesh<T, U>::from(const OrientedBox<T>& box)
 {
 	TriangleMesh<T, U>* mesh = new TriangleMesh<T, U>(box.getVertices());
-	auto [first, last] = box.getPrimitives<U>(3);
+	auto [first, last] = box.template getPrimitives<U>(3);
 	mesh->indices.assign(first, last);
 	return mesh;
 }
@@ -360,7 +361,7 @@ template<typename T, typename U>
 /*static*/ inline TriangleMesh<T, U>* TriangleMesh<T, U>::from(const SymmetricFrustum<T>& frustum)
 {
 	TriangleMesh<T, U>* mesh = new TriangleMesh<T, U>(frustum.getVertices());
-	auto [first, last] = frustum.getPrimitives<U>(3);
+	auto [first, last] = frustum.template getPrimitives<U>(3);
 	mesh->indices.assign(first, last);
 	return mesh;
 }
@@ -385,7 +386,7 @@ template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
 /*static*/ inline TriangleMesh<T, U>* TriangleMesh<T, U>::makeBox(const Vector3<T>& dimensions)
 {
-	return dimemsions.allGreaterThan(Vector3<T>::ZERO) ?
+	return dimensions.allGreaterThan(Vector3<T>::ZERO) ?
 		from(AxisAlignedBox<T>(dimensions)) :
 		nullptr;
 }
@@ -437,7 +438,7 @@ void TriangleMesh<T, U>::append(const TriangleMesh<T, U>* mesh)
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-bool TriangleMesh::hasValidVertexIndices() const
+bool TriangleMesh<T, U>::hasValidVertexIndices() const noexcept
 {
 	std::size_t nVertices = vertices.size();
 	for (std::size_t i = 0, n = indices.size(); i != n; i++)
@@ -451,9 +452,9 @@ bool TriangleMesh::hasValidVertexIndices() const
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-inline const Vector3<T>& TriangleMesh<T, U>::getVertex(std::size_t index) const
+inline const Vector3<T>& TriangleMesh<T, U>::getVertex(std::size_t index) const noexcept
 { 
-	return (index < vertices.size()) ? Vector3<T>(vertices[index]) : Vector3<T>::ZERO; 
+	return (index < vertices.size()) ? vertices[index] : Vector3<T>::ZERO; 
 }
 
 template<typename T, typename U>
@@ -506,7 +507,7 @@ inline void TriangleMesh<T, U>::removeVertexAt(std::size_t index)
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-inline U TriangleMesh<T, U>::getVertexIndex(std::size_t primitive, int vertex) const
+inline U TriangleMesh<T, U>::getVertexIndex(std::size_t primitive, int vertex) const noexcept
 {
 	std::size_t index = (primitive << 1) + primitive + vertex;
 	return indices.empty() ? U(index) : ((index < indices.size()) ? indices[index] : U());
@@ -514,7 +515,7 @@ inline U TriangleMesh<T, U>::getVertexIndex(std::size_t primitive, int vertex) c
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-inline U TriangleMesh<T, U>::getVertexIndex(std::size_t index) const
+inline U TriangleMesh<T, U>::getVertexIndex(std::size_t index) const noexcept
 { 
 	return (index < indices.size()) ? indices[index] : U(); 
 }
@@ -539,7 +540,8 @@ inline void TriangleMesh<T, U>::addVertexIndices(U v0, U v1, U v2)
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-template<std::input_iterator I, std::sentinel_for<I> S>
+template<std::input_iterator I, std::sentinel_for<I> S> 
+	requires std::integral<std::iter_value_t<I>>
 inline void TriangleMesh<T, U>::addVertexIndices(I first, S last)
 {
 	indices.insert(indices.end(), first, last); 
@@ -612,7 +614,7 @@ bool TriangleMesh<T, U>::computeVertexIndices()
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-inline std::size_t TriangleMesh<T, U>::getTriangleCount() const
+inline std::size_t TriangleMesh<T, U>::getTriangleCount() const noexcept
 { 
 	return indices.empty() ? vertices.size()/3 : indices.size()/3;
 }
@@ -720,7 +722,7 @@ std::vector<Plane<T>> TriangleMesh<T, U>::getPlanes() const
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-bool TriangleMesh<T, U>::isConvex() const
+bool TriangleMesh<T, U>::isConvex() const noexcept
 {
 	std::size_t vertexCount = vertices.size();
 	for (std::size_t i = 0, n = getTriangleCount(); i != n; i++)
@@ -740,10 +742,10 @@ bool TriangleMesh<T, U>::isConvex() const
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-Vector3<T> TriangleMesh<T, U>::computeCentroid() const
+Vector3<T> TriangleMesh<T, U>::computeCentroid() const noexcept
 {
 	if (vertices.empty())
-		return Vector3::ZERO;
+		return Vector3<T>::ZERO;
     
 	Vector3<T> average = vertices[0];
     for (std::size_t i = 1, n = vertices.size(); i != n; i++)
@@ -755,7 +757,7 @@ Vector3<T> TriangleMesh<T, U>::computeCentroid() const
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-T TriangleMesh<T, U>::computeSurfaceArea() const
+T TriangleMesh<T, U>::computeSurfaceArea() const noexcept
 {
 	T area = T(0);
 	for (std::size_t i = 0, n = getTriangleCount(); i != n; i++)
@@ -771,7 +773,7 @@ T TriangleMesh<T, U>::computeSurfaceArea() const
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-T TriangleMesh<T, U>::computeVolume() const
+T TriangleMesh<T, U>::computeVolume() const noexcept
 {
 	T vol = T(0);
 	for (std::size_t i = 0, n = getTriangleCount(); i != n; i++)
@@ -787,7 +789,7 @@ T TriangleMesh<T, U>::computeVolume() const
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-AxisAlignedBox<T> TriangleMesh<T, U>::computeAxisAlignedBoundingBox() const
+AxisAlignedBox<T> TriangleMesh<T, U>::computeAxisAlignedBoundingBox() const noexcept
 {
 	if (vertices.empty())
 		return {};
@@ -806,13 +808,13 @@ AxisAlignedBox<T> TriangleMesh<T, U>::computeAxisAlignedBoundingBox() const
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-Sphere<T> TriangleMesh<T, U>::computeBoundingSphere() const
+Sphere<T> TriangleMesh<T, U>::computeBoundingSphere() const noexcept
 {
 	if (vertices.empty())
 		return {};
 
 	if (vertices.size() == 1)
-		return { vertex[0], T(0) };
+		return { vertices[0], T(0) };
 
 	Vector3<T> minX = vertices[0];
 	Vector3<T> maxX = minX;
@@ -862,32 +864,36 @@ Sphere<T> TriangleMesh<T, U>::computeBoundingSphere() const
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-void TriangleMesh<T, U>::translate(const Vector3<T>& offset)
+TriangleMesh<T, U>& TriangleMesh<T, U>::translate(const Vector3<T>& offset) noexcept
 {
 	if (offset.isZero())
-		return;
+		return *this;
 
 	for (Vector3<T>& v : vertices)
 		v += offset;
+
+	return *this;
 }
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-void TriangleMesh<T, U>::transform(const Matrix3<T>& matrix)
+TriangleMesh<T, U>& TriangleMesh<T, U>::transform(const Matrix3<T>& matrix) noexcept
 {
 	if (vertices.empty() || matrix.isIdentity())
-		return;
+		return *this;
 
 	for (Vector3<T>& v : vertices)
 		v *= matrix;
+
+	return *this;
 }
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-void TriangleMesh<T, U>::transform(const AffineTransform<T>& transformation)
+TriangleMesh<T, U>& TriangleMesh<T, U>::transform(const AffineTransform<T>& transformation) noexcept
 {
 	if (vertices.empty() || transformation.isIdentity())
-		return;
+		return *this;
 
 	if (transformation.getBasis().isIdentity())
 	{
@@ -898,6 +904,8 @@ void TriangleMesh<T, U>::transform(const AffineTransform<T>& transformation)
 		for (Vector3<T>& v : vertices)
 			v.transform(transformation); 
 	}
+
+	return *this;
 }
 
 template<typename T, typename U>
@@ -960,13 +968,13 @@ bool TriangleMesh<T, U>::weldVertices(T tolerance)
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-bool TriangleMesh<T, U>::contains(const Vector3<T>& point) const
+bool TriangleMesh<T, U>::contains(const Vector3<T>& point) const noexcept
 {
 	for (std::size_t i = 0, n = getTriangleCount(); i != n; i++)
 	{
-		const Vector3& v0 = getVertex(getVertexIndex(i, 0));
-		const Vector3& v1 = getVertex(getVertexIndex(i, 1));
-		const Vector3& v2 = getVertex(getVertexIndex(i, 2));
+		const Vector3<T>& v0 = getVertex(getVertexIndex(i, 0));
+		const Vector3<T>& v1 = getVertex(getVertexIndex(i, 1));
+		const Vector3<T>& v2 = getVertex(getVertexIndex(i, 2));
 		if (!HalfSpace<T>(v0, v1, v2).contains(point))
 			return false;
 	}
@@ -990,7 +998,7 @@ namespace mathematics::templates {
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-/*static*/ TriangleMesh<T, U>* TriangleMesh<T, U>::from(const ConvexPolyhedron<T>* convexPolyhedron, T tolerance)
+/*static*/ TriangleMesh<T, U>* TriangleMesh<T, U>::from(const ConvexPolyhedron<T>* convexPolyhedron, T tolerance, T pivotTolerance)
 {
 	if (!convexPolyhedron)
 		return nullptr;
@@ -1001,7 +1009,8 @@ template<typename T, typename U>
 
 	std::size_t nHalfSpaces = convexPolyhedron->halfSpaces.size();
 	std::vector<std::tuple<int, int, int>> vertexPlanes;
-	using VerticesOnPlane = std::pair<std::vector<Vector3<T>>::iterator*, std::size_t>;
+	using VertexIterator = typename std::vector<Vector3<T>>::iterator;
+	using VerticesOnPlane = std::pair<VertexIterator*, std::size_t>;
 	std::vector<VerticesOnPlane> verticesOnPlanes(nHalfSpaces, { {}, {} });
 	std::size_t nVerticesOnAllPlanes = 0;
 
@@ -1014,7 +1023,7 @@ template<typename T, typename U>
             for (++i2; i2 != convexPolyhedron->halfSpaces.end(); ++i2)
 			{ 
                 // Test if the planes intersect at a point 
-				auto d = lu::decompose(Matrix3<T>(i0->getNormal(), i1->getNormal(), i2->getNormal()));
+				auto d = lu::decompose(Matrix3<T>(i0->getNormal(), i1->getNormal(), i2->getNormal()), pivotTolerance);
                 if (d.has_value())
 				{ 
 					Vector3<T> point = lu::solve(d.value(), Vector3<T>(-i0->d, -i1->d, -i2->d));
@@ -1047,7 +1056,7 @@ template<typename T, typename U>
 														
 							std::ptrdiff_t vertexIndex = std::distance(mesh->vertices.begin(), range.first);
 							mesh->vertices.insert(range.first, point);	// intersection of 3 planes
-							vertexPlanes.insert(vertexPlanes.begin() + vertexIndex, int(p0), int(p1), int(p2));
+							vertexPlanes.insert(vertexPlanes.begin() + vertexIndex, std::make_tuple(int(p0), int(p1), int(p2)));
 						}
 					}
 				}
@@ -1055,8 +1064,8 @@ template<typename T, typename U>
 		}
     }
 
-	std::vector<std::vector<Vector3<T>>::iterator> iteratorBuffer(nVerticesOnAllPlanes);
-	std::vector<Vector3<T>>::iterator* iteratorPtr = iteratorBuffer.data();
+	std::vector<VertexIterator> iteratorBuffer(nVerticesOnAllPlanes);
+	VertexIterator* iteratorPtr = iteratorBuffer.data();
 	for (std::size_t i = 0; i != nHalfSpaces; i++)
 	{
 		verticesOnPlanes[i].first = iteratorPtr;
@@ -1082,7 +1091,7 @@ template<typename T, typename U>
 		std::size_t nVerticesOnPlane = verticesOnPlanes[i].second;
 		if (nVerticesOnPlane >= 3)
 		{
-			std::vector<Vector3<T>>::iterator* iVertices = verticesOnPlanes[i].first;
+			VertexIterator* iVertices = verticesOnPlanes[i].first;
 			Vector3<T> center = *iVertices[0];
 			for (std::size_t j = 1; j < nVerticesOnPlane; j++)
 				center += *iVertices[j];
@@ -1090,7 +1099,7 @@ template<typename T, typename U>
 			
 			Vector3<T> normal = convexPolyhedron->halfSpaces[i].getNormal();
 			auto comparer =
-				[&center, &normal](const std::vector<Vector3<T>>::iterator& lhs, const std::vector<Vector3<T>>::iterator& rhs)
+				[&center, &normal](const VertexIterator& lhs, const VertexIterator& rhs)
 				{
 					return dot(normal, cross(*lhs - center, *rhs - center)) > T(0);
 				};

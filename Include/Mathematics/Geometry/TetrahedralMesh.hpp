@@ -188,8 +188,8 @@ template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
 inline TetrahedralMesh<T, U>::TetrahedralMesh(const Vector3<T>* vertices, std::size_t nVertices, const U* indices, std::size_t nIndices) :
 	//refCount_(), 
-	vertices(vertices + nVertices), 
-	indices(indices + nIndices) 
+	vertices(vertices, vertices + nVertices), 
+	indices(indices, indices + nIndices) 
 {
 }
 
@@ -198,8 +198,8 @@ template<typename T, typename U>
 template<std::integral V> 
 inline TetrahedralMesh<T, U>::TetrahedralMesh(const Vector3<T>* vertices, std::size_t nVertices, const V* indices, std::size_t nIndices) :
 	//refCount_(), 
-	vertices(vertices + nVertices), 
-	indices(indices + nIndices) 
+	vertices(vertices, vertices + nVertices), 
+	indices(indices, indices + nIndices) 
 {
 }
 
@@ -354,7 +354,7 @@ void TetrahedralMesh<T, U>::append(const TetrahedralMesh<T, U>* mesh)
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-bool TetrahedralMesh::hasValidVertexIndices() const
+bool TetrahedralMesh<T, U>::hasValidVertexIndices() const noexcept
 {
 	std::size_t nVertices = vertices.size();
 	for (std::size_t i = 0, n = indices.size(); i != n; i++)
@@ -368,9 +368,9 @@ bool TetrahedralMesh::hasValidVertexIndices() const
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-inline const Vector3<T>& TetrahedralMesh<T, U>::getVertex(std::size_t index) const
+inline const Vector3<T>& TetrahedralMesh<T, U>::getVertex(std::size_t index) const noexcept
 { 
-	return (index < vertices.size()) ? Vector3<T>(vertices[index]) : Vector3<T>::ZERO; 
+	return (index < vertices.size()) ? vertices[index] : Vector3<T>::ZERO; 
 }
 
 template<typename T, typename U>
@@ -423,7 +423,7 @@ inline void TetrahedralMesh<T, U>::removeVertexAt(std::size_t index)
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-inline U TetrahedralMesh<T, U>::getVertexIndex(std::size_t primitive, int vertex) const
+inline U TetrahedralMesh<T, U>::getVertexIndex(std::size_t primitive, int vertex) const noexcept
 {
 	std::size_t index = (primitive << 2) + vertex;
 	return indices.empty() ? U(index) : ((index < indices.size()) ? indices[index] : U());
@@ -431,7 +431,7 @@ inline U TetrahedralMesh<T, U>::getVertexIndex(std::size_t primitive, int vertex
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-inline U TetrahedralMesh<T, U>::getVertexIndex(std::size_t index) const
+inline U TetrahedralMesh<T, U>::getVertexIndex(std::size_t index) const noexcept
 { 
 	return (index < indices.size()) ? indices[index] : U(); 
 }
@@ -457,7 +457,8 @@ inline void TetrahedralMesh<T, U>::addVertexIndices(U v0, U v1, U v2, U v3)
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-template<std::input_iterator I, std::sentinel_for<I> S>
+template<std::input_iterator I, std::sentinel_for<I> S> 
+	requires std::integral<std::iter_value_t<I>>
 inline void TetrahedralMesh<T, U>::addVertexIndices(I first, S last)
 {
 	indices.insert(indices.end(), first, last); 
@@ -531,7 +532,7 @@ bool TetrahedralMesh<T, U>::computeVertexIndices()
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-inline std::size_t TetrahedralMesh<T, U>::getTetrahedronCount() const
+inline std::size_t TetrahedralMesh<T, U>::getTetrahedronCount() const noexcept
 { 
 	return indices.empty() ? (vertices.size() >> 2) : (indices.size() >> 2);
 }
@@ -577,10 +578,10 @@ std::vector<Tetrahedron<T>> TetrahedralMesh<T, U>::getTetrahedrons() const
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-Vector3<T> TetrahedralMesh<T, U>::computeCentroid() const
+Vector3<T> TetrahedralMesh<T, U>::computeCentroid() const noexcept
 {
 	if (vertices.empty())
-		return Vector3::ZERO;
+		return Vector3<T>::ZERO;
     
 	Vector3<T> average = vertices[0];
     for (std::size_t i = 1, n = vertices.size(); i != n; i++)
@@ -592,7 +593,7 @@ Vector3<T> TetrahedralMesh<T, U>::computeCentroid() const
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-T TetrahedralMesh<T, U>::computeVolume() const
+T TetrahedralMesh<T, U>::computeVolume() const noexcept
 {
 	T vol = T(0);
 	for (std::size_t i = 0, n = getTetrahedronCount(); i != n; i++)
@@ -609,7 +610,7 @@ T TetrahedralMesh<T, U>::computeVolume() const
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-AxisAlignedBox<T> TetrahedralMesh<T, U>::computeAxisAlignedBoundingBox() const
+AxisAlignedBox<T> TetrahedralMesh<T, U>::computeAxisAlignedBoundingBox() const noexcept
 {
 	if (vertices.empty())
 		return {};
@@ -628,13 +629,13 @@ AxisAlignedBox<T> TetrahedralMesh<T, U>::computeAxisAlignedBoundingBox() const
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-Sphere<T> TetrahedralMesh<T, U>::computeBoundingSphere() const
+Sphere<T> TetrahedralMesh<T, U>::computeBoundingSphere() const noexcept
 {
 	if (vertices.empty())
 		return {};
 
 	if (vertices.size() == 1)
-		return { vertex[0], T(0) };
+		return { vertices[0], T(0) };
 
 	Vector3<T> minX = vertices[0];
 	Vector3<T> maxX = minX;
@@ -684,32 +685,36 @@ Sphere<T> TetrahedralMesh<T, U>::computeBoundingSphere() const
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-void TetrahedralMesh<T, U>::translate(const Vector3<T>& offset)
+TetrahedralMesh<T, U>& TetrahedralMesh<T, U>::translate(const Vector3<T>& offset) noexcept
 {
 	if (offset.isZero())
-		return;
+		return *this;
 
 	for (Vector3<T>& v : vertices)
 		v += offset;
+
+	return *this;
 }
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-void TetrahedralMesh<T, U>::transform(const Matrix3<T>& matrix)
+TetrahedralMesh<T, U>& TetrahedralMesh<T, U>::transform(const Matrix3<T>& matrix) noexcept
 {
 	if (vertices.empty() || matrix.isIdentity())
-		return;
+		return *this;
 
 	for (Vector3<T>& v : vertices)
 		v *= matrix;
+
+	return *this;
 }
 
 template<typename T, typename U>
 	requires (std::floating_point<T> && std::integral<U>)
-void TetrahedralMesh<T, U>::transform(const AffineTransform<T>& transformation)
+TetrahedralMesh<T, U>& TetrahedralMesh<T, U>::transform(const AffineTransform<T>& transformation) noexcept
 {
 	if (vertices.empty() || transformation.isIdentity())
-		return;
+		return *this;
 
 	if (transformation.getBasis().isIdentity())
 	{
@@ -720,6 +725,8 @@ void TetrahedralMesh<T, U>::transform(const AffineTransform<T>& transformation)
 		for (Vector3<T>& v : vertices)
 			v.transform(transformation); 
 	}
+
+	return *this;
 }
 
 template<typename T, typename U>
