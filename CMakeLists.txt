@@ -177,6 +177,16 @@ target_compile_definitions(${MATHEMATICS_LIB_NAME}
         MATHEMATICS_HAS_QUICKHULL=$<BOOL:${MATHEMATICS_HAS_QUICKHULL}>
 )
 
+# The library accesses data through references of other types (e.g. Matrix3::operator[] returns its row as a Vector3&,
+# AffineTransform::getBasis() returns a Matrix3&, Plane::getNormal() returns a Vector3&), which is only well defined
+# without type-based (strict) aliasing optimizations. MSVC and clang-cl do not perform them.
+if(NOT CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+	target_compile_options(${MATHEMATICS_LIB_NAME}
+		INTERFACE
+			$<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,AppleClang,IntelLLVM>:-fno-strict-aliasing>
+	)
+endif()
+
 if (MATHEMATICS_WITH_TESTS)
     enable_testing()
     add_subdirectory(Tests)
