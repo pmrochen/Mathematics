@@ -237,6 +237,22 @@ TEST_CASE_TEMPLATE("free functions", T, TEST_REAL_TYPES)
 	CHECK_APPROX(angle(V(T(1), T(1)), V(T(1), T(0))), Constants<T>::PI/T(4));
 }
 
+TEST_CASE_TEMPLATE("angle accuracy", T, TEST_REAL_TYPES)
+{
+	using V = Vector2<T>;
+	for (T small : { T(1e-2), T(1e-3), T(1e-5) })
+	{
+		CAPTURE(small);
+		V u(T(3), T(0));
+		V v = V(std::cos(small), std::sin(small))*T(0.25); // vectors of different lengths
+		CHECK_APPROX(angle(u, v)/small, T(1)); // relative accuracy near 0
+		CHECK_APPROX(angle(u, -v), Constants<T>::PI - small); // and near pi
+	}
+	CHECK(angle(V(T(1), T(-2)), V(T(1), T(-2))) == T(0));
+	CHECK(angle(V::ZERO, V::UNIT_X) == T(0));
+	CHECK(angle(V::ZERO, V(T(-3), T(-1))) == T(0));
+}
+
 TEST_CASE_TEMPLATE("slerp", T, TEST_REAL_TYPES)
 {
 	using V = Vector2<T>;

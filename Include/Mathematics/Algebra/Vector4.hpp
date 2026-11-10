@@ -161,6 +161,9 @@ template<std::floating_point T> const Vector4<T> Vector4<T>::MINUS_INF{ -std::nu
 
 template<std::integral T>
 struct Vector4<T>
+#ifdef _MSC_VER
+	: public detail::IntegralVectorConstants<Vector4<T>> // provides ZERO (MSVC workaround)
+#endif
 {
 	using ComponentType = T;
 	using ConstArg = const Vector4&;
@@ -208,8 +211,8 @@ struct Vector4<T>
 
 	template<typename A> void serialize(A& ar) { ar(x, y, z, w); }
 
-	template<std::size_t I> requires (I < 4) T& get() noexcept;
-	template<std::size_t I> requires (I < 4) const T& get() const noexcept;
+	template<std::size_t I> requires (I < 4) T& get() noexcept { if constexpr (I == 0) return x; else if constexpr (I == 1) return y; else if constexpr (I == 2) return z; else return w; }
+	template<std::size_t I> requires (I < 4) const T& get() const noexcept { if constexpr (I == 0) return x; else if constexpr (I == 1) return y; else if constexpr (I == 2) return z; else return w; }
 
 	const Vector2<T>& xy/*getXY*/() const noexcept { return reinterpret_cast<const Vector2<T>&>(*this); }
 	const Vector3<T>& xyz/*getXYZ*/() const noexcept { return reinterpret_cast<const Vector3<T>&>(*this); }
@@ -228,16 +231,20 @@ struct Vector4<T>
 	T getMaxComponent() const { return std::max(std::max(std::max(x, y), z), w); }
 	Vector4& setZero() noexcept { x = T(); y = T(); z = T(); w = T(); return *this; }
 	Vector4& set(T x, T y, T z, T w) noexcept { this->x = x; this->y = y; this->z = z; this->w = w; return *this; }
-	Vector4& setMinimum(const Vector4& v1, const Vector4& v2);
-	Vector4& setMaximum(const Vector4& v1, const Vector4& v2);
+	Vector4& setMinimum(const Vector4& v1, const Vector4& v2) { x = std::min(v1.x, v2.x); y = std::min(v1.y, v2.y); z = std::min(v1.z, v2.z); w = std::min(v1.w, v2.w); return *this; }
+	Vector4& setMaximum(const Vector4& v1, const Vector4& v2) { x = std::max(v1.x, v2.x); y = std::max(v1.y, v2.y); z = std::max(v1.z, v2.z); w = std::max(v1.w, v2.w); return *this; }
 	Vector4& negate() noexcept { x = -x; y = -y; z = -z; w = -w; return *this; }
 
+#ifndef _MSC_VER
 	static const Vector4 ZERO;
+#endif
 
 	T x, y, z, w;
 };
 
+#ifndef _MSC_VER
 template<std::integral T> const Vector4<T> Vector4<T>::ZERO{};
+#endif
 
 #if SIMD_HAS_FLOAT4
 
@@ -563,55 +570,55 @@ inline Vector4<T>& Vector4<T>::normalize() noexcept
 	return *this;
 }
 
-template<std::integral T>
-template<std::size_t I>
-	requires (I < 4)
-inline T& Vector4<T>::get() noexcept
-{
-	if constexpr (I == 0)
-		return x;
-	else if constexpr (I == 1)
-		return y;
-	else if constexpr (I == 2)
-		return z;
-	else //if constexpr (I == 3)
-		return w;
-}
+// template<std::integral T>
+// template<std::size_t I>
+// 	requires (I < 4)
+// inline T& Vector4<T>::get() noexcept
+// {
+// 	if constexpr (I == 0)
+// 		return x;
+// 	else if constexpr (I == 1)
+// 		return y;
+// 	else if constexpr (I == 2)
+// 		return z;
+// 	else //if constexpr (I == 3)
+// 		return w;
+// }
 
-template<std::integral T>
-template<std::size_t I>
-	requires (I < 4)
-inline const T& Vector4<T>::get() const noexcept
-{
-	if constexpr (I == 0)
-		return x;
-	else if constexpr (I == 1)
-		return y;
-	else if constexpr (I == 2)
-		return z;
-	else //if constexpr (I == 3)
-		return w;
-}
+// template<std::integral T>
+// template<std::size_t I>
+// 	requires (I < 4)
+// inline const T& Vector4<T>::get() const noexcept
+// {
+// 	if constexpr (I == 0)
+// 		return x;
+// 	else if constexpr (I == 1)
+// 		return y;
+// 	else if constexpr (I == 2)
+// 		return z;
+// 	else //if constexpr (I == 3)
+// 		return w;
+// }
 
-template<std::integral T>
-inline Vector4<T>& Vector4<T>::setMinimum(const Vector4<T>& v1, const Vector4<T>& v2)
-{
-	x = std::min(v1.x, v2.x);
-	y = std::min(v1.y, v2.y);
-	z = std::min(v1.z, v2.z);
-	w = std::min(v1.w, v2.w);
-	return *this;
-}
+// template<std::integral T>
+// inline Vector4<T>& Vector4<T>::setMinimum(const Vector4<T>& v1, const Vector4<T>& v2)
+// {
+// 	x = std::min(v1.x, v2.x);
+// 	y = std::min(v1.y, v2.y);
+// 	z = std::min(v1.z, v2.z);
+// 	w = std::min(v1.w, v2.w);
+// 	return *this;
+// }
 
-template<std::integral T>
-inline Vector4<T>& Vector4<T>::setMaximum(const Vector4<T>& v1, const Vector4<T>& v2)
-{
-	x = std::max(v1.x, v2.x);
-	y = std::max(v1.y, v2.y);
-	z = std::max(v1.z, v2.z);
-	w = std::max(v1.w, v2.w);
-	return *this;
-}
+// template<std::integral T>
+// inline Vector4<T>& Vector4<T>::setMaximum(const Vector4<T>& v1, const Vector4<T>& v2)
+// {
+// 	x = std::max(v1.x, v2.x);
+// 	y = std::max(v1.y, v2.y);
+// 	z = std::max(v1.z, v2.z);
+// 	w = std::max(v1.w, v2.w);
+// 	return *this;
+// }
 
 #if SIMD_HAS_FLOAT4
 
@@ -1082,32 +1089,13 @@ inline Vector4<T> normalize(Vector4<T>&& v) noexcept
 	return v;
 }
 
-//template<typename T>
-//	requires std::floating_point<T>
-//inline Vector4<T> project(const Vector4<T>& v1, const Vector4<T>& v2) noexcept
-//{
-//	T m = v2.getMagnitudeSquared();
-//	return (m > T(0)) ? (dot(v1, v2)/m)*v2 : Vector4<T>::ZERO;
-//}
-
-//template<typename T>
-//	requires std::floating_point<T>
-//inline T angle(const Vector4<T>& v1, const Vector4<T>& v2)
-//{
-//#if MATHEMATICS_FAST_NORMALIZE
-//	Vector4<T> u(v1);
-//	Vector4<T> v(v2);
-//	u.normalize();
-//	v.normalize();
-//	return std::acos(std::clamp(dot(u, v), T(-1), T(1)));
-//#else
-//	T q = v1.getMagnitude()*v2.getMagnitude();
-//	if (q > T(0))
-//		return std::acos(std::clamp(dot(v1, v2)/q, T(-1), T(1)));
-//	else
-//		return (dot(v1, v2) >= T(0)) ? T(0) : Constants<T>::PI;
-//#endif
-//}
+template<typename T>
+	requires std::floating_point<T>
+inline Vector4<T> project(const Vector4<T>& v1, const Vector4<T>& v2) noexcept
+{
+	T m = v2.getMagnitudeSquared();
+	return (m > T(0)) ? (dot(v1, v2)/m)*v2 : Vector4<T>::ZERO;
+}
 
 template<typename T, typename U>
 concept AnyVector = (std::same_as<T, Vector2<U>> || std::same_as<T, Vector3<U>> || std::same_as<T, Vector4<U>>);

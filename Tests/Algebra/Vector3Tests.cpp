@@ -244,10 +244,27 @@ TEST_CASE_TEMPLATE("free functions", T, TEST_REAL_TYPES)
 	CHECK(project(a, V::ZERO) == V::ZERO);
 	CHECK_APPROX(angle(V::UNIT_X, V::UNIT_Z), Constants<T>::HALF_PI);
 	CHECK_APPROX(angle(V(T(2), T(0), T(0)), V(T(-3), T(0), T(0))), Constants<T>::PI);
-	CHECK_APPROX_TOL(angle(a, a), T(0), T(1e-3)); // acos is ill-conditioned near 1
+	CHECK(angle(a, a) == T(0));
 
 	Matrix3<T> t = tensor(V(T(1), T(2), T(3)), V(T(4), T(5), T(6)));
 	CHECK(t == Matrix3<T>(T(4), T(5), T(6), T(8), T(10), T(12), T(12), T(15), T(18)));
+}
+
+TEST_CASE_TEMPLATE("angle accuracy", T, TEST_REAL_TYPES)
+{
+	using V = Vector3<T>;
+	for (T small : { T(1e-2), T(1e-3), T(1e-5) })
+	{
+		CAPTURE(small);
+		// Inputs built from exact components, so that their true angle is known to full precision
+		V u(T(3), T(0), T(0));
+		V v = V(std::cos(small), T(0.6)*std::sin(small), T(0.8)*std::sin(small))*T(0.25); // vectors of different lengths
+		CHECK_APPROX(angle(u, v)/small, T(1)); // relative accuracy near 0
+		CHECK_APPROX(angle(u, -v), Constants<T>::PI - small); // and near pi
+	}
+	CHECK_APPROX(angle(V(T(2), T(0), T(0)), V(T(-3), T(0), T(0))), Constants<T>::PI);
+	CHECK(angle(V::ZERO, V::UNIT_X) == T(0));
+	CHECK(angle(V::ZERO, V(T(-1), T(-2), T(-3))) == T(0));
 }
 
 TEST_CASE_TEMPLATE("perpendicular", T, TEST_REAL_TYPES)

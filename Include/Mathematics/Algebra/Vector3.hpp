@@ -165,6 +165,9 @@ template<std::floating_point T> const Vector3<T> Vector3<T>::MINUS_INF{ -std::nu
 
 template<std::integral T>
 struct Vector3<T>
+#ifdef _MSC_VER
+	: public detail::IntegralVectorConstants<Vector3<T>> // provides ZERO (MSVC workaround)
+#endif
 {
 	using ComponentType = T;
 	using ConstArg = const Vector3&;
@@ -209,8 +212,8 @@ struct Vector3<T>
 
 	template<typename A> void serialize(A& ar) { ar(x, y, z); }
 
-	template<std::size_t I> requires (I < 3) T& get() noexcept;
-	template<std::size_t I> requires (I < 3) const T& get() const noexcept;
+	template<std::size_t I> requires (I < 3) T& get() noexcept { if constexpr (I == 0) return x; else if constexpr (I == 1) return y; else return z; }
+	template<std::size_t I> requires (I < 3) const T& get() const noexcept { if constexpr (I == 0) return x; else if constexpr (I == 1) return y; else return z; }
 
 	const Vector2<T>& xy/*getXY*/() const noexcept { return reinterpret_cast<const Vector2<T>&>(*this); }
 	Vector2<T> xz/*getXZ*/() const noexcept { return Vector2<T>(x, z); }
@@ -229,16 +232,20 @@ struct Vector3<T>
 	T getMaxComponent() const { return std::max(std::max(x, y), z); }
 	Vector3& setZero() noexcept { x = T(); y = T(); z = T(); return *this; }
 	Vector3& set(T x, T y, T z) noexcept { this->x = x; this->y = y; this->z = z; return *this; }
-	Vector3& setMinimum(const Vector3& v1, const Vector3& v2);
-	Vector3& setMaximum(const Vector3& v1, const Vector3& v2);
+	Vector3& setMinimum(const Vector3& v1, const Vector3& v2) { x = std::min(v1.x, v2.x); y = std::min(v1.y, v2.y); z = std::min(v1.z, v2.z); return *this; }
+	Vector3& setMaximum(const Vector3& v1, const Vector3& v2) { x = std::max(v1.x, v2.x); y = std::max(v1.y, v2.y); z = std::max(v1.z, v2.z); return *this; }
 	Vector3& negate() noexcept { x = -x; y = -y; z = -z; return *this; }
 
+#ifndef _MSC_VER
 	static const Vector3 ZERO;
+#endif
 
 	T x, y, z;
 };
 
+#ifndef _MSC_VER
 template<std::integral T> const Vector3<T> Vector3<T>::ZERO{};
+#endif
 
 #if SIMD_HAS_FLOAT4
 
@@ -640,49 +647,49 @@ inline Vector3<T>& Vector3<T>::rotate(Axis axis, T angle) noexcept
 	return *this;
 }
 
-template<std::integral T>
-template<std::size_t I>
-	requires (I < 3)
-inline T& Vector3<T>::get() noexcept
-{
-	if constexpr (I == 0)
-		return x;
-	else if constexpr (I == 1)
-		return y;
-	else //if constexpr (I == 2)
-		return z;
-}
+// template<std::integral T>
+// template<std::size_t I>
+// 	requires (I < 3)
+// inline T& Vector3<T>::get() noexcept
+// {
+// 	if constexpr (I == 0)
+// 		return x;
+// 	else if constexpr (I == 1)
+// 		return y;
+// 	else //if constexpr (I == 2)
+// 		return z;
+// }
 
-template<std::integral T>
-template<std::size_t I>
-	requires (I < 3)
-inline const T& Vector3<T>::get() const noexcept
-{
-	if constexpr (I == 0)
-		return x;
-	else if constexpr (I == 1)
-		return y;
-	else //if constexpr (I == 2)
-		return z;
-}
+// template<std::integral T>
+// template<std::size_t I>
+// 	requires (I < 3)
+// inline const T& Vector3<T>::get() const noexcept
+// {
+// 	if constexpr (I == 0)
+// 		return x;
+// 	else if constexpr (I == 1)
+// 		return y;
+// 	else //if constexpr (I == 2)
+// 		return z;
+// }
 
-template<std::integral T>
-inline Vector3<T>& Vector3<T>::setMinimum(const Vector3<T>& v1, const Vector3<T>& v2)
-{
-	x = std::min(v1.x, v2.x);
-	y = std::min(v1.y, v2.y);
-	z = std::min(v1.z, v2.z);
-	return *this;
-}
+// template<std::integral T>
+// inline Vector3<T>& Vector3<T>::setMinimum(const Vector3<T>& v1, const Vector3<T>& v2)
+// {
+// 	x = std::min(v1.x, v2.x);
+// 	y = std::min(v1.y, v2.y);
+// 	z = std::min(v1.z, v2.z);
+// 	return *this;
+// }
 
-template<std::integral T>
-inline Vector3<T>& Vector3<T>::setMaximum(const Vector3<T>& v1, const Vector3<T>& v2)
-{
-	x = std::max(v1.x, v2.x);
-	y = std::max(v1.y, v2.y);
-	z = std::max(v1.z, v2.z);
-	return *this;
-}
+// template<std::integral T>
+// inline Vector3<T>& Vector3<T>::setMaximum(const Vector3<T>& v1, const Vector3<T>& v2)
+// {
+// 	x = std::max(v1.x, v2.x);
+// 	y = std::max(v1.y, v2.y);
+// 	z = std::max(v1.z, v2.z);
+// 	return *this;
+// }
 
 #if SIMD_HAS_FLOAT4
 
@@ -1242,19 +1249,11 @@ template<typename T>
 	requires std::floating_point<T>
 inline T angle(const Vector3<T>& v1, const Vector3<T>& v2)
 {
-#if MATHEMATICS_FAST_NORMALIZE
-	Vector3<T> u(v1);
-	Vector3<T> v(v2);
-	u.normalize();
-	v.normalize();
-	return std::acos(std::clamp(dot(u, v), T(-1), T(1)));
-#else
-	T q = v1.getMagnitude()*v2.getMagnitude();
-	if (q > T(0))
-		return std::acos(std::clamp(dot(v1, v2)/q, T(-1), T(1)));
-	else
-		return (dot(v1, v2) >= T(0)) ? T(0) : Constants<T>::PI;
-#endif
+	// Unlike acos(dot(u, v)) of normalized vectors, this needs no normalization and is accurate for all angles
+	// (acos amplifies rounding errors near 0 and pi).
+	T c = cross(v1, v2).getMagnitude();
+	T d = dot(v1, v2);
+	return ((c == T(0)) && (d == T(0))) ? T(0) : std::atan2(c, d); // the angle with a zero vector is 0
 }
 
 } // namespace templates

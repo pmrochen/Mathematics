@@ -27,8 +27,26 @@
 #include "../Geometry/Axis.hpp"
 
 namespace mathematics {
-
 namespace templates {
+namespace detail {
+
+#ifdef _MSC_VER
+
+// MSVC workaround: MSVC does not distinguish out-of-class member definitions of partial specializations that differ only
+// in their constraints. It attributes the definition of ZERO of the integral specialization to the floating-point
+// specialization and fails with error C2086 (redefinition). With MSVC, integral vectors therefore inherit ZERO from
+// this unconstrained base instead.
+template<typename V>
+struct IntegralVectorConstants
+{
+	static const V ZERO;
+};
+
+template<typename V> const V IntegralVectorConstants<V>::ZERO{};
+
+#endif /* _MSC_VER */
+
+} // namespace detail
 
 template<typename T>
 	requires std::floating_point<T>
@@ -151,6 +169,9 @@ template<std::floating_point T> const Vector2<T> Vector2<T>::MINUS_INF{ -std::nu
 
 template<std::integral T>
 struct Vector2<T>
+#ifdef _MSC_VER
+	: public detail::IntegralVectorConstants<Vector2<T>> // provides ZERO (MSVC workaround)
+#endif
 {
 	using ComponentType = T;
 	using ConstArg = const Vector2&;
@@ -199,8 +220,8 @@ struct Vector2<T>
 
 	template<typename A> void serialize(A& ar) { ar(x, y); }
 
-	template<std::size_t I> requires (I < 2) T& get() noexcept;
-	template<std::size_t I> requires (I < 2) const T& get() const noexcept;
+	template<std::size_t I> requires (I < 2) T& get() noexcept { if constexpr (I == 0) return x; else return y; }
+	template<std::size_t I> requires (I < 2) const T& get() const noexcept { if constexpr (I == 0) return x; else return y; }
 
 	bool isZero() const noexcept { return (x == T()) && (y == T()); }
 	bool allLessThan(const Vector2& v) const noexcept { return (x < v.x) && (y < v.y); }
@@ -215,16 +236,20 @@ struct Vector2<T>
 	T getMaxComponent() const { return std::max(x, y); }
 	Vector2& setZero() noexcept { x = T(); y = T(); return *this; }
 	Vector2& set(T x, T y) noexcept { this->x = x; this->y = y; return *this; }
-	Vector2& setMinimum(const Vector2& v1, const Vector2& v2);
-	Vector2& setMaximum(const Vector2& v1, const Vector2& v2);
+	Vector2& setMinimum(const Vector2& v1, const Vector2& v2) { x = std::min(v1.x, v2.x); y = std::min(v1.y, v2.y); return *this; }
+	Vector2& setMaximum(const Vector2& v1, const Vector2& v2) { x = std::max(v1.x, v2.x); y = std::max(v1.y, v2.y); return *this; }
 	Vector2& negate() noexcept { x = -x; y = -y; return *this; }
 
+#ifndef _MSC_VER
 	static const Vector2 ZERO;
+#endif
 
 	T x, y;
 };
 
+#ifndef _MSC_VER
 template<std::integral T> const Vector2<T> Vector2<T>::ZERO{};
+#endif
 
 #if SIMD_HAS_FLOAT4
 
@@ -568,43 +593,43 @@ inline Vector2<T>& Vector2<T>::rotate(T angle) noexcept
 	return *this;
 }
 
-template<std::integral T>
-template<std::size_t I>
-	requires (I < 2)
-inline T& Vector2<T>::get() noexcept
-{
-	if constexpr (I == 0)
-		return x;
-	else //if constexpr (I == 1)
-		return y;
-}
+// template<std::integral T>
+// template<std::size_t I>
+// 	requires (I < 2)
+// inline T& Vector2<T>::get() noexcept
+// {
+// 	if constexpr (I == 0)
+// 		return x;
+// 	else //if constexpr (I == 1)
+// 		return y;
+// }
 
-template<std::integral T>
-template<std::size_t I>
-	requires (I < 2)
-inline const T& Vector2<T>::get() const noexcept
-{
-	if constexpr (I == 0)
-		return x;
-	else //if constexpr (I == 1)
-		return y;
-}
+// template<std::integral T>
+// template<std::size_t I>
+// 	requires (I < 2)
+// inline const T& Vector2<T>::get() const noexcept
+// {
+// 	if constexpr (I == 0)
+// 		return x;
+// 	else //if constexpr (I == 1)
+// 		return y;
+// }
 
-template<std::integral T>
-inline Vector2<T>& Vector2<T>::setMinimum(const Vector2<T>& v1, const Vector2<T>& v2)
-{
-	x = std::min(v1.x, v2.x);
-	y = std::min(v1.y, v2.y);
-	return *this;
-}
+// template<std::integral T>
+// inline Vector2<T>& Vector2<T>::setMinimum(const Vector2<T>& v1, const Vector2<T>& v2)
+// {
+// 	x = std::min(v1.x, v2.x);
+// 	y = std::min(v1.y, v2.y);
+// 	return *this;
+// }
 
-template<std::integral T>
-inline Vector2<T>& Vector2<T>::setMaximum(const Vector2<T>& v1, const Vector2<T>& v2)
-{
-	x = std::max(v1.x, v2.x);
-	y = std::max(v1.y, v2.y);
-	return *this;
-}
+// template<std::integral T>
+// inline Vector2<T>& Vector2<T>::setMaximum(const Vector2<T>& v1, const Vector2<T>& v2)
+// {
+// 	x = std::max(v1.x, v2.x);
+// 	y = std::max(v1.y, v2.y);
+// 	return *this;
+// }
 
 #if SIMD_HAS_FLOAT4
 
@@ -1076,19 +1101,11 @@ template<typename T>
 	requires std::floating_point<T>
 inline T angle(const Vector2<T>& v1, const Vector2<T>& v2)
 {
-#if MATHEMATICS_FAST_NORMALIZE
-	Vector2<T> u(v1);
-	Vector2<T> v(v2);
-	u.normalize();
-	v.normalize();
-	return std::acos(std::clamp(dot(u, v), T(-1), T(1)));
-#else
-	T q = v1.getMagnitude()*v2.getMagnitude();
-	if (q > T(0))
-		return std::acos(std::clamp(dot(v1, v2)/q, T(-1), T(1)));
-	else
-		return (dot(v1, v2) >= T(0)) ? T(0) : Constants<T>::PI;
-#endif
+	// Unlike acos(dot(u, v)) of normalized vectors, this needs no normalization and is accurate for all angles
+	// (acos amplifies rounding errors near 0 and pi).
+	T c = std::fabs(cross(v1, v2));
+	T d = dot(v1, v2);
+	return ((c == T(0)) && (d == T(0))) ? T(0) : std::atan2(c, d); // the angle with a zero vector is 0
 }
 
 } // namespace templates
