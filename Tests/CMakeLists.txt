@@ -22,16 +22,46 @@ set_target_properties(${MATHEMATICS_TESTS_NAME} PROPERTIES
 	CXX_EXTENSIONS OFF
 )
 
+# Linking the interface target brings in the Mathematics headers, the Simd dependency and the
+# MATHEMATICS_* compile definitions, so the tests exercise the same configuration as consumers do.
+target_link_libraries(${MATHEMATICS_TESTS_NAME} PRIVATE
+	${MATHEMATICS_LIB_NAME}
+)
+
 target_include_directories(${MATHEMATICS_TESTS_NAME} PRIVATE
-	${CMAKE_CURRENT_SOURCE_DIR}/../Include # Mathematics headers
+	${CMAKE_CURRENT_SOURCE_DIR} # TestUtilities.hpp
 	${CMAKE_CURRENT_BINARY_DIR}/downloaded # doctest.h
 )
 
 target_sources(${MATHEMATICS_TESTS_NAME} PRIVATE
 	Main.cpp
+	TestUtilities.hpp
+	ScalarTests.cpp
+	IntervalTests.cpp
+	RandomTests.cpp
+	Algebra/Vector2Tests.cpp
+	Algebra/Vector3Tests.cpp
+	Algebra/Vector4Tests.cpp
+	Algebra/Matrix2Tests.cpp
+	Algebra/Matrix3Tests.cpp
+	Algebra/Matrix4Tests.cpp
+	Algebra/QuaternionTests.cpp
+	Algebra/LUTests.cpp
+	Transform/AffineTransformTests.cpp
+	Transform/EulerTests.cpp
+	Geometry/Linear2Tests.cpp
+	Geometry/Linear3Tests.cpp
+	Geometry/Shapes2Tests.cpp
+	Geometry/PlaneTests.cpp
+	Geometry/PolygonTests.cpp
+	Geometry/BoxTests.cpp
+	Geometry/SolidTests.cpp
+	Geometry/BezierTests.cpp
+	Geometry/MeshTests.cpp
+	Analysis/AnalysisTests.cpp
 )
 
 add_test(
 	NAME "${MATHEMATICS_TESTS_NAME}"
 	COMMAND ${MATHEMATICS_TESTS_NAME} -ni -fc
-)	
+)
