@@ -330,7 +330,7 @@ inline O findLineRay(const Vector2<T>& originA, const Vector2<T>& directionA, co
 	{
 		if (!(std::fabs(cross(normalize(diff), directionB)) < Constants<T>::TOLERANCE))
 			return detail::infinity<O, T>();
-		return O({ T(0), T(0) }); // collinear
+		return O({ -dot(diff, directionA)/dot(directionA, directionA), T(0) }); // collinear: the intersection is originB/start
 	}
 
 	T t = cross(diff, directionB)/d2CrossD1;
@@ -354,7 +354,7 @@ inline O findLineLineSegment(const Vector2<T>& origin, const Vector2<T>& directi
 	{
 		if (!(std::fabs(cross(normalize(diff), directionB)) < Constants<T>::TOLERANCE))
 			return detail::infinity<O, T>();
-		return O({ T(0), T(0) }); // collinear
+		return O({ -dot(diff, directionA)/dot(directionA, directionA), T(0) }); // collinear: the intersection is originB/start
 	}
 
 	T t = cross(diff, directionB)/d2CrossD1;
