@@ -1,0 +1,74 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # x86-64 builds need at least SSE4.1 (or AVX) when SIMD is enabled
+          - name: Linux GCC (AVX2, Release)
+            os: ubuntu-24.04
+            cxx: g++-14
+            config: Release
+            options: -DMATHEMATICS_ENABLE_AVX2=ON
+          - name: Linux Clang (AVX2, Debug)
+            os: ubuntu-24.04
+            cxx: clang++-18
+            config: Debug
+            options: -DMATHEMATICS_ENABLE_AVX2=ON
+          - name: Linux Clang (SSE4.2, Release)
+            os: ubuntu-24.04
+            cxx: clang++-18
+            config: Release
+            options: -DMATHEMATICS_ENABLE_SSE4=ON
+          - name: Linux GCC (no SIMD, double precision, Release)
+            os: ubuntu-24.04
+            cxx: g++-14
+            config: Release
+            options: -DMATHEMATICS_ENABLE_SIMD=OFF -DMATHEMATICS_DOUBLE_PRECISION=ON
+          # arm64 runner: the Simd NEON backend is not enabled yet, so this exercises the generic code
+          - name: macOS AppleClang (arm64, Release)
+            os: macos-latest
+            config: Release
+            options: ""
+          - name: Windows MSVC (AVX2, Release)
+            os: windows-latest
+            config: Release
+            options: -DMATHEMATICS_ENABLE_AVX2=ON
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure
+        shell: bash
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+          ${{ matrix.cxx && format('-DCMAKE_CXX_COMPILER={0}', matrix.cxx) || '' }}
+          -DMATHEMATICS_WITH_TESTS=ON
+          ${{ matrix.options }}
+
+      - name: Build
+        # The test target is EXCLUDE_FROM_ALL, so it must be built explicitly
+        run: cmake --build build --config ${{ matrix.config }} --target MathematicsTests --parallel
+
+      - name: Test
+        run: ctest --test-dir build --build-config ${{ matrix.config }} --output-on-failure
