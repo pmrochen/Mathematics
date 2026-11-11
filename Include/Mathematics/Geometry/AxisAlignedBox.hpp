@@ -429,7 +429,9 @@ template<typename T>
 	requires std::floating_point<T>
 inline AxisAlignedBox<T>& AxisAlignedBox<T>::transform(const Matrix3<T>& matrix, bool orthogonal) noexcept
 {
-	*this = AxisAlignedBox<T>(OrientedBox<T>(*this, matrix, orthogonal));
+	// The bounds are computed from the (non-orthonormalized) transformed basis, which is exact for any
+	// matrix, including shears. The orthogonal parameter is kept for API compatibility and has no effect.
+	*this = AxisAlignedBox<T>(OrientedBox<T>(*this, matrix, true));
 	return *this;
 }
 
@@ -437,7 +439,9 @@ template<typename T>
 	requires std::floating_point<T>
 inline AxisAlignedBox<T>& AxisAlignedBox<T>::transform(const AffineTransform<T>& transformation, bool orthogonal) noexcept
 {
-	*this = AxisAlignedBox<T>(OrientedBox<T>(*this, transformation, orthogonal));
+	// The bounds are computed from the (non-orthonormalized) transformed basis, which is exact for any
+	// matrix, including shears. The orthogonal parameter is kept for API compatibility and has no effect.
+	*this = AxisAlignedBox<T>(OrientedBox<T>(*this, transformation, true));
 	return *this;
 }
 
