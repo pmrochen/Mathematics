@@ -39,6 +39,7 @@ target_sources(${MATHEMATICS_TESTS_NAME} PRIVATE
 	ScalarTests.cpp
 	IntervalTests.cpp
 	RandomTests.cpp
+	HashTests.cpp
 	Algebra/Vector2Tests.cpp
 	Algebra/Vector3Tests.cpp
 	Algebra/Vector4Tests.cpp
