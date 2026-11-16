@@ -217,16 +217,18 @@ The index type defaults to `std::size_t`; pass another as the first template arg
 `Triangle3::triangulate<unsigned int>(...)`.
 
 A second overload triangulates a polygon whose outline is given by an index loop into a shared vertex array. The
-output indices then refer to the vertex array as well. This overload needs a writable range of `(n - 2)*3` elements
-rather than an insert iterator:
+output indices then refer to the vertex array as well:
 
 ```cpp
 std::vector<unsigned int> outline{ 4, 3, 2, 1, 0 };             // the polygon, as indices into 'polygon'
-std::vector<unsigned int> triangles((outline.size() - 2)*3);
+std::vector<unsigned int> triangles;
 
 auto [last, ok] = Triangle3::triangulate<unsigned int>(polygon.begin(), polygon.end(),
-                                                       outline.begin(), outline.end(), triangles.begin());
+                                                       outline.begin(), outline.end(), std::back_inserter(triangles));
 ```
+
+All overloads write exactly `(n - 2)*3` indices for a polygon with more than three vertices, also when they report
+failure, so the output may equally be a pre-sized range of that length.
 
 ### Polygons in 2D
 

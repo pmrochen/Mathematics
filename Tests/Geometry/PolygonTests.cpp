@@ -232,6 +232,13 @@ TEST_CASE_TEMPLATE("triangulation", T, TEST_REAL_TYPES)
 			polygon.end(), indexed.begin());
 		CHECK(indexedResult);
 		CHECK(indexedOut == indexed.end());
+
+		// The indexed overload must accept any output iterator, not only a pre-sized range
+		std::vector<int> inserted;
+		auto [insertedOut, insertedResult] = Triangle3<T>::template triangulate<int>(vertices.begin(), vertices.end(), polygon.begin(),
+			polygon.end(), std::back_inserter(inserted));
+		CHECK(insertedResult);
+		CHECK(inserted == indexed);
 		CHECK_APPROX_TOL(triangulatedArea(vertices, indexed), T(2*n)*std::sin(Constants<T>::TWO_PI/T(n)), T(1e-3));
 	}
 
@@ -249,6 +256,28 @@ TEST_CASE_TEMPLATE("triangulation", T, TEST_REAL_TYPES)
 		CHECK(result);
 		REQUIRE(indices.size() == 12);
 		CHECK_APPROX(triangulatedArea(vertices, indices), T(3));
+	}
+
+	SUBCASE("self-intersecting polygon")
+	{
+		// The triangulation fails, but the output must stay within the (n - 2)*3 indices of a regular triangulation
+		std::vector<V> vertices{ V(T(0), T(0), T(0)), V(T(2), T(2), T(0)), V(T(2), T(0), T(0)), V(T(0), T(2), T(0)), V(T(1), T(3), T(0)),
+			V(T(1), T(-1), T(0)) };
+		const std::size_t expected = 3*(vertices.size() - 2);
+
+		std::vector<int> indices;
+		auto [out, result] = Triangle3<T>::triangulate(vertices.begin(), vertices.end(), std::back_inserter(indices));
+		CHECK_FALSE(result);
+		CHECK(indices.size() == expected);
+		for (int index : indices)
+			CHECK((index >= 0 && index < int(vertices.size())));
+
+		std::vector<int> polygon{ 0, 1, 2, 3, 4, 5 };
+		std::vector<int> indexed;
+		auto [indexedOut, indexedResult] = Triangle3<T>::template triangulate<int>(vertices.begin(), vertices.end(), polygon.begin(),
+			polygon.end(), std::back_inserter(indexed));
+		CHECK_FALSE(indexedResult);
+		CHECK(indexed == indices);
 	}
 
 	SUBCASE("indexed polygon")

@@ -545,21 +545,21 @@ template<std::integral U, std::random_access_iterator I, std::random_access_iter
 	{
 		if (distanceSquared(firstVertex[firstIndex[0]], firstVertex[firstIndex[2]]) <= distanceSquared(firstVertex[firstIndex[1]], firstVertex[firstIndex[3]]))
 		{
-			*outIndex++ = firstIndex[0];
-			*outIndex++ = firstIndex[1];
-			*outIndex++ = firstIndex[2];
-			*outIndex++ = firstIndex[0];
-			*outIndex++ = firstIndex[2];
-			*outIndex++ = firstIndex[3];
+			*outIndex++ = U(firstIndex[0]);
+			*outIndex++ = U(firstIndex[1]);
+			*outIndex++ = U(firstIndex[2]);
+			*outIndex++ = U(firstIndex[0]);
+			*outIndex++ = U(firstIndex[2]);
+			*outIndex++ = U(firstIndex[3]);
 		}
 		else
 		{
-			*outIndex++ = firstIndex[0];
-			*outIndex++ = firstIndex[1];
-			*outIndex++ = firstIndex[3];
-			*outIndex++ = firstIndex[1];
-			*outIndex++ = firstIndex[2];
-			*outIndex++ = firstIndex[3];
+			*outIndex++ = U(firstIndex[0]);
+			*outIndex++ = U(firstIndex[1]);
+			*outIndex++ = U(firstIndex[3]);
+			*outIndex++ = U(firstIndex[1]);
+			*outIndex++ = U(firstIndex[2]);
+			*outIndex++ = U(firstIndex[3]);
 		}
 
 		return { outIndex, true };
@@ -577,9 +577,12 @@ template<std::integral U, std::random_access_iterator I, std::random_access_iter
 	for (std::ptrdiff_t i = 0; i < nIndices; i++)
 		vertices2[i] = (firstVertex[firstIndex[i]]*basis).xy();
 
-	auto [outEnd, result] = triangulation::triangulate(vertices2, vertices2 + nIndices, outIndex);
-	for (; outIndex != outEnd; ++outIndex)
-		*outIndex = firstIndex[*outIndex];
+	// The 2D triangulator produces indices local to the polygon. They are collected in a temporary buffer and
+	// mapped through the index loop in a single pass, so that any output iterator (e.g. std::back_inserter) works.
+	std::ptrdiff_t* localIndices = (std::ptrdiff_t*)alloca((nIndices - 2)*3*sizeof(std::ptrdiff_t));
+	auto [localEnd, result] = triangulation::triangulate<std::ptrdiff_t>(vertices2, vertices2 + nIndices, localIndices);
+	for (const std::ptrdiff_t* i = localIndices; i != localEnd; ++i)
+		*outIndex++ = U(firstIndex[*i]);
 
 	return { outIndex, result };
 }

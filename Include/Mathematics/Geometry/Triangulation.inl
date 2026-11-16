@@ -118,11 +118,23 @@ std::pair<O, bool> triangulate(I firstVertex, I lastVertex, O outIndex)
 		{
 			//throw std::runtime_error("triangulate2() : bad polygon");
 
-			for (std::ptrdiff_t i = 0, n = nVertices - 2; i < n; i++)
+			// Fall back to a fan over the vertices that have not been clipped yet. Together with the triangles
+			// emitted so far this gives exactly (nVertices - 2) triangles, so the output never exceeds the
+			// size of a regular triangulation.
+			for (std::ptrdiff_t i = 1; (i + 1) < nVerticesRemaining; i++)
 			{
-				*outIndex++ = U(i);
-				*outIndex++ = U(i + 1);
-				*outIndex++ = U(i + 2);
+				if (reverse)
+				{
+					*outIndex++ = vertexIndices[i + 1];
+					*outIndex++ = vertexIndices[i];
+					*outIndex++ = vertexIndices[0];
+				}
+				else
+				{
+					*outIndex++ = vertexIndices[0];
+					*outIndex++ = vertexIndices[i];
+					*outIndex++ = vertexIndices[i + 1];
+				}
 			}
 
 			//if (nVertices > BUFFER_SIZE)
