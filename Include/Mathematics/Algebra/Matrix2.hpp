@@ -1209,10 +1209,8 @@ struct hash<::mathematics::templates::Matrix2<float>>
 {
 	size_t operator()(const ::mathematics::templates::Matrix2<float>& m) const noexcept
 	{
-		hash<typename ::simd::float4> hasher;
-		size_t seed = hasher(m.row0) + 0x9e3779b9;
-		seed ^= hasher(m.row1) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-		return seed;
+		// Only the lanes compared by operator== are hashed, the remaining ones may hold arbitrary data
+		return hash<typename ::simd::float4>()(::simd::pack2(m.row0, m.row1));
 	}
 };
 

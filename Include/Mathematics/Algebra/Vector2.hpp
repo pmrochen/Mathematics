@@ -1161,7 +1161,8 @@ struct hash<::mathematics::templates::Vector2<float>>
 {
 	size_t operator()(const ::mathematics::templates::Vector2<float>& v) const noexcept
 	{
-		return hash<typename ::simd::float4>()(v.xy);
+		// Only the lanes compared by operator== are hashed, the remaining ones may hold arbitrary data
+		return hash<typename ::simd::float4>()(::simd::cutoff2(v.xy));
 	}
 };
 

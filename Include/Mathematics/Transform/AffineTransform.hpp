@@ -1650,11 +1650,12 @@ struct hash<::mathematics::templates::AffineTransform<float>>
 {
 	size_t operator()(const ::mathematics::templates::AffineTransform<float>& m) const noexcept
 	{
+		// Only the lanes compared by operator== are hashed, the remaining ones may hold arbitrary data
 		hash<typename ::simd::float4> hasher;
-		size_t seed = hasher(m.row0) + 0x9e3779b9;
-		seed ^= hasher(m.row1) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-		seed ^= hasher(m.row2) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-		seed ^= hasher(m.row3) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		size_t seed = hasher(::simd::cutoff3(m.row0)) + 0x9e3779b9;
+		seed ^= hasher(::simd::cutoff3(m.row1)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(::simd::cutoff3(m.row2)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hasher(::simd::cutoff3(m.row3)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
 	}
 };
