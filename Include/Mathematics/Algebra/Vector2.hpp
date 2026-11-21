@@ -28,25 +28,6 @@
 
 namespace mathematics {
 namespace templates {
-namespace detail {
-
-#ifdef _MSC_VER
-
-// MSVC workaround: MSVC does not distinguish out-of-class member definitions of partial specializations that differ only
-// in their constraints. It attributes the definition of ZERO of the integral specialization to the floating-point
-// specialization and fails with error C2086 (redefinition). With MSVC, integral vectors therefore inherit ZERO from
-// this unconstrained base instead.
-template<typename V>
-struct IntegralVectorConstants
-{
-	static const V ZERO;
-};
-
-template<typename V> const V IntegralVectorConstants<V>::ZERO{};
-
-#endif /* _MSC_VER */
-
-} // namespace detail
 
 template<typename T>
 	requires std::floating_point<T>
@@ -169,7 +150,7 @@ template<std::floating_point T> const Vector2<T> Vector2<T>::MINUS_INF{ -std::nu
 
 template<std::integral T>
 struct Vector2<T>
-#ifdef _MSC_VER
+#if MATHEMATICS_CONSTANT_WORKAROUND
 	: public detail::IntegralVectorConstants<Vector2<T>> // provides ZERO (MSVC workaround)
 #endif
 {
@@ -240,14 +221,14 @@ struct Vector2<T>
 	Vector2& setMaximum(const Vector2& v1, const Vector2& v2) { x = std::max(v1.x, v2.x); y = std::max(v1.y, v2.y); return *this; }
 	Vector2& negate() noexcept { x = -x; y = -y; return *this; }
 
-#ifndef _MSC_VER
+#if !MATHEMATICS_CONSTANT_WORKAROUND
 	static const Vector2 ZERO;
 #endif
 
 	T x, y;
 };
 
-#ifndef _MSC_VER
+#if !MATHEMATICS_CONSTANT_WORKAROUND
 template<std::integral T> const Vector2<T> Vector2<T>::ZERO{};
 #endif
 

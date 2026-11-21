@@ -11,7 +11,30 @@
 #define MATHEMATICS_FAST_NORMALIZE 1
 #endif
 
+// MSVC workaround: MSVC does not distinguish out-of-class member definitions of partial specializations that differ only
+// in their constraints. It attributes the definition of ZERO of the integral specialization to the floating-point
+// specialization and fails with error C2086 (redefinition). With MSVC, integral vectors therefore inherit ZERO from
+// this unconstrained base instead.
+#if defined(_MSC_VER) && !defined(__clang__)
+#define MATHEMATICS_CONSTANT_WORKAROUND 1
+#else
+#define MATHEMATICS_CONSTANT_WORKAROUND 1
+#endif
+
 namespace mathematics {
+namespace detail {
+
+#if MATHEMATICS_CONSTANT_WORKAROUND
+template<typename V>
+struct IntegralVectorConstants
+{
+	static const V ZERO;
+};
+
+template<typename V> const V IntegralVectorConstants<V>::ZERO{};
+#endif /* MATHEMATICS_CONSTANT_WORKAROUND */
+
+} // namespace detail
 
 //template<typename T> constexpr T /*ZERO_*/TOLERANCE = T();
 //template<> constexpr float /*ZERO_*/TOLERANCE = 1e-6f;

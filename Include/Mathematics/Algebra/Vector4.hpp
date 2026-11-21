@@ -161,7 +161,7 @@ template<std::floating_point T> const Vector4<T> Vector4<T>::MINUS_INF{ -std::nu
 
 template<std::integral T>
 struct Vector4<T>
-#ifdef _MSC_VER
+#if MATHEMATICS_CONSTANT_WORKAROUND
 	: public detail::IntegralVectorConstants<Vector4<T>> // provides ZERO (MSVC workaround)
 #endif
 {
@@ -235,14 +235,14 @@ struct Vector4<T>
 	Vector4& setMaximum(const Vector4& v1, const Vector4& v2) { x = std::max(v1.x, v2.x); y = std::max(v1.y, v2.y); z = std::max(v1.z, v2.z); w = std::max(v1.w, v2.w); return *this; }
 	Vector4& negate() noexcept { x = -x; y = -y; z = -z; w = -w; return *this; }
 
-#ifndef _MSC_VER
+#if !MATHEMATICS_CONSTANT_WORKAROUND
 	static const Vector4 ZERO;
 #endif
 
 	T x, y, z, w;
 };
 
-#ifndef _MSC_VER
+#if !MATHEMATICS_CONSTANT_WORKAROUND
 template<std::integral T> const Vector4<T> Vector4<T>::ZERO{};
 #endif
 
