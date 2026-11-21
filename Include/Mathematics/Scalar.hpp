@@ -11,8 +11,19 @@
 #include <functional>
 #include <bit>
 #include <cstddef>
+#include <cstdint>
 #include <cmath>
 #include "Constants.hpp"
+
+// DevCom-11119601: -0 and 0 hash differently when /fp:fast or /O2 /arch:AVX2
+#if defined(_MSC_VER) && !defined(__clang__) && \
+	(defined(_M_FP_FAST) || \
+    ((_MSC_FULL_VER >= 195100000) && (_MSC_FULL_VER < 195236615) && \
+    (defined(__AVX2__) || defined(_M_ARM64) || defined(_M_ARM64EC))))
+#define MATHEMATICS_HASH_WORKAROUND 1
+#else
+#define MATHEMATICS_HASH_WORKAROUND 0
+#endif
 
 namespace mathematics {
 
@@ -21,17 +32,30 @@ struct Hasher : public std::hash<T>
 {
 };
 
-#ifdef _M_FP_FAST // On MSVC, -0 and 0 hash differently when /fp:fast is set
+#if MATHEMATICS_HASH_WORKAROUND
 template<std::floating_point T>
-struct Hasher<T> : public std::hash<T>
+struct Hasher<T>
 {
 	std::size_t operator()(const T& x) const noexcept 
 	{
-		return std::hash<T>::operator()(x + T(0)); // normalize -0 to +0
-		//return std::hash<T>::operator()((x == T(0)) ? T(0) : x);
+		if constexpr (sizeof(T) == 4) 
+		{
+			auto bits = std::bit_cast<std::uint32_t>(x);
+			if (bits == 0x8000'0000u)
+				bits = 0;
+			return std::hash<std::uint32_t>{}(bits);
+		}
+		else if constexpr (sizeof(T) == 8) 
+		{
+			auto bits = std::bit_cast<std::uint64_t>(x);
+			if (bits == 0x8000'0000'0000'0000ull)
+				bits = 0;
+			return std::hash<std::uint64_t>{}(bits);
+		}
+		return std::hash<T>{}(x + T(0));
 	}
 };
-#endif /* _M_FP_FAST */
+#endif /* MATHEMATICS_HASH_WORKAROUND */
 
 template<typename T>
 	requires (std::floating_point<T> || std::integral<T>)
