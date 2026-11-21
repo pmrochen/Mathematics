@@ -8,12 +8,30 @@
 #include <limits>
 #include <type_traits>
 #include <concepts>
-#include <utility>
+#include <functional>
 #include <bit>
+#include <cstddef>
 #include <cmath>
 #include "Constants.hpp"
 
 namespace mathematics {
+
+template<typename T>
+struct Hasher : public std::hash<T>
+{
+};
+
+#ifdef _M_FP_FAST // On MSVC, -0 and 0 hash differently when /fp:fast is set
+template<std::floating_point T>
+struct Hasher<T> : public std::hash<T>
+{
+	std::size_t operator()(const T& x) const noexcept 
+	{
+		return std::hash<T>::operator()(x + T(0)); // normalize -0 to +0
+		//return std::hash<T>::operator()((x == T(0)) ? T(0) : x);
+	}
+};
+#endif /* _M_FP_FAST */
 
 template<typename T>
 	requires (std::floating_point<T> || std::integral<T>)

@@ -1139,7 +1139,7 @@ struct hash<::mathematics::templates::Vector4<T>>
 {
 	size_t operator()(const ::mathematics::templates::Vector4<T>& v) const noexcept
 	{
-		hash<T> hasher;
+		::mathematics::Hasher<T> hasher;
 		size_t seed = hasher(v.x) + 0x9e3779b9;
 		seed ^= hasher(v.y) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(v.z) + 0x9e3779b9 + (seed << 6) + (seed >> 2);

@@ -266,7 +266,7 @@ struct hash<::mathematics::templates::Interval<T>>
 {
 	size_t operator()(const ::mathematics::templates::Interval<T>& interval) const noexcept
 	{
-		hash<T> hasher;
+		::mathematics::Hasher<T> hasher;
 		size_t seed = hasher(interval.minimum) + 0x9e3779b9;
 		seed ^= hasher(interval.maximum) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;

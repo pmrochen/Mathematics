@@ -485,7 +485,7 @@ struct hash<::mathematics::templates::Euler<T>>
 {
 	size_t operator()(const ::mathematics::templates::Euler<T>& e) const noexcept
 	{
-		hash<T> hasher;
+		::mathematics::Hasher<T> hasher;
 		size_t seed = hasher(e.x) + 0x9e3779b9;
 		seed ^= hasher(e.y) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(e.z) + 0x9e3779b9 + (seed << 6) + (seed >> 2);

@@ -593,7 +593,7 @@ struct hash<::mathematics::templates::Plane<T>>
 {
 	size_t operator()(const ::mathematics::templates::Plane<T>& p) const noexcept
 	{
-		hash<T> hasher;
+		::mathematics::Hasher<T> hasher;
 		size_t seed = hasher(p.a) + 0x9e3779b9;
 		seed ^= hasher(p.b) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(p.c) + 0x9e3779b9 + (seed << 6) + (seed >> 2);

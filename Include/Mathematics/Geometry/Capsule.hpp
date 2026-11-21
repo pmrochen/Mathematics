@@ -213,7 +213,7 @@ struct hash<::mathematics::templates::Capsule<T>>
 	size_t operator()(const ::mathematics::templates::Capsule<T>& capsule) const noexcept
 	{
 		hash<typename ::mathematics::templates::Vector3<T>> vectorHasher;
-		hash<T> hasher;
+		::mathematics::Hasher<T> hasher;
 		size_t seed = vectorHasher(capsule.center) + 0x9e3779b9;
 		seed ^= vectorHasher(capsule.axis) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(capsule.height) + 0x9e3779b9 + (seed << 6) + (seed >> 2);

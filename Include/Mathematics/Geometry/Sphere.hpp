@@ -186,7 +186,7 @@ struct hash<::mathematics::templates::Sphere<T>>
 	size_t operator()(const ::mathematics::templates::Sphere<T>& sphere) const noexcept
 	{
 		size_t seed = hash<typename ::mathematics::templates::Vector3<T>>()(sphere.center) + 0x9e3779b9;
-		seed ^= hash<T>()(sphere.radius) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= ::mathematics::Hasher<T>()(sphere.radius) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
 	}
 };

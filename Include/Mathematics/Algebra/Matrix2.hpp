@@ -1193,7 +1193,7 @@ struct hash<::mathematics::templates::Matrix2<T>>
 {
 	size_t operator()(const ::mathematics::templates::Matrix2<T>& m) const noexcept
 	{
-		hash<T> hasher;
+		::mathematics::Hasher<T> hasher;
 		size_t seed = hasher(m.m00) + 0x9e3779b9;
 		seed ^= hasher(m.m01) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(m.m10) + 0x9e3779b9 + (seed << 6) + (seed >> 2);

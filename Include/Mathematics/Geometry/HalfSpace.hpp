@@ -556,7 +556,7 @@ struct hash<::mathematics::templates::HalfSpace<T>>
 {
 	size_t operator()(const ::mathematics::templates::HalfSpace<T>& h) const noexcept
 	{
-		hash<T> hasher;
+		::mathematics::Hasher<T> hasher;
 		size_t seed = hasher(h.a) + 0x9e3779b9;
 		seed ^= hasher(h.b) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(h.c) + 0x9e3779b9 + (seed << 6) + (seed >> 2);

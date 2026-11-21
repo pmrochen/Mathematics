@@ -323,7 +323,7 @@ struct hash<::mathematics::templates::YawPitchRoll<T>>
 {
 	size_t operator()(const ::mathematics::templates::YawPitchRoll<T>& r) const noexcept
 	{
-		hash<T> hasher;
+		::mathematics::Hasher<T> hasher;
 		size_t seed = hasher(r.yaw) + 0x9e3779b9;
 		seed ^= hasher(r.pitch) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(r.roll) + 0x9e3779b9 + (seed << 6) + (seed >> 2);

@@ -1309,7 +1309,7 @@ struct hash<::mathematics::templates::Quaternion<T>>
 {
 	size_t operator()(const ::mathematics::templates::Quaternion<T>& q) const noexcept
 	{
-		hash<T> hasher;
+		::mathematics::Hasher<T> hasher;
 		size_t seed = hasher(q.x) + 0x9e3779b9;
 		seed ^= hasher(q.y) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(q.z) + 0x9e3779b9 + (seed << 6) + (seed >> 2);

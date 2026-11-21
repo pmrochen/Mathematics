@@ -143,7 +143,7 @@ struct hash<::mathematics::templates::Circle2<T>>
 	size_t operator()(const ::mathematics::templates::Circle2<T>& circle) const noexcept
 	{
 		size_t seed = hash<typename ::mathematics::templates::Vector2<T>>()(circle.center) + 0x9e3779b9;
-		seed ^= hash<T>()(circle.radius) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= ::mathematics::Hasher<T>()(circle.radius) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		return seed;
 	}
 };

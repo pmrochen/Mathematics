@@ -188,7 +188,7 @@ struct hash<::mathematics::templates::Torus<T>>
 	size_t operator()(const ::mathematics::templates::Torus<T>& torus) const noexcept
 	{
 		hash<typename ::mathematics::templates::Vector3<T>> vectorHasher;
-		hash<T> hasher;
+		::mathematics::Hasher<T> hasher;
 		size_t seed = vectorHasher(torus.center) + 0x9e3779b9;
 		seed ^= vectorHasher(torus.axis) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		seed ^= hasher(torus.majorRadius) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
